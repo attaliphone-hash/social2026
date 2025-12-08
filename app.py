@@ -85,7 +85,7 @@ def search_documents(query, limit=3):
 def main():
     st.set_page_config(page_title="Payroll Bot", page_icon="🤖")
     st.title("French Payroll Expert - Assistant IA")
-    st.subheader("Votre assistant conformité basé sur le Mémento Social 2023.")
+    st.subheader("Votre assistant conformité basé sur le Mémento Social.")
     
     # Sidebar
     st.sidebar.header("Configuration")
@@ -158,7 +158,7 @@ def main():
                 model = genai.GenerativeModel(selected_model_name)
                 # print(f"DEBUG: Modèle utilisé : {selected_model_name}")
                 
-                with st.spinner("Recherche d'informations et analyse..."):
+                with st.spinner("Merci de patienter quelques instants, nous recherchons les informations"):
                     # 1. Retrieval
                     results = search_documents(prompt, limit=3)
                     print("DEBUG: Recherche en base terminée")
