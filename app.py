@@ -1,10 +1,73 @@
 import streamlit as st
 import sqlite3
 import re
+import os
 import google.generativeai as genai
 
 # Configuration
 DB_NAME = "ingestion.db"
+
+def check_and_build_database():
+    """Checks if the database is ready, otherwise builds it from the text file."""
+    db_exists = os.path.exists(DB_NAME)
+    needs_building = False
+
+    if not db_exists:
+        needs_building = True
+    else:
+        try:
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
+            cursor.execute("SELECT count(*) FROM documents")
+            count = cursor.fetchone()[0]
+            if count == 0:
+                needs_building = True
+            conn.close()
+        except sqlite3.OperationalError:
+            needs_building = True
+
+    if needs_building:
+        st.info("⚙️ Première installation : Lecture du Mémento en cours...")
+        
+        # 1. Init DB
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT,
+                chunk_index INTEGER,
+                text TEXT
+            )
+        ''')
+        
+        # 2. Read File
+        file_path = os.path.join("documents", "accidents du travail.txt")
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                text = f.read()
+            
+            # 3. Chunking (Paragraphs or fixed size fallback)
+            # Simple paragraph split by double newline
+            chunks = [c.strip() for c in text.split('\n\n') if c.strip()]
+            
+            # If paragraphs are too huge, we might want to split them further, 
+            # but for this specific request, "Découpe le texte" is sufficient.
+            # Reuse logic from ingest.py? ingest.py had specific logic but no delimiters found here.
+            # Let's stick to paragraph splitting as planned.
+            
+            filename = "accidents du travail.txt"
+            for i, chunk in enumerate(chunks):
+                cursor.execute(
+                    "INSERT INTO documents (filename, chunk_index, text) VALUES (?, ?, ?)",
+                    (filename, i, chunk)
+                )
+            conn.commit()
+            st.success("✅ Mémento mémorisé !")
+        else:
+            st.error(f"Fichier source introuvable : {file_path}")
+        
+        conn.close()
 
 # French Stop Words & Configuration (Reused from V2)
 STOP_WORDS = {
@@ -84,8 +147,12 @@ def search_documents(query, limit=3):
 
 def main():
     st.set_page_config(page_title="Payroll Bot", page_icon="🤖")
+    
+    # Self-healing check
+    check_and_build_database()
+
     st.title("French Payroll Expert - Assistant IA")
-    st.subheader("Votre assistant conformité basé sur le Mémento Social.")
+    st.subheader("Votre assistant conformité basé sur le Mémento Social 2023.")
     
     # Sidebar
     st.sidebar.header("Configuration")
@@ -158,7 +225,7 @@ def main():
                 model = genai.GenerativeModel(selected_model_name)
                 # print(f"DEBUG: Modèle utilisé : {selected_model_name}")
                 
-                with st.spinner("Merci de patienter quelques instants, nous recherchons les informations"):
+                with st.spinner("Recherche d'informations et analyse..."):
                     # 1. Retrieval
                     results = search_documents(prompt, limit=3)
                     print("DEBUG: Recherche en base terminée")
