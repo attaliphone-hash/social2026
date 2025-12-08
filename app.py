@@ -192,7 +192,7 @@ def main():
             except Exception as e:
                 st.sidebar.error(f"Échec connexion : {e}")
 
-    st.sidebar.header("Documents Indexés")
+    st.sidebar.header("Informations fournies basées sur les textes suivants")
     docs = get_documents_list()
     if docs:
         for doc in docs:
@@ -225,7 +225,7 @@ def main():
                 model = genai.GenerativeModel(selected_model_name)
                 # print(f"DEBUG: Modèle utilisé : {selected_model_name}")
                 
-                with st.spinner("Recherche d'informations et analyse..."):
+                with st.spinner("Merci de patienter. Nous recherchons vos informations."):
                     # 1. Retrieval
                     results = search_documents(prompt, limit=3)
                     print("DEBUG: Recherche en base terminée")
