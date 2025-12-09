@@ -32,11 +32,15 @@ def charger_cerveau():
         pass
     collection = client.create_collection("paie")
 
-    # Recherche du fichier texte
-    fichiers = ["accidents du travail.txt", "documents/accidents du travail.txt"]
+    # --- LE NOUVEAU NOM EST ICI ---
+    # On cherche le fichier avec les tirets
+    nom_fichier = "accidents-du-travail.txt"
+    
+    # On vérifie s'il est à la racine ou dans un dossier
+    chemins_possibles = [nom_fichier, "documents/" + nom_fichier]
     fichier_trouve = None
     
-    for f in fichiers:
+    for f in chemins_possibles:
         if os.path.exists(f):
             fichier_trouve = f
             break
@@ -105,7 +109,7 @@ with st.spinner("Initialisation du système..."):
     db = charger_cerveau()
 
 if not db:
-    st.error("❌ Erreur : Fichier 'accidents du travail.txt' introuvable.")
+    st.error("❌ Erreur : Fichier 'accidents-du-travail.txt' introuvable. Vérifiez le nom sur GitHub.")
 else:
     st.success("✅ Système prêt !")
 
