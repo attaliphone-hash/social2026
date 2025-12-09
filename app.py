@@ -21,7 +21,7 @@ if not api_key:
     st.warning("⬅️ Veuillez entrer votre clé API.")
     st.stop()
 
-# --- 2. CERVEAU (Universel) ---
+# --- 2. CERVEAU (Mode "Chunking" Robuste) ---
 @st.cache_resource(show_spinner=False)
 def charger_cerveau():
     client = chromadb.Client()
@@ -31,7 +31,6 @@ def charger_cerveau():
         pass
     collection = client.create_collection("paie")
 
-    # Nom du fichier confirmé
     fichier = "accidents-du-travail.txt"
     
     if not os.path.exists(fichier):
@@ -40,41 +39,43 @@ def charger_cerveau():
     with open(fichier, "r", encoding="utf-8") as f:
         contenu = f.read()
 
-    # --- NOUVEAU DECOUPAGE (PARAGRAPHES) ---
-    # On coupe à chaque double saut de ligne (paragraphe naturel)
-    # Plus besoin de balises 
-    parts = contenu.split("\n\n")
+    # --- DÉCOUPAGE MATHÉMATIQUE (Chunking) ---
+    # On ne cherche plus les paragraphes. On coupe tous les 1000 caractères.
+    # C'est impossible à rater.
+    taille_bloc = 1000
+    chevauchement = 100 # On garde un peu de contexte entre chaque bloc
     
     docs = []
     ids = []
     
-    barre = st.progress(0, text="Lecture du fichier...")
-    total = len(parts)
-
-    for i, part in enumerate(parts):
-        texte = part.strip()
-        # On garde les paragraphes qui ont du sens (+ de 50 caractères)
-        if len(texte) > 50:
-            # On crée une référence automatique "Paragraphe X"
-            docs.append(f"Extrait {i+1}: {texte}")
-            ids.append(f"doc_{i}")
+    # Boucle mathématique sur le texte
+    for i in range(0, len(contenu), taille_bloc - chevauchement):
+        morceau = contenu[i : i + taille_bloc]
         
-        if total > 0 and i % 10 == 0:
-            barre.progress(min(i / total, 1.0))
-    
-    barre.empty()
+        # Si le morceau contient du texte (plus de 10 lettres)
+        if len(morceau.strip()) > 10:
+            docs.append(f"Extrait {i//taille_bloc + 1}: {morceau}")
+            ids.append(f"doc_{i}")
 
     if not docs:
         return "VIDE"
 
     # Vectorisation
     embeddings = []
-    for doc in docs:
+    barre = st.progress(0, text="Mémorisation des blocs...")
+    total = len(docs)
+
+    for i, doc in enumerate(docs):
         try:
             res = genai.embed_content(model="models/embedding-001", content=doc, task_type="retrieval_document")
             embeddings.append(res['embedding'])
         except:
             pass
+        
+        if total > 0 and i % 5 == 0:
+            barre.progress(min(i / total, 1.0))
+    
+    barre.empty()
     
     if len(embeddings) > 0:
         taille = min(len(docs), len(embeddings))
@@ -92,14 +93,15 @@ with st.spinner("Analyse du document..."):
     db = charger_cerveau()
 
 if db == "INTROUVABLE":
-    st.error("❌ Le fichier 'accidents-du-travail.txt' est introuvable.")
+    st.error("❌ Fichier 'accidents-du-travail.txt' introuvable.")
 elif db == "VIDE":
-    st.error("❌ Le fichier est lu mais semble vide (pas assez de texte).")
+    st.error("❌ Le fichier est lu mais semble totalement vide.")
 elif db:
-    st.success("✅ Mémento chargé avec succès !")
+    st.success("✅ Mémento chargé ! (Mode Chunking activé)")
 
+    # --- 4. CHAT ---
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis prêt."}]
+        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Posez votre question."}]
 
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["content"])
@@ -121,6 +123,6 @@ elif db:
                 st.chat_message("assistant").write(reponse.text)
                 st.session_state.messages.append({"role": "assistant", "content": reponse.text})
             else:
-                st.warning("Je ne trouve pas d'info pertinente.")
+                st.warning("Je n'ai rien trouvé de pertinent.")
         except Exception as e:
             st.error(f"Erreur : {e}")
