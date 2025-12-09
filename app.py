@@ -6,7 +6,7 @@ import streamlit as st
 import google.generativeai as genai
 import chromadb
 import os
-import time  # <--- Le secret pour ne pas se faire bloquer
+import time
 
 st.set_page_config(page_title="Expert RH", page_icon="🧠")
 st.title("Assistant Paie & RH 🧠")
@@ -14,6 +14,7 @@ st.title("Assistant Paie & RH 🧠")
 # --- 1. CONNEXION ---
 with st.sidebar:
     st.header("🔐 Connexion")
+    st.info("💡 Le système est bridé pour protéger votre quota gratuit.")
     api_key = st.text_input("Clé API Google", type="password")
     if api_key:
         genai.configure(api_key=api_key)
@@ -22,7 +23,7 @@ if not api_key:
     st.warning("⬅️ Veuillez entrer votre clé API.")
     st.stop()
 
-# --- 2. CERVEAU ---
+# --- 2. CERVEAU (Version Sécurisée) ---
 @st.cache_resource(show_spinner=False)
 def charger_cerveau():
     client = chromadb.Client()
@@ -57,41 +58,46 @@ def charger_cerveau():
         st.error("❌ Le fichier est vide.")
         return None
 
-    # --- VECTORISATION AVEC FREIN ---
+    # --- LIMITE DE SÉCURITÉ ---
+    # On indexe seulement les 50 premiers blocs pour la démo
+    if len(docs) > 50:
+        docs = docs[:50]
+        ids = ids[:50]
+        st.toast("⚠️ Mode Éco : Seuls les 50 premiers extraits sont chargés.", icon="🛡️")
+
+    # --- VECTORISATION LENTE ---
     embeddings = []
-    barre = st.progress(0, text="Apprentissage (Mode Prudent)...")
+    barre = st.progress(0, text="Chargement lent (Anti-blocage)...")
     
-    # On teste d'abord UN SEUL bloc
+    # Test de connexion
     try:
         genai.embed_content(model="models/embedding-001", content="Test", task_type="retrieval_document")
     except Exception as e:
         barre.empty()
-        st.error(f"⛔️ ERREUR GOOGLE : {e}")
+        st.error(f"⛔️ ERREUR QUOTA : {e}")
+        st.info("Revenez demain après 9h00 ou changez de clé API.")
         return None
 
-    # Boucle lente pour respecter le quota gratuit
     total = len(docs)
     for i, doc in enumerate(docs):
         try:
             res = genai.embed_content(model="models/embedding-001", content=doc, task_type="retrieval_document")
             embeddings.append(res['embedding'])
             
-            # PAUSE DE SÉCURITÉ : 2 secondes entre chaque envoi
-            time.sleep(2) 
+            # PAUSE OBLIGATOIRE (1.5 secondes)
+            time.sleep(1.5) 
             
         except Exception as e:
-            print(f"Erreur bloc {i}: {e}")
-            # Si on dépasse le quota, on attend plus longtemps
-            time.sleep(10)
+            st.warning(f"Pause forcée (Quota atteint à {i/total:.0%}). On continue avec ce qu'on a.")
+            break
         
-        # Mise à jour barre
         if total > 0:
-            barre.progress(min((i + 1) / total, 1.0), text=f"Lecture page {i+1}/{total}...")
+            barre.progress(min((i + 1) / total, 1.0))
     
     barre.empty()
     
     if len(embeddings) > 0:
-        taille = min(len(docs), len(embeddings))
+        taille = len(embeddings)
         collection.add(
             documents=docs[:taille], 
             ids=ids[:taille], 
@@ -102,11 +108,11 @@ def charger_cerveau():
     return None
 
 # --- 3. LANCEMENT ---
-with st.spinner("Analyse du document en cours (ça peut être long)..."):
+with st.spinner("Démarrage..."):
     db = charger_cerveau()
 
 if db:
-    st.success("✅ Mémento chargé ! Prêt à répondre.")
+    st.success("✅ Assistant prêt !")
 
     if "messages" not in st.session_state:
         st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis prêt."}]
@@ -131,6 +137,6 @@ if db:
                 st.chat_message("assistant").write(reponse.text)
                 st.session_state.messages.append({"role": "assistant", "content": reponse.text})
             else:
-                st.warning("Je n'ai rien trouvé de pertinent.")
+                st.warning("Info non trouvée dans les extraits chargés.")
         except Exception as e:
             st.error(f"Erreur : {e}")
