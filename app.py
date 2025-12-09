@@ -29,11 +29,12 @@ def check_and_build_database():
     if needs_building:
         st.info("⚙️ Première installation : Lecture du Mémento en cours...")
         
-        # 1. Init DB
+        # 1. Init DB - Force recreate to ensure clean state
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS documents")
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS documents (
+            CREATE TABLE documents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 filename TEXT,
                 chunk_index INTEGER,
@@ -41,31 +42,28 @@ def check_and_build_database():
             )
         ''')
         
-        # 2. Read File
-        file_path = os.path.join("documents", "accidents du travail.txt")
-        if os.path.exists(file_path):
-            with open(file_path, "r", encoding="utf-8") as f:
+        # 2. Read File - Check root directly as requested for Cloud env
+        filename_target = "accidents du travail.txt"
+        
+        if os.path.exists(filename_target):
+            with open(filename_target, "r", encoding="utf-8") as f:
                 text = f.read()
             
-            # 3. Chunking (Paragraphs or fixed size fallback)
-            # Simple paragraph split by double newline
+            # 3. Chunking (Paragraphs)
             chunks = [c.strip() for c in text.split('\n\n') if c.strip()]
             
-            # If paragraphs are too huge, we might want to split them further, 
-            # but for this specific request, "Découpe le texte" is sufficient.
-            # Reuse logic from ingest.py? ingest.py had specific logic but no delimiters found here.
-            # Let's stick to paragraph splitting as planned.
-            
-            filename = "accidents du travail.txt"
             for i, chunk in enumerate(chunks):
                 cursor.execute(
                     "INSERT INTO documents (filename, chunk_index, text) VALUES (?, ?, ?)",
-                    (filename, i, chunk)
+                    (filename_target, i, chunk)
                 )
             conn.commit()
-            st.success("✅ Mémento mémorisé !")
+            st.success("✅ Mémento chargé avec succès !")
         else:
-            st.error(f"Fichier source introuvable : {file_path}")
+            # Debug info if file missing
+            st.error(f"Fichier source introuvable : {filename_target}")
+            st.write("📂 Fichiers présents dans le dossier actuel :")
+            st.write(os.listdir('.'))
         
         conn.close()
 
@@ -152,7 +150,7 @@ def main():
     check_and_build_database()
 
     st.title("French Payroll Expert - Assistant IA")
-    st.subheader("Votre assistant conformité basé sur le Mémento Social 2023.")
+    st.subheader("Votre assistant conformité basé sur le Mémento Social.")
     
     # Sidebar
     st.sidebar.header("Configuration")
@@ -192,7 +190,7 @@ def main():
             except Exception as e:
                 st.sidebar.error(f"Échec connexion : {e}")
 
-    st.sidebar.header("Informations fournies basées sur les textes suivants")
+    st.sidebar.header("Documents Indexés")
     docs = get_documents_list()
     if docs:
         for doc in docs:
@@ -225,7 +223,7 @@ def main():
                 model = genai.GenerativeModel(selected_model_name)
                 # print(f"DEBUG: Modèle utilisé : {selected_model_name}")
                 
-                with st.spinner("Merci de patienter. Nous recherchons vos informations."):
+                with st.spinner("Merci de patienter, nous recherchons vos informations"):
                     # 1. Retrieval
                     results = search_documents(prompt, limit=3)
                     print("DEBUG: Recherche en base terminée")
