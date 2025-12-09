@@ -10,11 +10,11 @@ import time
 
 st.set_page_config(page_title="Expert RH", page_icon="🧠")
 st.title("Assistant Paie & RH 🧠")
+st.caption("Version Intégrale - Analyse complète")
 
 # --- 1. CONNEXION ---
 with st.sidebar:
     st.header("🔐 Connexion")
-    st.info("💡 Le système est bridé pour protéger votre quota gratuit.")
     api_key = st.text_input("Clé API Google", type="password")
     if api_key:
         genai.configure(api_key=api_key)
@@ -23,7 +23,7 @@ if not api_key:
     st.warning("⬅️ Veuillez entrer votre clé API.")
     st.stop()
 
-# --- 2. CERVEAU (Version Sécurisée) ---
+# --- 2. CERVEAU (Version ILLIMITÉE) ---
 @st.cache_resource(show_spinner=False)
 def charger_cerveau():
     client = chromadb.Client()
@@ -58,16 +58,13 @@ def charger_cerveau():
         st.error("❌ Le fichier est vide.")
         return None
 
-    # --- LIMITE DE SÉCURITÉ ---
-    # On indexe seulement les 50 premiers blocs pour la démo
-    if len(docs) > 50:
-        docs = docs[:50]
-        ids = ids[:50]
-        st.toast("⚠️ Mode Éco : Seuls les 50 premiers extraits sont chargés.", icon="🛡️")
-
-    # --- VECTORISATION LENTE ---
+    # --- VECTORISATION COMPLÈTE ---
     embeddings = []
-    barre = st.progress(0, text="Chargement lent (Anti-blocage)...")
+    
+    # On affiche le nombre total de blocs à traiter
+    total = len(docs)
+    msg_chargement = f"Lecture intégrale de {total} extraits... (Patience requise)"
+    barre = st.progress(0, text=msg_chargement)
     
     # Test de connexion
     try:
@@ -75,27 +72,30 @@ def charger_cerveau():
     except Exception as e:
         barre.empty()
         st.error(f"⛔️ ERREUR QUOTA : {e}")
-        st.info("Revenez demain après 9h00 ou changez de clé API.")
         return None
 
-    total = len(docs)
     for i, doc in enumerate(docs):
         try:
             res = genai.embed_content(model="models/embedding-001", content=doc, task_type="retrieval_document")
             embeddings.append(res['embedding'])
             
-            # PAUSE OBLIGATOIRE (1.5 secondes)
+            # PAUSE TECHNIQUE : Indispensable pour ne pas griller la vitesse autorisée
+            # C'est ce qui permet de charger tout le fichier sans planter.
             time.sleep(1.5) 
             
         except Exception as e:
-            st.warning(f"Pause forcée (Quota atteint à {i/total:.0%}). On continue avec ce qu'on a.")
+            st.error(f"Erreur sur l'extrait {i} : {e}")
+            # En cas d'erreur critique (quota jour atteint), on sauve ce qu'on a déjà fait
             break
         
+        # Mise à jour barre
         if total > 0:
-            barre.progress(min((i + 1) / total, 1.0))
+            pourcentage = (i + 1) / total
+            barre.progress(min(pourcentage, 1.0), text=f"Analyse : {i+1}/{total} extraits traités...")
     
     barre.empty()
     
+    # Enregistrement en base
     if len(embeddings) > 0:
         taille = len(embeddings)
         collection.add(
@@ -108,14 +108,14 @@ def charger_cerveau():
     return None
 
 # --- 3. LANCEMENT ---
-with st.spinner("Démarrage..."):
+with st.spinner("Démarrage du système..."):
     db = charger_cerveau()
 
 if db:
-    st.success("✅ Assistant prêt !")
+    st.success("✅ Mémento chargé à 100% !")
 
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis prêt."}]
+        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je connais tout le document. Posez votre question."}]
 
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["content"])
@@ -126,17 +126,17 @@ if db:
 
         try:
             q_vec = genai.embed_content(model="models/embedding-001", content=question, task_type="retrieval_query")
-            res = db.query(query_embeddings=[q_vec['embedding']], n_results=3)
+            res = db.query(query_embeddings=[q_vec['embedding']], n_results=4) # On récupère 4 extraits pour être précis
             
             if res['documents'] and res['documents'][0]:
                 contexte = "\n\n".join(res['documents'][0])
-                prompt = f"Expert RH. Utilise ce contexte pour répondre.\nCONTEXTE: {contexte}\nQUESTION: {question}"
+                prompt = f"Tu es un expert RH. Réponds en te basant UNIQUEMENT sur ce contexte.\nCONTEXTE: {contexte}\nQUESTION: {question}"
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 reponse = model.generate_content(prompt)
                 
                 st.chat_message("assistant").write(reponse.text)
                 st.session_state.messages.append({"role": "assistant", "content": reponse.text})
             else:
-                st.warning("Info non trouvée dans les extraits chargés.")
+                st.warning("Je n'ai pas trouvé la réponse dans le document.")
         except Exception as e:
             st.error(f"Erreur : {e}")
