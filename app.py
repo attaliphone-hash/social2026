@@ -1,263 +1,167 @@
 import streamlit as st
-import sqlite3
-import re
-import os
 import google.generativeai as genai
+import chromadb
+import re
 
-# Configuration
-DB_NAME = "ingestion.db"
+# --- Configuration de la Page ---
+st.set_page_config(page_title="Payroll Bot", page_icon="⚖️")
+st.title("French Payroll Expert - Assistant IA 🧠")
+st.caption("Moteur de Recherche Sémantique (RAG) alimenté par Gemini & ChromaDB")
 
-def check_and_build_database():
-    """Checks if the database is ready, otherwise builds it from the text file."""
-    db_exists = os.path.exists(DB_NAME)
-    needs_building = False
+# --- Gestion de la Clé API ---
+if "api_key" not in st.session_state:
+    st.session_state.api_key = ""
 
-    if not db_exists:
-        needs_building = True
-    else:
-        try:
-            conn = sqlite3.connect(DB_NAME)
-            cursor = conn.cursor()
-            cursor.execute("SELECT count(*) FROM documents")
-            count = cursor.fetchone()[0]
-            if count == 0:
-                needs_building = True
-            conn.close()
-        except sqlite3.OperationalError:
-            needs_building = True
+with st.sidebar:
+    st.header("🔐 Configuration")
+    api_input = st.text_input("Collez votre clé Google API ici", type="password", value=st.session_state.api_key)
+    if api_input:
+        st.session_state.api_key = api_input
+        genai.configure(api_key=api_input)
+    
+    st.markdown("---")
+    st.info("Ce modèle utilise la **recherche vectorielle**. Il comprend le sens des mots (ex: 'repas' = 'nourriture').")
 
-    if needs_building:
-        st.info("⚙️ Première installation : Lecture du Mémento en cours...")
-        
-        # 1. Init DB - Force recreate to ensure clean state
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("DROP TABLE IF EXISTS documents")
-        cursor.execute('''
-            CREATE TABLE documents (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                filename TEXT,
-                chunk_index INTEGER,
-                text TEXT
-            )
-        ''')
-        
-        # 2. Read File - Check root directly as requested for Cloud env
-        filename_target = "accidents du travail.txt"
-        
-        if os.path.exists(filename_target):
-            with open(filename_target, "r", encoding="utf-8") as f:
-                text = f.read()
-            
-            # 3. Chunking (Paragraphs)
-            chunks = [c.strip() for c in text.split('\n\n') if c.strip()]
-            
-            for i, chunk in enumerate(chunks):
-                cursor.execute(
-                    "INSERT INTO documents (filename, chunk_index, text) VALUES (?, ?, ?)",
-                    (filename_target, i, chunk)
-                )
-            conn.commit()
-            st.success("✅ Mémento chargé avec succès !")
-        else:
-            # Debug info if file missing
-            st.error(f"Fichier source introuvable : {filename_target}")
-            st.write("📂 Fichiers présents dans le dossier actuel :")
-            st.write(os.listdir('.'))
-        
-        conn.close()
+# Arrêt si pas de clé
+if not st.session_state.api_key:
+    st.warning("⬅️ Veuillez entrer votre clé API dans la barre latérale pour activer l'intelligence.")
+    st.stop()
 
-# French Stop Words & Configuration (Reused from V2)
-STOP_WORDS = {
-    "le", "la", "les", "de", "des", "du", "un", "une", "et", "ou", "à", "en", 
-    "pour", "par", "sur", "dans", "ce", "cette", "ces", "je", "tu", "il", "elle", 
-    "nous", "vous", "ils", "elles", "est", "sont", "a", "ont", "l", "d", "qu", 
-    "que", "qui", "aux", "avec", "sans", "sous"
-}
-
-# Weighted Keywords Categories (Reused from V2 for Retrieval)
-ACTION_KEYWORDS = {"déclarer", "envoyer", "transmettre", "payer", "verser", "licencier", "rompre", "avertir", "remplir", "saisir"}
-TIME_KEYWORDS = {"délai", "délais", "temps", "durée", "heure", "heures", "jour", "jours", "mois", "an", "année", "quand", "date"}
-DECLARATION_TRIGGER = {"déclarer", "déclaration"}
-DECLARATION_BOOST_TERMS = ["48 heures", "net-entreprises", "formulaire", "cerfa"]
-
-def get_connection():
-    return sqlite3.connect(DB_NAME)
-
-def get_documents_list():
-    conn = get_connection()
-    cursor = conn.cursor()
+# --- Cœur du Réacteur : Base Vectorielle ---
+@st.cache_resource(show_spinner=False)
+def build_vector_db():
+    """Lit le fichier, vectorise chaque paragraphe et indexe dans ChromaDB."""
+    
+    # 1. Initialisation de ChromaDB (Mémoire volatile pour la démo)
+    chroma_client = chromadb.Client()
     try:
-        cursor.execute("SELECT DISTINCT filename FROM documents")
-        files = [row[0] for row in cursor.fetchall()]
-    except sqlite3.OperationalError:
-        files = []
-    conn.close()
-    return files
+        chroma_client.delete_collection("payroll_docs") # Nettoyage si existe
+    except:
+        pass
+    collection = chroma_client.create_collection(name="payroll_docs")
 
-def clean_and_tokenize(text):
-    text = re.sub(r'[^\w\s]', ' ', text.lower())
-    tokens = text.split()
-    return [t for t in tokens if t not in STOP_WORDS and len(t) > 1]
+    # 2. Lecture du fichier source
+    try:
+        with open("accidents du travail.txt", "r", encoding="utf-8") as f:
+            text = f.read()
+    except FileNotFoundError:
+        st.error("❌ Fichier 'accidents du travail.txt' introuvable à la racine.")
+        return None
 
-def calculate_score_v2(query_tokens, chunk_text, original_query):
-    # Reuse V2 Scoring logic for good retrieval
-    chunk_tokens = set(clean_and_tokenize(chunk_text))
-    score = 0
+    # 3. Découpage intelligent par balise 
+    # On sépare le texte à chaque fois qu'on voit "
+    metadatas = []
+    ids = []
     
-    for token in query_tokens:
-        if token in chunk_tokens:
-            if token in ACTION_KEYWORDS:
-                score += 5
-            elif token in TIME_KEYWORDS:
-                score += 3
-            else:
-                score += 1
-            
-    if any(trigger in original_query.lower() for trigger in DECLARATION_TRIGGER):
-        for term in DECLARATION_BOOST_TERMS:
-            if term in chunk_text.lower():
-                score += 50
-                break 
-
-    return score
-
-def search_documents(query, limit=3):
-    """Retrieve top N chunks."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT filename, text FROM documents")
-    all_chunks = cursor.fetchall()
-    conn.close()
+    total_parts = len(parts)
     
-    query_tokens = clean_and_tokenize(query)
-    if not query_tokens:
-        return []
-
-    scored_results = []
-    for filename, text in all_chunks:
-        score = calculate_score_v2(query_tokens, text, query)
-        if score > 0:
-            scored_results.append((score, filename, text))
-            
-    scored_results.sort(key=lambda x: x[0], reverse=True)
-    return scored_results[:limit]
-
-def main():
-    st.set_page_config(page_title="Payroll Bot", page_icon="🤖")
-    
-    # Self-healing check
-    check_and_build_database()
-
-    st.title("French Payroll Expert - Assistant IA")
-    st.subheader("Votre assistant conformité basé sur le Mémento Social.")
-    
-    # Sidebar
-    st.sidebar.header("Configuration")
-    
-    # Authentification
-    access_password = st.sidebar.text_input("Mot de passe d'accès", type="password")
-    if access_password != "socialpro2026":
-        st.sidebar.warning("Accès Restreint 🔒")
-        st.stop()
+    # Boucle sur chaque morceau de texte
+    for i, part in enumerate(parts):
+        if not part.strip(): continue # On saute les vides
         
-    api_key = st.sidebar.text_input("Collez votre clé Google API ici", type="password")
-    
-    selected_model_name = "gemini-pro" # Default
-    
-    if api_key:
         try:
-            genai.configure(api_key=api_key)
-            # Fetch available models
-            model_list = []
-            for m in genai.list_models():
-                if 'generateContent' in m.supported_generation_methods:
-                    model_list.append(m.name)
-            
-            if model_list:
-                selected_model_name = st.sidebar.selectbox("Choisir le modèle", model_list, index=0)
-            else:
-                st.sidebar.error("Aucun modèle compatible trouvé pour cette clé.")
-        except Exception as e:
-            st.sidebar.error(f"Erreur API Key : {e}")
-            
-        if st.sidebar.button("Tester la connexion"):
-            try:
-                model_test = genai.GenerativeModel(selected_model_name)
-                with st.spinner(f"Test de connexion avec {selected_model_name}..."):
-                    response_test = model_test.generate_content("Coucou via API Test")
-                st.sidebar.success(f"Connexion OK ! Réponse : {response_test.text}")
-            except Exception as e:
-                st.sidebar.error(f"Échec connexion : {e}")
-
-    st.sidebar.header("Documents Indexés")
-    docs = get_documents_list()
-    if docs:
-        for doc in docs:
-            st.sidebar.text(f"📄 {doc}")
-    else:
-        st.sidebar.warning("Aucun document trouvé.")
-
-    # Chat Interface
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-    if prompt := st.chat_input("Posez votre question..."):
-        st.chat_message("user").markdown(prompt)
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        
-        if not api_key:
-            response = "🚫 **Veuillez entrer une clé API Google dans la barre latérale pour activer l'intelligence.**"
-            st.chat_message("assistant").markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
-            return
-
-        with st.chat_message("assistant"):
-            try:
-                genai.configure(api_key=api_key)
-                # print("DEBUG: Clé API reçue") # Removed to reduce noise or keep if user wants
-                model = genai.GenerativeModel(selected_model_name)
-                # print(f"DEBUG: Modèle utilisé : {selected_model_name}")
+            # On récupère l'ID et le texte (ex: " 259] Le texte de loi...")
+            if "]" in part:
+                source_id, content = part.split("]", 1)
+                source_id = source_id.strip()
+                content = content.strip()
                 
-                with st.spinner("Merci de patienter, nous recherchons vos informations"):
-                    # 1. Retrieval
-                    results = search_documents(prompt, limit=3)
-                    print("DEBUG: Recherche en base terminée")
+                if len(content) > 10: # On ignore les fragments trop courts
+                    # GÉNÉRATION DU VECTEUR (L'étape magique)
+                    # On demande à Google : "Transforme ce texte en coordonnées mathématiques"
+                    embedding_result = genai.embed_content(
+                        model="models/embedding-001",
+                        content=content,
+                        task_type="retrieval_document",
+                        title="Payroll Rule"
+                    )
                     
-                    if not results:
-                        response = "Je n'ai pas trouvé d'information pertinente dans les documents pour répondre à cette question."
-                    else:
-                        # 2. Augmented Generation
-                        context_text = ""
-                        for idx, (score, fname, text) in enumerate(results):
-                            context_text += f"Extrait {idx+1} (Source: {fname}):\n{text}\n\n"
-                            
-                        rag_prompt = f"""Tu es un expert RH. Voici des extraits du Mémento Social :
-{context_text}
+                    documents.append(content)
+                    metadatas.append({"source": source_id})
+                    ids.append(f"doc_{source_id}")
+                    
+                    # Ajout dans la base vectorielle
+                    collection.add(
+                        documents=[content],
+                        embeddings=[embedding_result['embedding']],
+                        metadatas=[{"source": source_id}],
+                        ids=[f"doc_{source_id}"]
+                    )
+        except Exception as e:
+            print(f"Erreur sur le chunk {i}: {e}")
+            
+        # Mise à jour barre de progression
+        my_bar.progress(min((i + 1) / total_parts, 1.0), text=progress_text)
 
-Réponds à la question : '{prompt}' en utilisant ces extraits.
-Sois clair, pédagogique et cite la source entre parenthèses lorsque tu utilises une information.
-Si les extraits ne contiennent pas la réponse, dis-le honnêtement.
-"""
-                        # Call Gemini
-                        print("DEBUG: Envoi à Gemini...")
-                        try:
-                            ai_response = model.generate_content(rag_prompt)
-                            response = ai_response.text
-                        except Exception as e_gemini:
-                            raise Exception(f"Erreur lors de l'appel Gemini : {e_gemini}")
-                        
-                st.markdown(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
-                
-            except Exception as e:
-                error_msg = f"❌ Erreur technique : {e}"
-                st.error(error_msg)
-                print(f"DEBUG ERROR: {e}")
+    my_bar.empty() # On cache la barre quand c'est fini
+    return collection
 
-if __name__ == "__main__":
-    main()
+# Lancement de l'indexation (se fait une seule fois grâce au cache)
+with st.spinner("Chargement du cerveau numérique..."):
+    collection = build_vector_db()
+
+if collection:
+    st.success("✅ Mémento Social indexé et prêt !")
+
+# --- Interface de Chat ---
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis votre expert RH. Posez-moi une question sur les accidents du travail."}]
+
+# Affichage de l'historique
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
+
+# Zone de saisie
+if user_query := st.chat_input("Ex: Est-ce que je suis couvert si je me blesse à la cantine ?"):
+    
+    # 1. Affiche la question utilisateur
+    st.session_state.messages.append({"role": "user", "content": user_query})
+    st.chat_message("user").write(user_query)
+
+    # 2. Recherche Vectorielle (Retrieval)
+    # On transforme la question en vecteur pour trouver les concepts proches
+    query_embedding = genai.embed_content(
+        model="models/embedding-001",
+        content=user_query,
+        task_type="retrieval_query"
+    )
+    
+    results = collection.query(
+        query_embeddings=[query_embedding['embedding']],
+        n_results=4 # On prend les 4 meilleurs paragraphes
+    )
+    
+    # 3. Construction du contexte
+    context_text = ""
+    for doc, meta in zip(results['documents'][0], results['metadatas'][0]):
+        context_text += f"[Source {meta['source']}] : {doc}\n\n"
+
+    # 4. Génération de la réponse (Generation)
+    prompt = f"""Tu es un expert juridique Senior en droit social.
+    Ta mission est de répondre à la question de l'utilisateur en te basant EXCLUSIVEMENT sur les extraits du Mémento fournis ci-dessous.
+    
+    Règles :
+    1. Sois précis et pédagogue.
+    2. Cite systématiquement tes sources entre parenthèses ou crochets (ex: [Source 12]).
+    3. Si la réponse n'est pas dans le texte, dis "Je ne trouve pas cette information dans le Mémento". Ne l'invente pas.
+    
+    CONTEXTE DU MÉMENTO :
+    {context_text}
+    
+    QUESTION UTILISATEUR :
+    {user_query}
+    """
+
+    # Appel à Gemini Pro
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    with st.chat_message("assistant"):
+        with st.spinner("Analyse juridique en cours..."):
+            response = model.generate_content(prompt)
+            st.markdown(response.text)
+            
+            # Sauvegarde historique
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
+            
+            # Bonus : Afficher les sources brutes (Preuve)
+            with st.expander("🔍 Voir les extraits juridiques utilisés"):
+                st.markdown(context_text)
