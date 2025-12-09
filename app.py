@@ -18,13 +18,12 @@ with st.sidebar:
         genai.configure(api_key=api_key)
 
 if not api_key:
-    st.warning("⬅️ Veuillez entrer votre clé API pour démarrer.")
+    st.warning("⬅️ Veuillez entrer votre clé API.")
     st.stop()
 
-# --- 2. INTELLIGENCE ---
+# --- 2. CERVEAU (Universel) ---
 @st.cache_resource(show_spinner=False)
 def charger_cerveau():
-    # Préparation de la mémoire
     client = chromadb.Client()
     try:
         client.delete_collection("paie")
@@ -32,81 +31,75 @@ def charger_cerveau():
         pass
     collection = client.create_collection("paie")
 
-    # NOM CONFIRMÉ PAR LE DÉTECTIVE
-    nom_fichier = "accidents-du-travail.txt"
+    # Nom du fichier confirmé
+    fichier = "accidents-du-travail.txt"
     
-    if not os.path.exists(nom_fichier):
-        return None
+    if not os.path.exists(fichier):
+        return "INTROUVABLE"
 
-    # Lecture
-    with open(nom_fichier, "r", encoding="utf-8") as f:
+    with open(fichier, "r", encoding="utf-8") as f:
         contenu = f.read()
 
-    # Découpage sécurisé (Anti-bug copie)
-    partie_a = "["
-    partie_b = "source:"
-    balise = partie_a + partie_b
-    parts = contenu.split(balise)
-
+    # --- NOUVEAU DECOUPAGE (PARAGRAPHES) ---
+    # On coupe à chaque double saut de ligne (paragraphe naturel)
+    # Plus besoin de balises 
+    parts = contenu.split("\n\n")
+    
     docs = []
     ids = []
     
-    # Barre de chargement
-    barre = st.progress(0, text="Lecture du Mémento...")
+    barre = st.progress(0, text="Lecture du fichier...")
     total = len(parts)
 
     for i, part in enumerate(parts):
-        if "]" in part:
-            try:
-                morceaux = part.split("]", 1)
-                ref = morceaux[0]
-                texte = morceaux[1].strip()
-                
-                if len(texte) > 10:
-                    docs.append(f"Source {ref}: {texte}")
-                    ids.append(f"doc_{i}")
-            except:
-                pass
+        texte = part.strip()
+        # On garde les paragraphes qui ont du sens (+ de 50 caractères)
+        if len(texte) > 50:
+            # On crée une référence automatique "Paragraphe X"
+            docs.append(f"Extrait {i+1}: {texte}")
+            ids.append(f"doc_{i}")
         
         if total > 0 and i % 10 == 0:
             barre.progress(min(i / total, 1.0))
     
     barre.empty()
 
-    # Création des vecteurs
-    if docs:
-        embeddings = []
-        for doc in docs:
-            try:
-                res = genai.embed_content(model="models/embedding-001", content=doc, task_type="retrieval_document")
-                embeddings.append(res['embedding'])
-            except:
-                pass
-        
-        if len(embeddings) > 0:
-            taille_min = min(len(docs), len(embeddings))
-            collection.add(
-                documents=docs[:taille_min], 
-                ids=ids[:taille_min], 
-                embeddings=embeddings[:taille_min]
-            )
-            return collection
-            
-    return None
+    if not docs:
+        return "VIDE"
 
-# --- 3. DÉMARRAGE ---
-with st.spinner("Initialisation du système..."):
-    # On force le rechargement si besoin
+    # Vectorisation
+    embeddings = []
+    for doc in docs:
+        try:
+            res = genai.embed_content(model="models/embedding-001", content=doc, task_type="retrieval_document")
+            embeddings.append(res['embedding'])
+        except:
+            pass
+    
+    if len(embeddings) > 0:
+        taille = min(len(docs), len(embeddings))
+        collection.add(
+            documents=docs[:taille], 
+            ids=ids[:taille], 
+            embeddings=embeddings[:taille]
+        )
+        return collection
+            
+    return "VIDE"
+
+# --- 3. LANCEMENT ---
+with st.spinner("Analyse du document..."):
     db = charger_cerveau()
 
-if not db:
-    st.error(f"❌ Erreur : Le fichier 'accidents-du-travail.txt' est illisible ou vide.")
-else:
-    st.success("✅ Système prêt !")
+if db == "INTROUVABLE":
+    st.error("❌ Le fichier 'accidents-du-travail.txt' est introuvable.")
+elif db == "VIDE":
+    st.error("❌ Le fichier est lu mais semble vide (pas assez de texte).")
+elif db:
+    st.success("✅ Mémento chargé avec succès !")
 
-    # --- 4. CHAT ---
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis votre expert RH."}]
+        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis prêt."}]
 
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["content"])
@@ -121,14 +114,13 @@ else:
             
             if res['documents'] and res['documents'][0]:
                 contexte = "\n\n".join(res['documents'][0])
-                prompt = f"Expert RH. Contexte : {contexte}. Question : {question}"
+                prompt = f"Expert RH. Utilise ce contexte pour répondre.\nCONTEXTE: {contexte}\nQUESTION: {question}"
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 reponse = model.generate_content(prompt)
                 
                 st.chat_message("assistant").write(reponse.text)
                 st.session_state.messages.append({"role": "assistant", "content": reponse.text})
             else:
-                st.warning("Je n'ai rien trouvé de pertinent dans le document.")
-            
+                st.warning("Je ne trouve pas d'info pertinente.")
         except Exception as e:
             st.error(f"Erreur : {e}")
