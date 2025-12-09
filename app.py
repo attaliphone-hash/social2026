@@ -41,8 +41,13 @@ def get_db():
     with open(fichier, "r", encoding="utf-8") as f:
         contenu = f.read()
 
-    # Découpage sécurisé
-    balise = "
+    # Découpage sécurisé pour éviter l'erreur de copie
+    partie_1 = "["
+    partie_2 = "source:"
+    balise = partie_1 + partie_2
+    parts = contenu.split(balise)
+
+    docs = []
     ids = []
     
     # Barre de chargement
@@ -77,7 +82,7 @@ def get_db():
                 res = genai.embed_content(model="models/embedding-001", content=doc, task_type="retrieval_document")
                 embeddings.append(res['embedding'])
             except:
-                pass # Si un vecteur échoue, on continue
+                pass 
         
         # Vérification des tailles avant ajout
         if len(docs) == len(embeddings):
