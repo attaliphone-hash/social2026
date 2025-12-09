@@ -6,6 +6,7 @@ import streamlit as st
 import google.generativeai as genai
 import chromadb
 import os
+import time  # <--- Le secret pour ne pas se faire bloquer
 
 st.set_page_config(page_title="Expert RH", page_icon="🧠")
 st.title("Assistant Paie & RH 🧠")
@@ -56,30 +57,36 @@ def charger_cerveau():
         st.error("❌ Le fichier est vide.")
         return None
 
-    # --- VECTORISATION (SANS SILENCE) ---
+    # --- VECTORISATION AVEC FREIN ---
     embeddings = []
-    barre = st.progress(0, text="Connexion au cerveau Google...")
+    barre = st.progress(0, text="Apprentissage (Mode Prudent)...")
     
-    # On teste d'abord UN SEUL bloc pour voir si la clé marche
+    # On teste d'abord UN SEUL bloc
     try:
-        test_vec = genai.embed_content(model="models/embedding-001", content="Test", task_type="retrieval_document")
+        genai.embed_content(model="models/embedding-001", content="Test", task_type="retrieval_document")
     except Exception as e:
         barre.empty()
-        st.error(f"⛔️ ERREUR GOOGLE API : {e}")
-        st.info("Vérifiez que votre Clé API est valide et que vous avez activé 'Generative AI API' dans la console Google Cloud.")
+        st.error(f"⛔️ ERREUR GOOGLE : {e}")
         return None
 
-    # Si le test passe, on lance tout
+    # Boucle lente pour respecter le quota gratuit
+    total = len(docs)
     for i, doc in enumerate(docs):
         try:
             res = genai.embed_content(model="models/embedding-001", content=doc, task_type="retrieval_document")
             embeddings.append(res['embedding'])
+            
+            # PAUSE DE SÉCURITÉ : 2 secondes entre chaque envoi
+            time.sleep(2) 
+            
         except Exception as e:
-            # On continue même si un bloc échoue, mais on le signale dans la console
             print(f"Erreur bloc {i}: {e}")
+            # Si on dépasse le quota, on attend plus longtemps
+            time.sleep(10)
         
-        if len(docs) > 0 and i % 5 == 0:
-            barre.progress(min(i / len(docs), 1.0))
+        # Mise à jour barre
+        if total > 0:
+            barre.progress(min((i + 1) / total, 1.0), text=f"Lecture page {i+1}/{total}...")
     
     barre.empty()
     
@@ -95,7 +102,7 @@ def charger_cerveau():
     return None
 
 # --- 3. LANCEMENT ---
-with st.spinner("Analyse du document..."):
+with st.spinner("Analyse du document en cours (ça peut être long)..."):
     db = charger_cerveau()
 
 if db:
