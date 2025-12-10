@@ -10,7 +10,7 @@ import time
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Expert RH", page_icon="🧠")
-st.title("Assistant Paie & RH")
+st.title("Assistant Paie, social & RH")
 st.caption("Accès Sécurisé")
 
 # --- 0. LE SAS D'ENTRÉE (Mot de passe) ---
@@ -131,7 +131,7 @@ if db:
 
     # --- 4. CHAT (Moteur Gemini 2.5) ---
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis prêt."}]
+        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis prêt, vous pouvez poser votre question."}]
 
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["content"])
