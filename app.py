@@ -10,8 +10,8 @@ import time
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Expert RH", page_icon="🧠")
-st.title("Assistant Paie & RH 🧠")
-st.caption("Moteur : Gemini 1.5 Flash + Text-Embedding-004")
+st.title("Agent expert Paie & RH ")
+st.caption("PAIE, RÈGLEMENTATION. DES RÉPONSES PRÉCISES BASÉES SUR LES TEXTES OFFICIELS")
 
 # --- 1. SÉCURITÉ & CONNEXION ---
 with st.sidebar:
