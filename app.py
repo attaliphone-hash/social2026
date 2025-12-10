@@ -11,7 +11,7 @@ import time
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Agent expert RH", page_icon="")
 st.title("Agent expert RH, notre spécialiste métier")
-st.caption("Base de connaissance centralisée")
+st.caption("Paie, règlementation, une base de connaissance centralisée")
 
 # --- 1. SÉCURITÉ & CONNEXION ---
 with st.sidebar:
