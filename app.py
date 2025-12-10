@@ -10,8 +10,8 @@ import time
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Expert RH", page_icon="🧠")
-st.title("Assistant Paie & RH 🧠")
-st.caption("Accès Sécurisé - Démo Client")
+st.title("Assistant Paie & RH")
+st.caption("Accès Sécurisé")
 
 # --- 0. LE SAS D'ENTRÉE (Mot de passe) ---
 # C'est ici que l'on bloque les intrus
@@ -36,7 +36,7 @@ with st.sidebar:
     # On regarde d'abord dans le coffre-fort (Secrets) pour le "Zéro Clic"
     if "GOOGLE_API_KEY" in st.secrets:
         api_key = st.secrets["GOOGLE_API_KEY"]
-        st.success("✅ Clé API intégrée (Mode Démo)")
+        st.success("✅ Mode Démo Opérationnel")
     else:
         # Sinon, on demande à l'utilisateur
         api_key = st.text_input("Clé API Google", type="password")
