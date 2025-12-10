@@ -10,8 +10,8 @@ import time
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="Expert RH", page_icon="🧠")
-st.title("Agent expert Paie & RH ")
-st.caption("PAIE, RÈGLEMENTATION. DES RÉPONSES PRÉCISES BASÉES SUR LES TEXTES OFFICIELS")
+st.title("Assistant Paie & RH 🧠")
+st.caption("Moteur : Gemini 2.5 Flash + Text-Embedding-004")
 
 # --- 1. SÉCURITÉ & CONNEXION ---
 with st.sidebar:
@@ -62,13 +62,13 @@ def charger_cerveau():
         st.error("❌ Le fichier est vide.")
         return None
 
-    # Vectorisation (Avec le NOUVEAU modèle)
+    # Vectorisation (Nouveau Modèle 2025)
     embeddings = []
     total = len(docs)
-    msg = f"Analyse intégrale de {total} extraits..."
+    msg = f"Analyse intégrale de {total} extraits avec Gemini 2.5..."
     barre = st.progress(0, text=msg)
     
-    # --- CHANGEMENT ICI : On utilise text-embedding-004 ---
+    # --- CHANGEMENT 1 : Modèle d'embedding à jour ---
     modele_embedding = "models/text-embedding-004" 
 
     # Test de connexion
@@ -84,14 +84,13 @@ def charger_cerveau():
             res = genai.embed_content(model=modele_embedding, content=doc, task_type="retrieval_document")
             embeddings.append(res['embedding'])
             
-            # On garde la pause de sécurité, c'est plus prudent
+            # Pause de sécurité conservée (même si 2.5 est plus rapide, prudence sur le quota)
             time.sleep(1.0) 
             
         except Exception as e:
             st.error(f"Erreur sur l'extrait {i} : {e}")
             break
         
-        # Barre de progression
         if total > 0:
             barre.progress(min((i + 1) / total, 1.0))
     
@@ -106,15 +105,15 @@ def charger_cerveau():
     return None
 
 # --- 3. DÉMARRAGE ---
-with st.spinner("Chargement et analyse du Mémento..."):
+with st.spinner("Mise à jour du cerveau vers Gemini 2.5..."):
     db = charger_cerveau()
 
 if db:
-    st.success("✅ Assistant opérationnel !")
+    st.success("✅ Assistant opérationnel (Moteur v2.5) !")
 
     # --- 4. CHAT ---
     if "messages" not in st.session_state:
-        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis prêt."}]
+        st.session_state.messages = [{"role": "assistant", "content": "Bonjour ! Je suis à jour et prêt."}]
 
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["content"])
@@ -124,14 +123,16 @@ if db:
         st.chat_message("user").write(question)
 
         try:
-            # Recherche avec le NOUVEAU modèle
+            # 1. Recherche (Mémoire)
             q_vec = genai.embed_content(model="models/text-embedding-004", content=question, task_type="retrieval_query")
             res = db.query(query_embeddings=[q_vec['embedding']], n_results=4)
             
             if res['documents'] and res['documents'][0]:
                 contexte = "\n\n".join(res['documents'][0])
+                
+                # --- CHANGEMENT 2 : Le modèle de Chat à jour ---
                 prompt = f"Tu es un expert RH. Réponds via ce contexte UNIQUEMENT.\nCONTEXTE: {contexte}\nQUESTION: {question}"
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash') 
                 reponse = model.generate_content(prompt)
                 
                 st.chat_message("assistant").write(reponse.text)
