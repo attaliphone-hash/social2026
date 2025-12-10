@@ -9,9 +9,9 @@ import os
 import time
 
 # --- CONFIGURATION ---
-st.set_page_config(page_title="Super Expert RH", page_icon="🧠")
-st.title("Super-Cerveau Paie & RH 🧠")
-st.caption("Base de connaissance centralisée (Multi-fichiers)")
+st.set_page_config(page_title="Agent expert RH", page_icon="")
+st.title("Notre spécialiste métier")
+st.caption("Base de connaissance centralisée")
 
 # --- 1. SÉCURITÉ & CONNEXION ---
 with st.sidebar:
