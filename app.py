@@ -16,7 +16,7 @@ import time
 # --- 2. CONFIGURATION DE LA PAGE ---
 st.set_page_config(page_title="Expert RH", page_icon="🧠", layout="wide")
 st.title("Assistant expert Paie, Social & RH")
-st.caption("Accès Sécurisé - Convention Collective & Code du Travail")
+st.caption("Accès personnel Sécurisé")
 
 # --- 3. SÉCURITÉ (Mot de passe) ---
 # Si le mot de passe n'est pas bon, on arrête tout ici.
@@ -126,7 +126,7 @@ def charger_cerveau():
 # --- 6. INTERFACE DE CHAT ---
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Bonjour ! Je suis assistant expert Paie, Social & RH. Posez-moi une question."}
+        {"role": "assistant", "content": "Bonjour ! Je suis l'assistant expert Paie, Social & RH. Posez-moi votre question."}
     ]
 
 # Affichage de l'historique
