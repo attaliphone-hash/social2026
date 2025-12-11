@@ -162,7 +162,7 @@ if question := st.chat_input("Votre question juridique ou paie..."):
         
         QUESTION : {question}"""
 
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         reponse = model.generate_content(prompt_final)
         
         # 4. Affichage de la réponse
