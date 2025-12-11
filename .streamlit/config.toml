@@ -3,5 +3,5 @@ base = "light"
 primaryColor = "#1E3A8A"        # Bleu Nuit (Très pro, type banque/assurance)
 backgroundColor = "#FFFFFF"     # Blanc Pur (Pour la clarté maximale)
 secondaryBackgroundColor = "9FC1EF" # Gris-Bleu (Pour la barre latérale)
-textColor = "#1E293B"           # Gris Anthracite (Plus doux à lire que le noir pur)
+textColor = "#1E3A8A"           # Gris Anthracite (Plus doux à lire que le noir pur)
 font = "sans serif"             # Police moderne et nette
