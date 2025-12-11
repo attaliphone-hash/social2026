@@ -1,7 +1,7 @@
 import os
 import sys
 
-# --- 1. CORRECTIF POUR LE CLOUD (Pour éviter les erreurs SQLite) ---
+# --- 1. CORRECTIF CLOUD (Obligatoire) ---
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -14,59 +14,56 @@ import chromadb
 import time
 
 # --- 2. CONFIGURATION DE LA PAGE ---
-st.set_page_config(page_title="Expert RH", page_icon="🧠", layout="wide")
-st.title("Assistant expert Paie, Social & RH")
-st.caption("Accès personnel Sécurisé")
+st.set_page_config(page_title="Expert RH & Social", page_icon="⚖️", layout="wide")
+st.title("Assistant Expert Paie & Droit Social ⚖️")
+st.caption("Accès Réservé - Base Documentaire 2025")
 
 # --- 3. SÉCURITÉ (Mot de passe) ---
-# Si le mot de passe n'est pas bon, on arrête tout ici.
 if "password_correct" not in st.session_state:
     st.session_state.password_correct = False
 
 if not st.session_state.password_correct:
-    # On utilise un formulaire pour éviter que ça tourne dans le vide
     with st.form("login_form"):
-        st.write("🔒 **Veuillez vous identifier**")
+        st.write("🔒 **Identification Requise**")
         password_input = st.text_input("Mot de passe", type="password")
-        submit_btn = st.form_submit_button("Valider")
+        submit_btn = st.form_submit_button("Entrer")
         
         if submit_btn:
             if password_input == "socialpro2026":
                 st.session_state.password_correct = True
-                st.rerun() # On recharge proprement la page
+                st.rerun()
             else:
-                st.error("❌ Mot de passe incorrect")
-    st.stop() # Arrêt du script si pas connecté
+                st.error("❌ Accès refusé.")
+    st.stop()
 
-# --- 4. CONNEXION API GOOGLE (Une fois connecté) ---
+# --- 4. CONNEXION API ---
 with st.sidebar:
-    st.header("🤖 Configuration")
+    st.header("⚙️ Configuration")
     api_key = None
     
-    # Tentative de récupération depuis les secrets
     try:
         if "GOOGLE_API_KEY" in st.secrets:
             api_key = st.secrets["GOOGLE_API_KEY"]
-            st.success("Clé API connectée")
+            st.success("✅ Clé API connectée (Pro)")
     except:
         pass
 
-    # Si pas de secret, champ manuel
     if not api_key:
-        api_key = st.text_input("Entrez votre clé API Google", type="password")
+        api_key = st.text_input("Clé API Google", type="password")
     
     if api_key:
         genai.configure(api_key=api_key)
 
 if not api_key:
-    st.warning("⚠️ Veuillez configurer la clé API dans la barre latérale pour continuer.")
+    st.warning("⚠️ Veuillez configurer la clé API pour continuer.")
     st.stop()
 
-# --- 5. LE CERVEAU (Fonction de chargement des documents) ---
+# --- 5. LE CERVEAU (RAG) ---
 @st.cache_resource(show_spinner=False)
 def charger_cerveau():
     client = chromadb.Client()
-    nom_collection = "expert_rh_db_v3" # On change le nom pour forcer la mise à jour si besoin
+    # On change le nom pour forcer la mise à jour avec le nouveau modèle
+    nom_collection = "expert_rh_pro_v2" 
 
     try:
         client.delete_collection(nom_collection)
@@ -75,7 +72,7 @@ def charger_cerveau():
     
     collection = client.create_collection(nom_collection)
 
-    # Récupération des fichiers .txt
+    # Lecture de tous les fichiers .txt (Documentation interne + Taux)
     fichiers_txt = [f for f in os.listdir('.') if f.endswith('.txt') and f != 'requirements.txt']
     
     if not fichiers_txt:
@@ -85,36 +82,37 @@ def charger_cerveau():
     docs_ids = []
     compteur = 0
     
-    # Découpage des fichiers
     for fichier in fichiers_txt:
         with open(fichier, "r", encoding="utf-8") as f:
             contenu = f.read()
         
-        taille_bloc = 1500
+        taille_bloc = 1500 # Blocs plus gros pour l'expert (plus de contexte)
         chevauchement = 200
         
         for i in range(0, len(contenu), taille_bloc - chevauchement):
             morceau = contenu[i : i + taille_bloc]
-            docs_textes.append(f"Source: {fichier}\n\n{morceau}")
-            docs_ids.append(f"doc_{compteur}")
-            compteur += 1
+            if len(morceau.strip()) > 10:
+                docs_textes.append(f"Source Documentaire [{fichier}] :\n{morceau}")
+                docs_ids.append(f"doc_{compteur}")
+                compteur += 1
 
     if not docs_textes:
         return None
 
-    # Création des Embeddings (vectorisation)
+    # Embedding
     embeddings = []
-    barre = st.progress(0, text="Lecture des documents juridiques...")
+    barre = st.progress(0, text="Analyse de la documentation interne...")
     
+    modele_embedding = "models/text-embedding-004"
+
     for i, doc in enumerate(docs_textes):
         try:
-            # On utilise le modèle d'embedding de Google
-            res = genai.embed_content(model="models/text-embedding-004", content=doc, task_type="retrieval_document")
+            res = genai.embed_content(model=modele_embedding, content=doc, task_type="retrieval_document")
             embeddings.append(res['embedding'])
-            time.sleep(0.5) # Petite pause pour éviter de saturer l'API
+            time.sleep(0.05) # Rapide car compte payant
         except:
             pass
-        barre.progress((i + 1) / len(docs_textes))
+        barre.progress(min((i + 1) / len(docs_textes), 1.0))
     
     barre.empty()
     
@@ -123,51 +121,62 @@ def charger_cerveau():
         return collection
     return None
 
-# --- 6. INTERFACE DE CHAT ---
+# --- 6. INTERFACE CHAT ---
+with st.spinner("Initialisation de l'Expertise..."):
+    db = charger_cerveau()
+
+if db:
+    st.success("✅ Système expert opérationnel.")
+else:
+    st.error("❌ Documentation introuvable (.txt).")
+
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Bonjour ! Je suis l'assistant expert Paie, Social & RH. Posez-moi votre question."}
+        {"role": "assistant", "content": "Bonjour. Je suis prêt à analyser vos problématiques paie et droit social sur la base des textes 2025."}
     ]
 
-# Affichage de l'historique
 for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+    icone = "👔" if msg["role"] == "assistant" else "👤"
+    st.chat_message(msg["role"], avatar=icone).write(msg["content"])
 
-# Chargement silencieux de la base de données
-db = charger_cerveau()
-
-# Zone de saisie utilisateur
-if question := st.chat_input("Votre question juridique ou paie..."):
-    # 1. On affiche la question
+if question := st.chat_input("Posez votre cas pratique ou question juridique..."):
     st.session_state.messages.append({"role": "user", "content": question})
-    st.chat_message("user").write(question)
+    st.chat_message("user", avatar="👤").write(question)
 
-    if not db:
-        st.error("Je n'ai pas trouvé de documents (.txt) à lire. Vérifiez vos fichiers.")
-        st.stop()
+    if db:
+        try:
+            # 1. Recherche
+            q_vec = genai.embed_content(model="models/text-embedding-004", content=question, task_type="retrieval_query")
+            res = db.query(query_embeddings=[q_vec['embedding']], n_results=7) # Plus de sources pour l'expert
+            
+            if res['documents'] and res['documents'][0]:
+                contexte = "\n\n".join(res['documents'][0])
+                
+                # 2. Prompt "Expert Senior"
+                prompt_final = f"""Tu es un Expert RH et Paie Senior (Consultant).
+                Ta mission : Fournir une analyse juridique précise et sourcée.
+                
+                CONSIGNES STRICTES :
+                1. Base-toi PRIORITAIREMENT sur le CONTEXTE fourni ci-dessous.
+                2. Vérifie systématiquement les dates. Si un document parle de 2024 et que nous sommes en 2025/2026, signale-le ou adapte si tu as la règle générique.
+                3. Cite tes sources (ex: "Selon le fichier taux_mai_2025...").
+                4. Adopte un ton professionnel, factuel et structuré.
+                
+                CONTEXTE DOCUMENTAIRE :
+                {contexte}
+                
+                QUESTION DU CLIENT : {question}"""
 
-    # 2. Recherche dans la base (RAG)
-    try:
-        q_vec = genai.embed_content(model="models/text-embedding-004", content=question, task_type="retrieval_query")
-        res = db.query(query_embeddings=[q_vec['embedding']], n_results=5)
-        contexte = "\n\n".join(res['documents'][0])
-        
-        # 3. Génération de la réponse
-        prompt_final = f"""Tu es un Expert RH et Paie Senior. Réponds à la question en utilisant le contexte fourni.
-        Si la réponse n'est pas dans le contexte, dis-le clairement.
-        Cite l'article ou la source si possible.
-        
-        CONTEXTE JURIDIQUE :
-        {contexte}
-        
-        QUESTION : {question}"""
+                # --- LE MOTEUR PRO (Stable & Rapide) ---
+                # On utilise Gemini 2.0 Flash pour encaisser la charge sans erreur
+                model = genai.GenerativeModel('models/gemini-2.0-flash')
+                
+                reponse = model.generate_content(prompt_final)
+                
+                st.chat_message("assistant", avatar="👔").write(reponse.text)
+                st.session_state.messages.append({"role": "assistant", "content": reponse.text})
+            else:
+                st.warning("⚠️ Information absente de la base documentaire actuelle.")
 
-        model = genai.GenerativeModel('gemini-2.0-flash')
-        reponse = model.generate_content(prompt_final)
-        
-        # 4. Affichage de la réponse
-        st.chat_message("assistant").write(reponse.text)
-        st.session_state.messages.append({"role": "assistant", "content": reponse.text})
-
-    except Exception as e:
-        st.error(f"Une erreur est survenue : {e}")
+        except Exception as e:
+            st.error(f"Erreur système : {e}")
