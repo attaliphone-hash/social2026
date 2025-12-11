@@ -1,4 +1,5 @@
 [theme]
+base = "light"
 primaryColor = "#1E3A8A"        # Bleu Nuit (Très pro, type banque/assurance)
 backgroundColor = "#FFFFFF"     # Blanc Pur (Pour la clarté maximale)
 secondaryBackgroundColor = "#F1F5F9" # Gris-Bleu très pâle (Pour la barre latérale)
