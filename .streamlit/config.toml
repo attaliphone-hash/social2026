@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#1E3A8A"        # Bleu Nuit (Très pro, type banque/assurance)
+backgroundColor = "#FFFFFF"     # Blanc Pur (Pour la clarté maximale)
+secondaryBackgroundColor = "#F1F5F9" # Gris-Bleu très pâle (Pour la barre latérale)
+textColor = "#1E293B"           # Gris Anthracite (Plus doux à lire que le noir pur)
+font = "sans serif"             # Police moderne et nette
