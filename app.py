@@ -36,26 +36,27 @@ if not st.session_state.password_correct:
                 st.error("❌ Accès refusé.")
     st.stop()
 
-# --- 4. CONNEXION API ---
-with st.sidebar:
-    st.header("⚙️ Configuration")
-    api_key = None
-    
-    try:
-        if "GOOGLE_API_KEY" in st.secrets:
-            api_key = st.secrets["GOOGLE_API_KEY"]
-            st.success("✅ Clé API connectée (Pro)")
-    except:
-        pass
+# --- 4. CONNEXION API (Simplifiée sans Sidebar) ---
+api_key = None
 
-    if not api_key:
-        api_key = st.text_input("Clé API Google", type="password")
-    
-    if api_key:
-        genai.configure(api_key=api_key)
+# Tentative de récupération depuis les secrets (cas idéal)
+try:
+    if "GOOGLE_API_KEY" in st.secrets:
+        api_key = st.secrets["GOOGLE_API_KEY"]
+        # On n'affiche rien si ça marche, c'est transparent pour l'utilisateur
+except:
+    pass
 
+# Si la clé n'est pas trouvée (ex: quelqu'un fork le projet), on demande poliment
 if not api_key:
-    st.warning("⚠️ Veuillez configurer la clé API pour continuer.")
+    with st.expander("⚙️ Configuration Technique (Clé API manquante)", expanded=True):
+        st.warning("Aucune clé API trouvée dans les secrets.")
+        api_key = st.text_input("Entrez votre clé API Google", type="password")
+
+if api_key:
+    genai.configure(api_key=api_key)
+else:
+    st.error("⚠️ Clé API requise pour démarrer.")
     st.stop()
 
 # --- 5. LE CERVEAU (RAG) ---
