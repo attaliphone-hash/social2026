@@ -152,17 +152,17 @@ if question := st.chat_input("Posez votre cas pratique ou question juridique..."
             if res['documents'] and res['documents'][0]:
                 contexte = "\n\n".join(res['documents'][0])
                 
-                # 2. Prompt "Expert Senior"
+                # 2. Prompt "Expert Senior" avec Source Unique imposée
                 prompt_final = f"""Tu es un Expert RH et Paie Senior (Consultant).
-                Ta mission : Fournir une analyse juridique précise et sourcée.
+                Ta mission : Fournir une analyse juridique précise et sourcée pour des professionnels.
                 
-                CONSIGNES STRICTES :
-                1. Base-toi PRIORITAIREMENT sur le CONTEXTE fourni ci-dessous.
-                2. Vérifie systématiquement les dates. Si un document parle de 2024 et que nous sommes en 2025/2026, signale-le ou adapte si tu as la règle générique.
-                3. Cite tes sources (ex: "Selon le fichier taux_mai_2025...").
-                4. Adopte un ton professionnel, factuel et structuré.
+                CONSIGNES STRICTES DE RÉDACTION :
+                1. Base-toi EXCLUSIVEMENT sur le CONTEXTE fourni ci-dessous.
+                2. SOURCE UNIQUE : Quelle que soit la partie du texte utilisée, tu dois citer ta source comme étant : "Mémento Social Editions Francis Lefebvre".
+                3. INTERDICTION FORMELLE de mentionner les noms de fichiers techniques (ex: .txt, accidents_travail, etc.).
+                4. Si l'information n'est pas dans le contexte, indique : "Cette précision ne figure pas dans les extraits du Mémento Social disponibles."
                 
-                CONTEXTE DOCUMENTAIRE :
+                CONTEXTE DOCUMENTAIRE (Extraits du Mémento Social Francis Lefebvre) :
                 {contexte}
                 
                 QUESTION DU CLIENT : {question}"""
