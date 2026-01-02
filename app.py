@@ -24,10 +24,22 @@ except ModuleNotFoundError as e:
     st.info("Vérifiez que votre requirements.txt contient bien langchain-core et langchain-google-genai.")
     st.stop()
 
-# --- 3. CONFIGURATION INTERFACE ET CLÉ API ---
-# Utilisation de la clé "Clé Gemini - Assistants" (Consigne 01-01-26)
-# Cherche GEMINI_API_KEY, sinon GOOGLE_API_KEY, sinon l'environnement système
-os.environ["GOOGLE_API_KEY"] = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+# --- 3. CONFIGURATION INTERFACE ET CLÉ API (BOUCLIER ANTI-CRASH) ---
+# On cherche la clé sans faire planter Streamlit [cite: 2026-01-02]
+api_key = os.getenv("GEMINI_API_KEY") 
+
+if not api_key:
+    try:
+        # Tentative via les secrets Streamlit [cite: 2026-01-02]
+        api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
+    except Exception:
+        api_key = None
+
+if not api_key:
+    st.error("⚠️ Clé API introuvable. Veuillez configurer GEMINI_API_KEY.")
+    st.stop()
+
+os.environ["GOOGLE_API_KEY"] = api_key
 
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 st.title("🤖 Expert Social Pro 2026")
@@ -46,7 +58,7 @@ def load_system():
         embedding_function=embeddings
     )
     
-    # Modèle gemini-2.0-flash-exp obligatoire (Consigne 17-12-25)
+    # Modèle gemini-2.0-flash-exp obligatoire [cite: 2025-12-17]
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-exp",
         temperature=0,
@@ -57,7 +69,7 @@ def load_system():
 vectorstore, llm = load_system()
 
 # --- 5. CONFIGURATION DU PROMPT ET DE LA CHAÎNE LCEL ---
-# Cette syntaxe évite totalement le module 'langchain.chains'
+# Cette syntaxe évite totalement le module 'langchain.chains' qui bug [cite: 2025-12-19]
 prompt = ChatPromptTemplate.from_template("""
 Tu es un assistant expert en droit social français. 
 Réponds à la question de manière professionnelle en utilisant le contexte fourni.
