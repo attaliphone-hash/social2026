@@ -1,0 +1,10 @@
+.gcloudignore
+.git
+.gitignore
+__pycache__
+.devcontainer/
+.streamlit/
+venv/
+env/
+.DS_Store
+*.pyc

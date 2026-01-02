@@ -1,0 +1,7 @@
+[theme]
+base = "light"
+primaryColor = "#1E3A8A"        # Bleu Nuit (Pour les boutons et les focus)
+backgroundColor = "#FFFFFF"     # Blanc Pur (Fond de page)
+secondaryBackgroundColor = "#F0F2F6" # GRIS CLAIR (Important : C'est le fond de la barre de saisie !)
+textColor = "#000000"           # Noir (Pour une lecture parfaite des textes juridiques)
+font = "sans serif"
