@@ -1,13 +1,7 @@
-# Empêcher l'envoi de la grosse base de données sur GitHub
 chroma_db/
-chroma.sqlite3
-
-# Empêcher l'envoi des fichiers sources volumineux
 sources_pdf/
 *.txt
 *.pdf
-
-# Fichiers système et environnement
 venv/
-.DS_Store
-.env
+.git/
+.gitignore
