@@ -20,24 +20,28 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 st.title("🤖 Expert Social Pro 2026")
 
-# Récupération sécurisée de la clé
+# Récupération de la clé GEMINI via Environnement ou Secrets
 api_key = os.getenv("GEMINI_API_KEY") 
 if not api_key:
     try:
-        api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
+        api_key = st.secrets.get("GEMINI_API_KEY")
     except Exception:
         api_key = None
 
 if not api_key:
-    st.error("⚠️ Clé API introuvable.")
+    st.error("⚠️ Clé API GEMINI introuvable. Vérifiez vos variables d'environnement.")
     st.stop()
 
 os.environ["GOOGLE_API_KEY"] = api_key
 
-# --- 4. SYSTÈME DE MOT DE PASSE (CORRIGÉ) ---
+# --- 4. SYSTÈME DE MOT DE PASSE (3 TENTATIVES) ---
 def check_password():
+    # Initialisation du compteur
+    if "retry_count" not in st.session_state:
+        st.session_state["retry_count"] = 0
+
     def password_entered():
-        # Tentative de récupération sécurisée sans crash [cite: 2026-01-02]
+        # Récupération sécurisée du mot de passe attendu
         correct_pwd = os.getenv("APP_PASSWORD")
         if not correct_pwd:
             try:
@@ -47,34 +51,45 @@ def check_password():
 
         if st.session_state["pwd_input"] == correct_pwd:
             st.session_state["password_correct"] = True
+            st.session_state["retry_count"] = 0
             del st.session_state["pwd_input"]
         else:
             st.session_state["password_correct"] = False
+            st.session_state["retry_count"] += 1
 
-    if "password_correct" not in st.session_state:
-        st.text_input("Veuillez saisir le mot de passe :", type="password", on_change=password_entered, key="pwd_input")
-        return False
-    elif not st.session_state["password_correct"]:
-        st.text_input("Mot de passe incorrect. Réessayez :", type="password", on_change=password_entered, key="pwd_input")
-        st.error("😕 Accès refusé.")
-        return False
-    return True
+    if st.session_state.get("password_correct"):
+        return True
+
+    if st.session_state["retry_count"] >= 3:
+        st.error("🚫 Accès bloqué après 3 tentatives. Veuillez rafraîchir la page.")
+        st.stop()
+
+    if st.session_state["retry_count"] > 0:
+        st.warning(f"⚠️ Mot de passe erroné. Tentative {st.session_state['retry_count']}/3")
+    
+    st.text_input("Veuillez saisir le mot de passe :", type="password", on_change=password_entered, key="pwd_input")
+    return False
+
 if not check_password():
     st.stop()
 
 # --- 5. CHARGEMENT DU SYSTÈME RAG ---
 @st.cache_resource
 def load_system():
+    # Utilisation des embeddings Google et de la base téléchargée via Dockerfile
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
+    # Modèle de référence : gemini-2.0-flash-exp [cite: 2025-12-17]
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0)
     return vectorstore, llm
 
 vectorstore, llm = load_system()
 
-# --- 6. CHAÎNE LCEL ---
+# --- 6. CONFIGURATION DU PROMPT ET DE LA CHAÎNE ---
 prompt = ChatPromptTemplate.from_template("""
-Tu es un assistant expert en droit social français. 
+Tu es un assistant expert en droit social français. Utilise les documents fournis pour répondre.
+Si tu ne sais pas, dis que tu ne sais pas.
+
 Contexte : {context}
 Question : {question}
 """)
@@ -85,7 +100,7 @@ rag_chain = (
     | prompt | llm | StrOutputParser()
 )
 
-# --- 7. CHAT ---
+# --- 7. INTERFACE DE CHAT ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -97,7 +112,9 @@ if query := st.chat_input("Posez votre question juridique..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
+    
     with st.chat_message("assistant"):
-        answer = rag_chain.invoke(query)
-        st.markdown(answer)
-        st.session_state.messages.append({"role": "assistant", "content": answer})
+        with st.spinner("Recherche dans la base de données..."):
+            answer = rag_chain.invoke(query)
+            st.markdown(answer)
+            st.session_state.messages.append({"role": "assistant", "content": answer})
