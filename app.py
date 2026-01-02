@@ -1,7 +1,8 @@
-# --- 1. CONFIGURATION SQLITE (CRITIQUE POUR CHROMADB SUR CLOUD RUN) ---
+# --- 1. CONFIGURATION SQLITE (CRITIQUE POUR CLOUD RUN) ---
 import sys
 import os
 
+# Correction pour SQLite sur environnement Debian/Cloud Run
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -10,32 +11,29 @@ except ImportError:
 
 import streamlit as st
 
-# --- 2. IMPORTS DES MODULES (MÉTHODE ATOMIQUE ANTI-BUG) ---
+# --- 2. IMPORTS DES MODULES (SYNTAXE DE SECOURS LANGCHAIN 0.3+) ---
 try:
-    # 1. Imports Google GenAI et Vecteurs
+    # IA et Vecteurs
     from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
     from langchain_chroma import Chroma
     from langchain_core.prompts import ChatPromptTemplate
     
-    # 2. Imports des chaînes (Chemin complet pour forcer la détection)
-    import langchain.chains.combine_documents.stuff
-    import langchain.chains.retrieval
+    # Imports directs pour contourner le bug 'No module named langchain.chains'
     from langchain.chains.combine_documents import create_stuff_documents_chain
-    from langchain.chains import create_retrieval_chain
+    from langchain.chains.retrieval import create_retrieval_chain
     
 except ModuleNotFoundError as e:
-    st.error(f"❌ Erreur de module LangChain : {e}")
-    st.info("Tentative de diagnostic de l'environnement...")
+    st.error(f"❌ Erreur de module persistante : {e}")
+    st.info("Tentative de chargement via chemin alternatif...")
     try:
-        import pkg_resources
-        installed_packages = [d.project_name for d in pkg_resources.working_set]
-        st.write(f"Paquets vus par Python : {', '.join(sorted(installed_packages))}")
+        # Chemin de secours absolu
+        from langchain.chains.retrieval import create_retrieval_chain
+        from langchain.chains.combine_documents.stuff import create_stuff_documents_chain
     except:
-        st.write("Impossible de lister les paquets.")
-    st.stop()
+        st.stop()
 
 # --- 3. CONFIGURATION INTERFACE ET CLÉ API ---
-# Utilisation de la clé "Clé Gemini - Assistants" (Consigne 01-01-26)
+# Clé Gemini - Assistants (Consigne 01-01-26)
 os.environ["GOOGLE_API_KEY"] = st.secrets["GEMINI_API_KEY"]
 
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
@@ -44,7 +42,7 @@ st.title("🤖 Expert Social Pro 2026")
 # --- 4. CHARGEMENT DU SYSTÈME RAG ---
 @st.cache_resource
 def load_system():
-    # Embeddings (modèle stable text-embedding-004)
+    # Embeddings text-embedding-004 stable
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     
     # Dossier de la base (Golden Index téléchargé via Dockerfile)
@@ -55,7 +53,7 @@ def load_system():
         embedding_function=embeddings
     )
     
-    # Utilisation impérative de gemini-2.0-flash-exp (Consigne du 17-12-25)
+    # Modèle gemini-2.0-flash-exp obligatoire (Consigne 17-12-25)
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-exp",
         temperature=0,
@@ -79,7 +77,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}"),
 ])
 
-# Création des chaînes de traitement
+# Création des chaînes
 question_answer_chain = create_stuff_documents_chain(llm, prompt)
 rag_chain = create_retrieval_chain(vectorstore.as_retriever(), question_answer_chain)
 
@@ -92,7 +90,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Entrée utilisateur et invocation de la chaîne
+# Entrée utilisateur et réponse
 if query := st.chat_input("Posez votre question juridique..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
