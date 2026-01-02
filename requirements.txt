@@ -5,3 +5,5 @@ langchain-google-genai
 langchain-chroma
 langchain-core
 pysqlite3-binary
+pypdf
+python-dotenv
