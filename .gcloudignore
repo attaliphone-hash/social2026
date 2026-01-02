@@ -1,4 +1,14 @@
-.git
-__pycache__
+# Ignorer les dossiers lourds (le Dockerfile les téléchargera lui-même)
+chroma_db/
+sources_pdf/
+
+# Ignorer tous les fichiers de données locaux
+*.txt
+*.pdf
+*.sqlite3
+
+# Ignorer les dossiers système
+.git/
+.gitignore
 venv/
-env/
+.DS_Store
