@@ -8,3 +8,7 @@ venv/
 env/
 .DS_Store
 *.pyc
+chroma_db/
+sources_pdf/
+*.txt
+*.pdf
