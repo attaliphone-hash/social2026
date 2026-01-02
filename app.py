@@ -26,7 +26,8 @@ except ModuleNotFoundError as e:
 
 # --- 3. CONFIGURATION INTERFACE ET CLÉ API ---
 # Utilisation de la clé "Clé Gemini - Assistants" (Consigne 01-01-26)
-os.environ["GOOGLE_API_KEY"] = st.secrets["GEMINI_API_KEY"]
+# Cherche GEMINI_API_KEY, sinon GOOGLE_API_KEY, sinon l'environnement système
+os.environ["GOOGLE_API_KEY"] = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
 
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 st.title("🤖 Expert Social Pro 2026")
