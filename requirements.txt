@@ -1,9 +1,8 @@
 streamlit
-langchain>=0.3.0
+langchain-core
 langchain-community
 langchain-google-genai
 langchain-chroma
-langchain-core
 pysqlite3-binary
 pypdf
 google-generativeai
