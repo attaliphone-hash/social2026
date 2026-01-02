@@ -1,20 +1,4 @@
-# Forcer l'inclusion des fichiers vitaux
-!requirements.txt
-!app.py
-!Dockerfile
-
-# Ignorer le reste du superflu pour alléger l'envoi
 .git
-.gitignore
 __pycache__
-.devcontainer/
 venv/
 env/
-.DS_Store
-*.pyc
-
-# Ignorer les données lourdes (elles sont gérées par le Dockerfile)
-chroma_db/
-sources_pdf/
-*.txt
-*.pdf
