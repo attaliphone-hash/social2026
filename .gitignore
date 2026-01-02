@@ -1,7 +1,13 @@
+# Ne pas envoyer la base de données (trop lourde pour GitHub)
 chroma_db/
+*.sqlite3
+
+# Ne pas envoyer les sources (on ne veut que le code sur GitHub)
 sources_pdf/
 *.txt
 *.pdf
+
+# Système
+.DS_Store
 venv/
-.git/
-.gitignore
+.env
