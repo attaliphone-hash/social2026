@@ -2,7 +2,6 @@
 import sys
 import os
 
-# Correction pour SQLite sur environnement Debian/Cloud Run
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -11,29 +10,22 @@ except ImportError:
 
 import streamlit as st
 
-# --- 2. IMPORTS DES MODULES (SYNTAXE DE SECOURS LANGCHAIN 0.3+) ---
+# --- 2. IMPORTS DES MODULES (FLUX LCEL - SANS 'CHAINS') ---
 try:
     # IA et Vecteurs
     from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
     from langchain_chroma import Chroma
     from langchain_core.prompts import ChatPromptTemplate
-    
-    # Imports directs pour contourner le bug 'No module named langchain.chains'
-    from langchain.chains.combine_documents import create_stuff_documents_chain
-    from langchain.chains.retrieval import create_retrieval_chain
+    from langchain_core.runnables import RunnablePassthrough
+    from langchain_core.output_parsers import StrOutputParser
     
 except ModuleNotFoundError as e:
-    st.error(f"❌ Erreur de module persistante : {e}")
-    st.info("Tentative de chargement via chemin alternatif...")
-    try:
-        # Chemin de secours absolu
-        from langchain.chains.retrieval import create_retrieval_chain
-        from langchain.chains.combine_documents.stuff import create_stuff_documents_chain
-    except:
-        st.stop()
+    st.error(f"❌ Erreur de module : {e}")
+    st.info("Vérifiez que votre requirements.txt contient bien langchain-core et langchain-google-genai.")
+    st.stop()
 
 # --- 3. CONFIGURATION INTERFACE ET CLÉ API ---
-# Clé Gemini - Assistants (Consigne 01-01-26)
+# Utilisation de la clé "Clé Gemini - Assistants" (Consigne 01-01-26)
 os.environ["GOOGLE_API_KEY"] = st.secrets["GEMINI_API_KEY"]
 
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
@@ -45,7 +37,7 @@ def load_system():
     # Embeddings text-embedding-004 stable
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     
-    # Dossier de la base (Golden Index téléchargé via Dockerfile)
+    # Dossier de la base (Golden Index)
     persist_directory = "chroma_db"
     
     vectorstore = Chroma(
@@ -63,23 +55,31 @@ def load_system():
 
 vectorstore, llm = load_system()
 
-# --- 5. CONFIGURATION DU PROMPT ---
-system_prompt = (
-    "Tu es un assistant expert en droit social français. "
-    "Réponds aux questions en utilisant le contexte fourni. "
-    "Cite tes sources de manière précise (BOSS, Code du travail). "
-    "\n\n"
-    "{context}"
+# --- 5. CONFIGURATION DU PROMPT ET DE LA CHAÎNE LCEL ---
+# Cette syntaxe évite totalement le module 'langchain.chains'
+prompt = ChatPromptTemplate.from_template("""
+Tu es un assistant expert en droit social français. 
+Réponds à la question de manière professionnelle en utilisant le contexte fourni.
+Cite tes sources (BOSS, Code du travail, etc.) si elles sont présentes.
+
+Contexte :
+{context}
+
+Question : {question}
+""")
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+# Construction de la chaîne par pipe (LCEL)
+retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+
+rag_chain = (
+    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
 )
-
-prompt = ChatPromptTemplate.from_messages([
-    ("system", system_prompt),
-    ("human", "{input}"),
-])
-
-# Création des chaînes
-question_answer_chain = create_stuff_documents_chain(llm, prompt)
-rag_chain = create_retrieval_chain(vectorstore.as_retriever(), question_answer_chain)
 
 # --- 6. GESTION DU CHAT ---
 if "messages" not in st.session_state:
@@ -90,17 +90,17 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Entrée utilisateur et réponse
+# Entrée utilisateur
 if query := st.chat_input("Posez votre question juridique..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
 
     with st.chat_message("assistant"):
-        with st.spinner("Analyse des sources officielles..."):
+        with st.spinner("Analyse des sources en cours..."):
             try:
-                response = rag_chain.invoke({"input": query})
-                answer = response["answer"]
+                # Appel direct de la chaîne LCEL
+                answer = rag_chain.invoke(query)
                 st.markdown(answer)
                 st.session_state.messages.append({"role": "assistant", "content": answer})
             except Exception as e:
