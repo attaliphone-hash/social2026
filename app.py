@@ -1,7 +1,6 @@
 # --- 1. CONFIGURATION SQLITE (CRITIQUE POUR CLOUD RUN) ---
 import sys
 import os
-
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -10,111 +9,90 @@ except ImportError:
 
 import streamlit as st
 
-# --- 2. IMPORTS DES MODULES (FLUX LCEL - SANS 'CHAINS') ---
-try:
-    # IA et Vecteurs
-    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-    from langchain_chroma import Chroma
-    from langchain_core.prompts import ChatPromptTemplate
-    from langchain_core.runnables import RunnablePassthrough
-    from langchain_core.output_parsers import StrOutputParser
-    
-except ModuleNotFoundError as e:
-    st.error(f"❌ Erreur de module : {e}")
-    st.info("Vérifiez que votre requirements.txt contient bien langchain-core et langchain-google-genai.")
-    st.stop()
+# --- 2. IMPORTS DES MODULES ---
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_chroma import Chroma
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
-# --- 3. CONFIGURATION INTERFACE ET CLÉ API (BOUCLIER ANTI-CRASH) ---
-# On cherche la clé sans faire planter Streamlit [cite: 2026-01-02]
+# --- 3. CONFIGURATION INTERFACE ET CLÉ API ---
+st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
+st.title("🤖 Expert Social Pro 2026")
+
+# Récupération sécurisée de la clé
 api_key = os.getenv("GEMINI_API_KEY") 
-
 if not api_key:
     try:
-        # Tentative via les secrets Streamlit [cite: 2026-01-02]
         api_key = st.secrets.get("GEMINI_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
     except Exception:
         api_key = None
 
 if not api_key:
-    st.error("⚠️ Clé API introuvable. Veuillez configurer GEMINI_API_KEY.")
+    st.error("⚠️ Clé API introuvable.")
     st.stop()
 
 os.environ["GOOGLE_API_KEY"] = api_key
 
-st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
-st.title("🤖 Expert Social Pro 2026")
+# --- 4. SYSTÈME DE MOT DE PASSE ---
+def check_password():
+    def password_entered():
+        # Vérifie le mot de passe dans les secrets ou l'environnement
+        correct_pwd = st.secrets.get("APP_PASSWORD") or os.getenv("APP_PASSWORD")
+        if st.session_state["pwd_input"] == correct_pwd:
+            st.session_state["password_correct"] = True
+            del st.session_state["pwd_input"]
+        else:
+            st.session_state["password_correct"] = False
 
-# --- 4. CHARGEMENT DU SYSTÈME RAG ---
+    if "password_correct" not in st.session_state:
+        st.text_input("Veuillez saisir le mot de passe :", type="password", on_change=password_entered, key="pwd_input")
+        return False
+    elif not st.session_state["password_correct"]:
+        st.text_input("Mot de passe incorrect. Réessayez :", type="password", on_change=password_entered, key="pwd_input")
+        st.error("😕 Accès refusé.")
+        return False
+    return True
+
+if not check_password():
+    st.stop()
+
+# --- 5. CHARGEMENT DU SYSTÈME RAG ---
 @st.cache_resource
 def load_system():
-    # Embeddings text-embedding-004 stable
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-    
-    # Dossier de la base (Golden Index)
-    persist_directory = "chroma_db"
-    
-    vectorstore = Chroma(
-        persist_directory=persist_directory,
-        embedding_function=embeddings
-    )
-    
-    # Modèle gemini-2.0-flash-exp obligatoire [cite: 2025-12-17]
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash-exp",
-        temperature=0,
-    )
-    
+    vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0)
     return vectorstore, llm
 
 vectorstore, llm = load_system()
 
-# --- 5. CONFIGURATION DU PROMPT ET DE LA CHAÎNE LCEL ---
-# Cette syntaxe évite totalement le module 'langchain.chains' qui bug [cite: 2025-12-19]
+# --- 6. CHAÎNE LCEL ---
 prompt = ChatPromptTemplate.from_template("""
 Tu es un assistant expert en droit social français. 
-Réponds à la question de manière professionnelle en utilisant le contexte fourni.
-Cite tes sources (BOSS, Code du travail, etc.) si elles sont présentes.
-
-Contexte :
-{context}
-
+Contexte : {context}
 Question : {question}
 """)
 
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
-
-# Construction de la chaîne par pipe (LCEL)
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-
 rag_chain = (
-    {"context": retriever | format_docs, "question": RunnablePassthrough()}
-    | prompt
-    | llm
-    | StrOutputParser()
+    {"context": retriever | (lambda docs: "\n\n".join(d.page_content for d in docs)), "question": RunnablePassthrough()}
+    | prompt | llm | StrOutputParser()
 )
 
-# --- 6. GESTION DU CHAT ---
+# --- 7. CHAT ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Affichage de l'historique
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Entrée utilisateur
 if query := st.chat_input("Posez votre question juridique..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
-
     with st.chat_message("assistant"):
-        with st.spinner("Analyse des sources en cours..."):
-            try:
-                # Appel direct de la chaîne LCEL
-                answer = rag_chain.invoke(query)
-                st.markdown(answer)
-                st.session_state.messages.append({"role": "assistant", "content": answer})
-            except Exception as e:
-                st.error(f"Erreur lors de la génération : {e}")
+        answer = rag_chain.invoke(query)
+        st.markdown(answer)
+        st.session_state.messages.append({"role": "assistant", "content": answer})
