@@ -10,24 +10,32 @@ except ImportError:
 
 import streamlit as st
 
-# --- 2. IMPORTS DES MODULES (CONTOURNEMENT DU BUG LANGCHAIN) ---
+# --- 2. IMPORTS DES MODULES (MÉTHODE ATOMIQUE ANTI-BUG) ---
 try:
-    # Imports de base pour l'IA et la base de données
+    # 1. Imports Google GenAI et Vecteurs
     from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
     from langchain_chroma import Chroma
     from langchain_core.prompts import ChatPromptTemplate
     
-    # Correction spécifique : on force le chargement du module parent
-    import langchain.chains
-    from langchain.chains.retrieval import create_retrieval_chain
+    # 2. Imports des chaînes (Chemin complet pour forcer la détection)
+    import langchain.chains.combine_documents.stuff
+    import langchain.chains.retrieval
     from langchain.chains.combine_documents import create_stuff_documents_chain
+    from langchain.chains import create_retrieval_chain
     
 except ModuleNotFoundError as e:
-    st.error(f"⚠️ Erreur de module persistante : {e}")
+    st.error(f"❌ Erreur de module LangChain : {e}")
+    st.info("Tentative de diagnostic de l'environnement...")
+    try:
+        import pkg_resources
+        installed_packages = [d.project_name for d in pkg_resources.working_set]
+        st.write(f"Paquets vus par Python : {', '.join(sorted(installed_packages))}")
+    except:
+        st.write("Impossible de lister les paquets.")
     st.stop()
 
 # --- 3. CONFIGURATION INTERFACE ET CLÉ API ---
-# Utilisation de la clé "Clé Gemini - Assistants" (Consigne du 01-01-26)
+# Utilisation de la clé "Clé Gemini - Assistants" (Consigne 01-01-26)
 os.environ["GOOGLE_API_KEY"] = st.secrets["GEMINI_API_KEY"]
 
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
@@ -47,7 +55,7 @@ def load_system():
         embedding_function=embeddings
     )
     
-    # Utilisation obligatoire de gemini-2.0-flash-exp (Consigne du 17-12-25)
+    # Utilisation impérative de gemini-2.0-flash-exp (Consigne du 17-12-25)
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-exp",
         temperature=0,
@@ -79,12 +87,12 @@ rag_chain = create_retrieval_chain(vectorstore.as_retriever(), question_answer_c
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Affichage de l'historique des messages
+# Affichage de l'historique
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Entrée utilisateur et réponse de l'IA
+# Entrée utilisateur et invocation de la chaîne
 if query := st.chat_input("Posez votre question juridique..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
