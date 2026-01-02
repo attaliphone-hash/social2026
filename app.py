@@ -12,21 +12,23 @@ import streamlit as st
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- 3. SYSTÈME DE MOT DE PASSE (BARRAGE PRIORITAIRE) ---
+# --- 3. SYSTÈME DE MOT DE PASSE (LOGIQUE SIMPLIFIÉE V21) ---
 if "password_correct" not in st.session_state:
     st.session_state["password_correct"] = False
 
-def password_entered():
-    correct_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
-    if st.session_state["pwd_input"] == correct_pwd:
-        st.session_state["password_correct"] = True
-        # On ne supprime plus pwd_input ici, c'est ce qui causait le crash sur Cloud Run [cite: 2026-01-02]
-    else:
-        st.error("😕 Mot de passe incorrect.")
-
+# Écran de verrouillage
 if not st.session_state["password_correct"]:
     st.title("🔐 Accès Restreint")
-    st.text_input("Mot de passe :", type="password", on_change=password_entered, key="pwd_input")
+    # On utilise un champ simple sans on_change pour éviter le refresh automatique
+    pwd_input = st.text_input("Veuillez saisir le mot de passe Expert :", type="password")
+    
+    if st.button("Se connecter"):
+        correct_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
+        if pwd_input == correct_pwd:
+            st.session_state["password_correct"] = True
+            st.rerun() # On force le rechargement propre
+        else:
+            st.error("😕 Mot de passe incorrect.")
     st.stop()
 
 # --- 4. SI CONNECTÉ : CHARGEMENT DES IMPORTS LOURDS ---
