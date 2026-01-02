@@ -34,11 +34,17 @@ if not api_key:
 
 os.environ["GOOGLE_API_KEY"] = api_key
 
-# --- 4. SYSTÈME DE MOT DE PASSE ---
+# --- 4. SYSTÈME DE MOT DE PASSE (CORRIGÉ) ---
 def check_password():
     def password_entered():
-        # Vérifie le mot de passe dans les secrets ou l'environnement
-        correct_pwd = st.secrets.get("APP_PASSWORD") or os.getenv("APP_PASSWORD")
+        # Tentative de récupération sécurisée sans crash [cite: 2026-01-02]
+        correct_pwd = os.getenv("APP_PASSWORD")
+        if not correct_pwd:
+            try:
+                correct_pwd = st.secrets.get("APP_PASSWORD")
+            except Exception:
+                correct_pwd = None
+
         if st.session_state["pwd_input"] == correct_pwd:
             st.session_state["password_correct"] = True
             del st.session_state["pwd_input"]
@@ -53,7 +59,6 @@ def check_password():
         st.error("😕 Accès refusé.")
         return False
     return True
-
 if not check_password():
     st.stop()
 
