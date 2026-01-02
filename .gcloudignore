@@ -1,14 +1,15 @@
-# Ignorer les dossiers lourds (le Dockerfile les téléchargera lui-même)
+# On ignore les gros dossiers
 chroma_db/
 sources_pdf/
+venv/
+.git/
 
-# Ignorer tous les fichiers de données locaux
+# On ignore les fichiers de données mais PAS le requirements.txt
+# (La ligne suivante dit : ignore tous les .txt sauf requirements.txt)
 *.txt
+!requirements.txt
+
+# On ignore les PDF et les bases de données locales
 *.pdf
 *.sqlite3
-
-# Ignorer les dossiers système
-.git/
-.gitignore
-venv/
 .DS_Store
