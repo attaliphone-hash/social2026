@@ -43,7 +43,8 @@ def set_design(bg_image_file, sidebar_color):
     [data-testid="stSidebar"] p, 
     [data-testid="stSidebar"] span, 
     [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] .stCaption {{
+    [data-testid="stSidebar"] .stCaption,
+    [data-testid="stSidebar"] div.stMarkdown p {{
          color: white !important;
     }}
 
@@ -64,8 +65,11 @@ def set_design(bg_image_file, sidebar_color):
         background-color: rgba(255, 255, 255, 0.2) !important;
     }}
 
-    /* --- FIN DESIGN SIDEBAR --- */
-
+    /* Ajustement de l'alignement vertical du titre principal */
+    .block-container {{
+        padding-top: 2rem;
+    }}
+    
     /* Bulles de chat */
     .stChatMessage {{
         background-color: rgba(255, 255, 255, 0.95);
@@ -112,25 +116,41 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
 
-# --- 5. SIDEBAR ---
+# --- 5. SIDEBAR MODIFIÉE ---
 with st.sidebar:
-    st.image("avatar-logo.png", width=100)
-    st.title("Navigation")
+    # Logo un peu plus grand ici car c'est la "maison"
+    st.image("avatar-logo.png", width=120)
+    
+    # Texte de bienvenue déplacé ici (en gras pour ressortir sur le bleu)
+    st.markdown("**Bienvenue sur votre expert social dédié.**")
+    
     st.markdown("---")
     st.subheader("Contexte Juridique")
     st.info("📅 **Année Fiscale : 2026**\n\nBase à jour des dernières LFSS et Ordonnances connues.")
     st.markdown("---")
+    
     if st.button("🗑️ Nouvelle Conversation", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
+        
     st.markdown("---")
-    st.caption("Expert Social Pro v2.8 - Accès Cabinet")
+    st.caption("Expert Social Pro v3.0 - Accès Cabinet")
 
-# --- 6. INTERFACE PRINCIPALE (TEXTE CORRIGÉ) ---
+# --- 6. INTERFACE PRINCIPALE MODIFIÉE ---
 
-st.title("⚖️ Expert Social Pro 2026")
+# Création de deux colonnes pour aligner le Logo (petit) et le Titre
+col_logo, col_title = st.columns([1, 12]) 
+
+with col_logo:
+    # Logo en petit à la place de la balance
+    st.image("avatar-logo.png", width=70) 
+
+with col_title:
+    # Le titre sans l'emoji balance
+    st.title("Expert Social Pro 2026")
+
+# Le texte explicatif restant
 st.markdown("""
-**Bienvenue sur votre expert social dédié.**
 Posez vos questions techniques en droit social et paie. L'IA analyse le BOSS, le Code du travail, le Code de la Sécurité sociale et les conventions pour vous fournir des réponses basées exclusivement sur des textes officiels.
 """)
 st.markdown("---")
