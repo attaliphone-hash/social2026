@@ -21,11 +21,15 @@ def get_base64(bin_file):
 def set_design(bg_image_file, sidebar_color):
     """Injecte le CSS pour le fond, la sidebar et masques les éléments parasites."""
     bin_str = get_base64(bg_image_file)
+    
+    # CORRECTION ICI : Détection automatique de l'extension (png ou webp)
+    extension = "webp" if bg_image_file.endswith(".webp") else "png"
+
     page_bg_img = f'''
     <style>
     /* Fond d'écran principal */
     .stApp {{
-        background-image: url("data:image/png;base64,{bin_str}");
+        background-image: url("data:image/{extension};base64,{bin_str}");
         background-size: cover;
         background-repeat: no-repeat;
         background-attachment: fixed;
@@ -107,7 +111,7 @@ st.set_page_config(page_title="Expert Social Pro 2026", layout="wide", page_icon
 
 # DESIGN ACTIF
 try:
-    set_design('background.png', '#024c6f')
+    set_design('background.webp', '#024c6f')
 except FileNotFoundError:
     pass
 
