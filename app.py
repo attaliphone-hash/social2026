@@ -1,7 +1,7 @@
 # --- 1. CONFIGURATION SQLITE ET IMPORTS ---
 import sys
 import os
-import base64 # Nécessaire pour les images de fond
+import base64 
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -10,10 +10,10 @@ except ImportError:
 
 import streamlit as st
 
-# --- 2. FONCTIONS DESIGN & CSS (LA MAGIE VISUELLE) ---
+# --- 2. FONCTIONS DESIGN & CSS ---
 
 def get_base64(bin_file):
-    """Encode une image locale en base64 pour l'intégrer au CSS sans URL externe."""
+    """Encode une image locale en base64."""
     with open(bin_file, 'rb') as f:
         data = f.read()
     return base64.b64encode(data).decode()
@@ -31,18 +31,44 @@ def set_design(bg_image_file, sidebar_color):
         background-attachment: fixed;
     }}
     
-    /* Couleur de la barre latérale (Sidebar) */
+    /* --- DESIGN SIDEBAR (Blanc sur Bleu) --- */
     [data-testid="stSidebar"] > div:first-child {{
         background-color: {sidebar_color};
-        color: white; /* Texte en blanc pour le contraste */
-    }}
-    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] label {{
-         color: white !important; /* Force les titres et labels en blanc */
     }}
     
-    /* Ajustements pour la lisibilité sur le fond */
+    /* Forcer TOUT le texte en BLANC dans la sidebar */
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3, 
+    [data-testid="stSidebar"] p, 
+    [data-testid="stSidebar"] span, 
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stCaption {{
+         color: white !important;
+    }}
+
+    /* Style de la boîte d'info (Fond transparent + bordure blanche) */
+    [data-testid="stSidebar"] .stAlert {{
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    }}
+    
+    /* Bouton transparent avec bordure */
+    [data-testid="stSidebar"] button {{
+        background-color: transparent !important;
+        border: 1px solid white !important;
+        color: white !important;
+    }}
+    [data-testid="stSidebar"] button:hover {{
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }}
+
+    /* --- FIN DESIGN SIDEBAR --- */
+
+    /* Bulles de chat */
     .stChatMessage {{
-        background-color: rgba(255, 255, 255, 0.95); /* Bulles de chat légèrement transparentes */
+        background-color: rgba(255, 255, 255, 0.95);
         border-radius: 15px;
         padding: 10px;
         margin-bottom: 10px;
@@ -54,23 +80,22 @@ def set_design(bg_image_file, sidebar_color):
 # --- 3. CONFIGURATION PAGE ET AUTHENTIFICATION ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide", page_icon="⚖️")
 
-# On applique le design immédiatement (si les fichiers existent)
+# DESIGN ACTIF
 try:
-    set_design('background.png', '#344908')
+    set_design('background.png', '#024c6f')
 except FileNotFoundError:
-    st.warning("Images de design non trouvées. L'application continue en mode dégradé.")
+    pass
 
 if "password_correct" not in st.session_state:
     st.session_state["password_correct"] = False
 
 if not st.session_state["password_correct"]:
-    # Interface de login épurée
-    st.markdown("<h1 style='text-align: center; color: #344908;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Veuillez vous identifier pour accéder à la base de connaissances.</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        pwd_input = st.text_input("Mot de passe :", type="password", label_visibility="collapsed", placeholder="Saisissez votre mot de passe ici...")
+        pwd_input = st.text_input("Mot de passe :", type="password", label_visibility="collapsed")
         if st.button("Connexion sécurisée", type="primary", use_container_width=True):
             correct_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
             if pwd_input == correct_pwd:
@@ -80,30 +105,29 @@ if not st.session_state["password_correct"]:
                 st.error("Identifiants incorrects.")
     st.stop()
 
-# --- 4. CHARGEMENT DES MODULES LOURDS (APRÈS AUTH) ---
+# --- 4. CHARGEMENT IA ---
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
 
-# --- 5. SIDEBAR : CONTEXTE ET NAVIGATION ---
+# --- 5. SIDEBAR ---
 with st.sidebar:
-    st.image("avatar-logo.png", width=100) # Petit rappel du logo en haut
+    st.image("avatar-logo.png", width=100)
     st.title("Navigation")
     st.markdown("---")
     st.subheader("Contexte Juridique")
     st.info("📅 **Année Fiscale : 2026**\n\nBase à jour des dernières LFSS et Ordonnances connues.")
     st.markdown("---")
-    if st.button("🗑️ Nouvelle Conversation", type="secondary", use_container_width=True):
+    if st.button("🗑️ Nouvelle Conversation", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
     st.markdown("---")
-    st.caption("Expert Social Pro v2.1 - Accès Cabinet")
+    st.caption("Expert Social Pro v2.8 - Accès Cabinet")
 
-# --- 6. INTERFACE PRINCIPALE : ACCUEIL ET CHAT ---
+# --- 6. INTERFACE PRINCIPALE (TEXTE CORRIGÉ) ---
 
-# En-tête de l'interface principale
 st.title("⚖️ Expert Social Pro 2026")
 st.markdown("""
 **Bienvenue sur votre expert social dédié.**
@@ -118,7 +142,7 @@ if not api_key:
     st.stop()
 os.environ["GOOGLE_API_KEY"] = api_key
 
-# Chargement RAG
+# RAG
 @st.cache_resource
 def load_system():
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
@@ -128,7 +152,7 @@ def load_system():
 
 vectorstore, llm = load_system()
 
-# --- 7. CHAÎNE RAG ÉVOLUÉE (POUR SOURCES PLIABLES) ---
+# --- 7. CHAÎNE RAG ---
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 prompt = ChatPromptTemplate.from_template("""
@@ -141,48 +165,35 @@ Question : {question}
 Réponse technique et précise :
 """)
 
-# Nouvelle structure pour récupérer à la fois la réponse ET les documents sources
 rag_chain_with_sources = RunnableParallel(
     {"context": retriever, "question": RunnablePassthrough()}
 ).assign(answer= prompt | llm | StrOutputParser())
 
-# --- 8. GESTION DU CHAT AVEC AVATARS ---
+# --- 8. CHAT ---
 
-# Définition des avatars
-assistant_avatar = "avatar-logo.png" # Votre logo pro
-user_avatar = "🧑‍💼" # Un emoji pro neutre
+assistant_avatar = "avatar-logo.png"
+user_avatar = "🧑‍💼"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Affichage de l'historique
 for message in st.session_state.messages:
     avatar_to_use = assistant_avatar if message["role"] == "assistant" else user_avatar
     with st.chat_message(message["role"], avatar=avatar_to_use):
         st.markdown(message["content"])
 
-# Zone de saisie et traitement
 if query := st.chat_input("Posez votre question technique ici..."):
-    # 1. Affichage message utilisateur
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user", avatar=user_avatar):
         st.markdown(query)
     
-    # 2. Traitement et affichage réponse assistant
     with st.chat_message("assistant", avatar=assistant_avatar):
         with st.spinner("Analyse croisée des textes officiels en cours..."):
-            # On récupère le dictionnaire complet {answer: "...", context: [docs]}
             response = rag_chain_with_sources.invoke(query)
-            
-            # Affichage de la réponse principale
             st.markdown(response["answer"])
-            
-            # Affichage des sources dans un menu dépliant "Pro"
             with st.expander("📚 Voir les sources officielles et extraits juridiques utilisés"):
                 for i, doc in enumerate(response["context"]):
                     st.markdown(f"**Source {i+1}** (Extrait pertinent) :")
                     st.caption(doc.page_content)
                     st.markdown("---")
-            
-            # On sauvegarde uniquement la réponse textuelle dans l'historique pour ne pas surcharger
             st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
