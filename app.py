@@ -17,10 +17,10 @@ if "password_correct" not in st.session_state:
     st.session_state["password_correct"] = False
 
 if not st.session_state["password_correct"]:
-    st.title("🔐 Accès Restreint")
+    st.title("🔐 Accès Réservé")
     
     # Utilisation d'un champ simple sans on_change pour éviter les boucles automatiques
-    pwd_input = st.text_input("Veuillez saisir le mot de passe Expert :", type="password")
+    pwd_input = st.text_input("Veuillez saisir votre mot de passe :", type="password")
     
     if st.button("Accéder à l'Expert Social"):
         correct_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
@@ -28,7 +28,7 @@ if not st.session_state["password_correct"]:
             st.session_state["password_correct"] = True
             st.rerun() # Rechargement immédiat pour valider l'accès
         else:
-            st.error("😕 Mot de passe incorrect.")
+            st.error("😕 Mot de passe incorrect. Veuillez réessayer")
     st.stop() # Bloque le reste du script tant que password_correct est False
 
 # --- 4. SI AUTHENTIFIÉ : CHARGEMENT DES MODULES LOURDS ---
@@ -86,7 +86,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if query := st.chat_input("Posez votre question technique..."):
+if query := st.chat_input("Posez votre question ici..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
