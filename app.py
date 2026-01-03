@@ -10,7 +10,7 @@ except ImportError:
 
 import streamlit as st
 
-# --- 2. FONCTIONS DESIGN & CSS ---
+# --- 2. FONCTIONS DESIGN & CSS (MODIFIÉ POUR CACHER MENU ET BANDE BLANCHE) ---
 
 def get_base64(bin_file):
     """Encode une image locale en base64."""
@@ -19,7 +19,7 @@ def get_base64(bin_file):
     return base64.b64encode(data).decode()
 
 def set_design(bg_image_file, sidebar_color):
-    """Injecte le CSS pour le fond d'écran et la couleur de la sidebar."""
+    """Injecte le CSS pour le fond, la sidebar et masques les éléments parasites."""
     bin_str = get_base64(bg_image_file)
     page_bg_img = f'''
     <style>
@@ -30,6 +30,32 @@ def set_design(bg_image_file, sidebar_color):
         background-repeat: no-repeat;
         background-attachment: fixed;
     }}
+    
+    /* --- MASQUAGE DU MENU ET DE LA BANDE BLANCHE --- */
+    
+    /* Cache le bouton "3 points" et le menu Streamlit */
+    [data-testid="stToolbar"] {{
+        visibility: hidden;
+        height: 0%;
+    }}
+    
+    /* Cache la bande de décoration en haut (souvent colorée) */
+    [data-testid="stDecoration"] {{
+        visibility: hidden;
+        height: 0%;
+    }}
+
+    /* Rend le header transparent pour supprimer la bande blanche */
+    header {{
+        background-color: transparent !important;
+    }}
+
+    /* Remonte le contenu principal pour coller au haut de la page */
+    .block-container {{
+        padding-top: 1rem !important; /* Réduit l'espace en haut */
+    }}
+
+    /* --- FIN MASQUAGE --- */
     
     /* --- DESIGN SIDEBAR (Blanc sur Bleu) --- */
     [data-testid="stSidebar"] > div:first-child {{
@@ -63,11 +89,6 @@ def set_design(bg_image_file, sidebar_color):
     }}
     [data-testid="stSidebar"] button:hover {{
         background-color: rgba(255, 255, 255, 0.2) !important;
-    }}
-
-    /* Ajustement de l'alignement vertical du titre principal */
-    .block-container {{
-        padding-top: 2rem;
     }}
     
     /* Bulles de chat */
@@ -116,12 +137,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
 
-# --- 5. SIDEBAR MODIFIÉE ---
+# --- 5. SIDEBAR MODIFIÉE (SANS LOGO) ---
 with st.sidebar:
-    # Logo un peu plus grand ici car c'est la "maison"
-    st.image("avatar-logo.png", width=120)
+    # Espace vide pour aérer le haut
+    st.markdown("##") 
     
-    # Texte de bienvenue déplacé ici (en gras pour ressortir sur le bleu)
+    # Texte de bienvenue SEUL (plus de logo ici)
     st.markdown("**Bienvenue sur votre expert social dédié.**")
     
     st.markdown("---")
@@ -134,9 +155,9 @@ with st.sidebar:
         st.rerun()
         
     st.markdown("---")
-    st.caption("Expert Social Pro v3.0 - Accès Cabinet")
+    st.caption("Expert Social Pro v3.1 - Accès Cabinet")
 
-# --- 6. INTERFACE PRINCIPALE MODIFIÉE ---
+# --- 6. INTERFACE PRINCIPALE ---
 
 # Création de deux colonnes pour aligner le Logo (petit) et le Titre
 col_logo, col_title = st.columns([1, 12]) 
@@ -149,7 +170,7 @@ with col_title:
     # Le titre sans l'emoji balance
     st.title("Expert Social Pro 2026")
 
-# Le texte explicatif restant
+# Le texte explicatif
 st.markdown("""
 Posez vos questions techniques en droit social et paie. L'IA analyse le BOSS, le Code du travail, le Code de la Sécurité sociale et les conventions pour vous fournir des réponses basées exclusivement sur des textes officiels.
 """)
