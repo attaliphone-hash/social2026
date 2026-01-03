@@ -6,8 +6,9 @@ chroma_db/
 sources_pdf/
 *.txt
 *.pdf
+!requirements.txt  <-- AJOUT CRUCIAL (Sinon Git oublie vos librairies)
 
-# Système
+# Système & Sécurité
 .DS_Store
 venv/
 .env
