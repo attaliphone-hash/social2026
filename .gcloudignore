@@ -1,15 +1,25 @@
-# On ignore les gros dossiers
+# --- DOSSIERS SYSTÈME & GIT ---
+.git/
+.gitignore
+.DS_Store
+venv/
+__pycache__/
+
+# --- DONNÉES LOURDES (À NE PAS ENVOYER) ---
 chroma_db/
 sources_pdf/
-venv/
-.git/
+*.sqlite3
 
-# On ignore les fichiers de données mais PAS le requirements.txt
-# (La ligne suivante dit : ignore tous les .txt sauf requirements.txt)
+# --- DOCUMENTATION & TEXTE ---
+# On ignore les PDF et les fichiers texte
+*.pdf
 *.txt
+*.md
+
+# --- EXCEPTIONS (CE QUI DOIT PARTIR) ---
+# On force l'envoi du fichier requirements.txt
 !requirements.txt
 
-# On ignore les PDF et les bases de données locales
-*.pdf
-*.sqlite3
-.DS_Store
+# On force l'envoi des images pour le design
+!*.png
+!*.jpg
