@@ -5,21 +5,17 @@
 venv/
 __pycache__/
 
-# --- DONNÉES LOURDES (À NE PAS ENVOYER) ---
-chroma_db/
+# --- DONNÉES LOURDES ---
 sources_pdf/
-*.sqlite3
+# chroma_db et les fichiers sqlite3 DOIVENT partir cette fois !
 
-# --- DOCUMENTATION & TEXTE ---
-# On ignore les PDF et les fichiers texte
+# --- DOCUMENTATION ---
 *.pdf
 *.txt
 *.md
 
-# --- EXCEPTIONS (CE QUI DOIT PARTIR) ---
-# On force l'envoi du fichier requirements.txt
+# --- EXCEPTIONS ---
 !requirements.txt
-
-# On force l'envoi des images pour le design
 !*.png
 !*.jpg
+!*.webp
