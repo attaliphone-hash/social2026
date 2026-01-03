@@ -10,7 +10,7 @@ except ImportError:
 
 import streamlit as st
 
-# --- 2. FONCTIONS DESIGN & CSS (MODIFIÉ POUR CACHER MENU ET BANDE BLANCHE) ---
+# --- 2. FONCTIONS DESIGN & CSS ---
 
 def get_base64(bin_file):
     """Encode une image locale en base64."""
@@ -21,81 +21,36 @@ def get_base64(bin_file):
 def set_design(bg_image_file, sidebar_color):
     """Injecte le CSS pour le fond, la sidebar et masques les éléments parasites."""
     bin_str = get_base64(bg_image_file)
-    
-    # CORRECTION ICI : Détection automatique de l'extension (png ou webp)
     extension = "webp" if bg_image_file.endswith(".webp") else "png"
 
     page_bg_img = f'''
     <style>
-    /* Fond d'écran principal */
     .stApp {{
         background-image: url("data:image/{extension};base64,{bin_str}");
         background-size: cover;
         background-repeat: no-repeat;
         background-attachment: fixed;
     }}
-    
-    /* --- MASQUAGE DU MENU ET DE LA BANDE BLANCHE --- */
-    
-    /* Cache le bouton "3 points" et le menu Streamlit */
-    [data-testid="stToolbar"] {{
-        visibility: hidden;
-        height: 0%;
-    }}
-    
-    /* Cache la bande de décoration en haut (souvent colorée) */
-    [data-testid="stDecoration"] {{
-        visibility: hidden;
-        height: 0%;
-    }}
-
-    /* Rend le header transparent pour supprimer la bande blanche */
-    header {{
-        background-color: transparent !important;
-    }}
-
-    /* Remonte le contenu principal pour coller au haut de la page */
-    .block-container {{
-        padding-top: 1rem !important; /* Réduit l'espace en haut */
-    }}
-
-    /* --- FIN MASQUAGE --- */
-    
-    /* --- DESIGN SIDEBAR (Blanc sur Bleu) --- */
-    [data-testid="stSidebar"] > div:first-child {{
-        background-color: {sidebar_color};
-    }}
-    
-    /* Forcer TOUT le texte en BLANC dans la sidebar */
-    [data-testid="stSidebar"] h1, 
-    [data-testid="stSidebar"] h2, 
-    [data-testid="stSidebar"] h3, 
-    [data-testid="stSidebar"] p, 
-    [data-testid="stSidebar"] span, 
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] .stCaption,
-    [data-testid="stSidebar"] div.stMarkdown p {{
+    [data-testid="stToolbar"] {{ visibility: hidden; height: 0%; }}
+    [data-testid="stDecoration"] {{ visibility: hidden; height: 0%; }}
+    header {{ background-color: transparent !important; }}
+    .block-container {{ padding-top: 1rem !important; }}
+    [data-testid="stSidebar"] > div:first-child {{ background-color: {sidebar_color}; }}
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, 
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] div.stMarkdown p {{
          color: white !important;
     }}
-
-    /* Style de la boîte d'info (Fond transparent + bordure blanche) */
     [data-testid="stSidebar"] .stAlert {{
         background-color: rgba(255, 255, 255, 0.05) !important;
         color: white !important;
         border: 1px solid rgba(255, 255, 255, 0.5) !important;
     }}
-    
-    /* Bouton transparent avec bordure */
     [data-testid="stSidebar"] button {{
         background-color: transparent !important;
         border: 1px solid white !important;
         color: white !important;
     }}
-    [data-testid="stSidebar"] button:hover {{
-        background-color: rgba(255, 255, 255, 0.2) !important;
-    }}
-    
-    /* Bulles de chat */
     .stChatMessage {{
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 15px;
@@ -109,7 +64,6 @@ def set_design(bg_image_file, sidebar_color):
 # --- 3. CONFIGURATION PAGE ET AUTHENTIFICATION ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide", page_icon="⚖️")
 
-# DESIGN ACTIF
 try:
     set_design('background.webp', '#024c6f')
 except FileNotFoundError:
@@ -120,8 +74,6 @@ if "password_correct" not in st.session_state:
 
 if not st.session_state["password_correct"]:
     st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center;'>Veuillez vous identifier pour accéder à la base de connaissances.</p>", unsafe_allow_html=True)
-    
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         pwd_input = st.text_input("Mot de passe :", type="password", label_visibility="collapsed")
@@ -141,47 +93,33 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
 
-# --- 5. SIDEBAR MODIFIÉE (SANS LOGO) ---
+# --- 5. SIDEBAR ---
 with st.sidebar:
-    # Espace vide pour aérer le haut
     st.markdown("##") 
-    
-    # Texte de bienvenue SEUL (plus de logo ici)
     st.markdown("**Bienvenue sur votre expert social dédié.**")
-    
     st.markdown("---")
     st.subheader("Contexte Juridique")
     st.info("📅 **Année Fiscale : 2026**\n\nBase à jour des dernières LFSS et Ordonnances connues.")
     st.markdown("---")
-    
     if st.button("🗑️ Nouvelle Conversation", use_container_width=True):
         st.session_state.messages = []
         st.rerun()
-        
     st.markdown("---")
     st.caption("Expert Social Pro v3.1 - Accès Cabinet")
 
 # --- 6. INTERFACE PRINCIPALE ---
-
-# Création de deux colonnes pour aligner le Logo (petit) et le Titre
 col_logo, col_title = st.columns([1, 12]) 
-
 with col_logo:
-    # Logo en petit à la place de la balance
     st.image("avatar-logo.png", width=70) 
-
 with col_title:
-    # Le titre sans l'emoji balance
     st.title("Expert Social Pro 2026")
 
-# Le texte explicatif
 st.markdown("""
 Posez vos questions techniques en droit social et paie. L'IA analyse le BOSS, le Code du travail, le Code de la Sécurité sociale et les conventions pour vous fournir des réponses basées exclusivement sur des textes officiels.
 """)
 st.markdown("---")
 
-# Clé API
-api_key = os.getenv("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
+api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
 if not api_key:
     st.error("⚠️ Clé API GEMINI manquante.")
     st.stop()
@@ -197,12 +135,13 @@ def load_system():
 
 vectorstore, llm = load_system()
 
-# --- 7. CHAÎNE RAG ---
+# --- 7. CHAÎNE RAG (MODIFIÉ POUR TXT) ---
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 prompt = ChatPromptTemplate.from_template("""
 Tu es un assistant expert en droit social et paie français.
-CONSIGNE : Ne suggère JAMAIS de vérifier le BOSS. Donne directement les chiffres, taux et conditions. Cite les articles de loi ou paragraphes du BOSS entre parenthèses quand tu les utilises.
+CONSIGNE : Ne suggère JAMAIS de vérifier le BOSS. Donne directement les chiffres, taux et conditions. 
+Cite le nom du fichier source (ex: BOSS_Frais_Pro.txt) et les articles de loi ou paragraphes du BOSS entre parenthèses quand tu les utilises.
 
 Contexte : {context}
 Question : {question}
@@ -214,7 +153,7 @@ rag_chain_with_sources = RunnableParallel(
     {"context": retriever, "question": RunnablePassthrough()}
 ).assign(answer= prompt | llm | StrOutputParser())
 
-# --- 8. CHAT ---
+# --- 8. CHAT (MODIFIÉ POUR LES SOURCES TXT) ---
 
 assistant_avatar = "avatar-logo.png"
 user_avatar = "🧑‍💼"
@@ -238,7 +177,8 @@ if query := st.chat_input("Posez votre question technique ici..."):
             st.markdown(response["answer"])
             with st.expander("📚 Voir les sources officielles et extraits juridiques utilisés"):
                 for i, doc in enumerate(response["context"]):
-                    st.markdown(f"**Source {i+1}** (Extrait pertinent) :")
+                    source_name = doc.metadata.get("source", "Source inconnue")
+                    st.markdown(f"**Source {i+1} : {source_name}**")
                     st.caption(doc.page_content)
                     st.markdown("---")
             st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
