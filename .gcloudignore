@@ -5,19 +5,18 @@
 venv/
 __pycache__/
 
-# --- DONNÉES LOURDES (À NE PAS ENVOYER) ---
+# --- DONNÉES LOURDES ---
 chroma_db/
-sources_pdf/
+# sources_pdf/  <-- J'AI ENLEVÉ CETTE LIGNE (ou mis un # devant) pour que les PDF soient envoyés !
 *.sqlite3
 
 # --- DOCUMENTATION & TEXTE ---
-# On ignore les PDF bruts et fichiers texte
-*.pdf
-*.txt
-*.md
+# On veut que les PDF partent cette fois !
+# *.pdf
+# *.txt
+# *.md
 
-# --- EXCEPTIONS (CE QUI DOIT PARTIR) ---
-# On force l'envoi de ces fichiers indispensables
+# --- EXCEPTIONS ---
 !requirements.txt
 !*.png
 !*.jpg
