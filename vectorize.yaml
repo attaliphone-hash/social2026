@@ -1,0 +1,22 @@
+steps:
+# 1. On installe tout le nécessaire
+- name: 'python:3.10-slim'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    apt-get update && apt-get install -y git build-essential
+    pip install --upgrade pip
+    pip install -r requirements.txt
+    echo "🚀 Démarrage de la vectorisation sur le Cloud..."
+    python build_db.py
+    echo "✅ Vectorisation terminée !"
+
+# 2. On sauvegarde le cerveau tout neuf dans le Bucket (en écrasant l'ancien)
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['storage', 'cp', '-r', 'chroma_db/chroma.sqlite3', 'gs://social2026-data/chroma.sqlite3']
+
+# On se donne 2 heures max (7200 secondes) pour être large
+timeout: 7200s
+options:
+  machineType: 'E2_HIGHCPU_8'
