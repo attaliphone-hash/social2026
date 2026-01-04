@@ -3,7 +3,6 @@ import sys
 import os
 import base64 
 
-# Indispensable pour ChromaDB sur Cloud Run
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -15,13 +14,11 @@ import streamlit as st
 # --- 2. FONCTIONS DESIGN & CSS ---
 
 def get_base64(bin_file):
-    """Encode une image locale en base64."""
     with open(bin_file, 'rb') as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
 def set_design(bg_image_file, sidebar_color):
-    """Injecte le CSS pour le fond et la sidebar."""
     try:
         bin_str = get_base64(bg_image_file)
         extension = "webp" if bg_image_file.endswith(".webp") else "png"
@@ -33,22 +30,38 @@ def set_design(bg_image_file, sidebar_color):
             background-repeat: no-repeat;
             background-attachment: fixed;
         }}
+        /* Texte blanc pour le titre et sous-titre principal */
+        h1, .stMarkdown p {{ color: white !important; }}
+        
         [data-testid="stToolbar"] {{ visibility: hidden; height: 0%; }}
         [data-testid="stDecoration"] {{ visibility: hidden; height: 0%; }}
         header {{ background-color: transparent !important; }}
         .block-container {{ padding-top: 1rem !important; }}
+        
+        /* Sidebar */
         [data-testid="stSidebar"] > div:first-child {{ background-color: {sidebar_color}; }}
         [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, 
         [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label,
         [data-testid="stSidebar"] .stCaption, [data-testid="stSidebar"] div.stMarkdown p {{
              color: white !important;
         }}
+        
+        /* Bouton Nouvelle Conversation lisible */
+        [data-testid="stSidebar"] button {{
+            background-color: white !important;
+            color: #024c6f !important;
+            border: none !important;
+            font-weight: bold !important;
+        }}
+        
         .stChatMessage {{
             background-color: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 10px;
             margin-bottom: 10px;
         }}
+        /* Ajustement des textes dans les messages pour lisibilité sur fond blanc */
+        .stChatMessage p {{ color: black !important; }}
         </style>
         '''
         st.markdown(page_bg_img, unsafe_allow_html=True)
@@ -58,29 +71,25 @@ def set_design(bg_image_file, sidebar_color):
 # --- 3. CONFIGURATION PAGE ET AUTHENTIFICATION ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide", page_icon="⚖️")
 
-# Correction : Logique de session robuste pour Cloud Run
 if "password_correct" not in st.session_state:
     st.session_state["password_correct"] = False
 
 def check_password():
-    """Vérifie le mot de passe et met à jour la session."""
     correct_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
     if st.session_state["pwd_input"] == correct_pwd:
         st.session_state["password_correct"] = True
-        del st.session_state["pwd_input"]  # Supprime le mot de passe de la mémoire après validation
+        del st.session_state["pwd_input"]
     else:
         st.error("Mot de passe incorrect.")
 
-# Écran de verrouillage
 if not st.session_state["password_correct"]:
     set_design('background.webp', '#024c6f')
-    st.markdown("<h1 style='text-align: center; color: #024c6f; margin-top: 100px;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: white; margin-top: 100px;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         st.text_input("Veuillez saisir le code d'accès :", type="password", key="pwd_input", on_change=check_password)
     st.stop()
 
-# Si authentifié, appliquer le design complet
 set_design('background.webp', '#024c6f')
 
 # --- 4. CHARGEMENT IA ---
@@ -90,7 +99,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
 
-# --- 5. CHARGEMENT SYSTÈME (RAG) ---
 api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
 if not api_key:
     st.error("⚠️ Clé API GEMINI manquante.")
@@ -99,22 +107,20 @@ os.environ["GOOGLE_API_KEY"] = api_key
 
 @st.cache_resource
 def load_system():
-    # Utilisation du modèle d'embedding recommandé
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-    # Chargement de la base vectorielle chroma_db (163 MiB)
     vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
-    # Configuration de Gemini 2.0 Flash
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0)
     return vectorstore, llm
 
 vectorstore, llm = load_system()
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
-# --- 6. PROMPT EXPERT ---
+# --- 5. PROMPT EXPERT ---
+# Consigne ajoutée pour simplifier le nom des sources
 prompt = ChatPromptTemplate.from_template("""
 Tu es un assistant expert en droit social et paie français (Expert Social Pro 2026).
-CONSIGNE : Ne suggère JAMAIS de vérifier le BOSS. Donne directement les chiffres, taux et conditions. 
-Cite systématiquement le nom du fichier source (ex: BOSS_Frais_Pro.txt) et les articles de loi entre parenthèses.
+CONSIGNE : Ne suggère JAMAIS de vérifier le BOSS. Donne directement les chiffres et taux. 
+IMPORTANT : Quand tu cites tes sources, ne donne pas le nom du fichier (ex: BOSS_Frais_Pro.txt), utilise simplement le terme "BOSS" ou "Code du travail" selon le contexte.
 
 Contexte : {context}
 Question : {question}
@@ -122,14 +128,20 @@ Question : {question}
 Réponse technique et précise :
 """)
 
+def format_source_name(name):
+    """Simplifie le nom de la source pour l'affichage utilisateur."""
+    if "BOSS" in name.upper(): return "BOSS"
+    if "LEGITEXT" in name.upper() or "CODE" in name.upper(): return "Code du Travail"
+    return "Source officielle"
+
 rag_chain_with_sources = RunnableParallel(
     {"context": retriever, "question": RunnablePassthrough()}
 ).assign(answer= prompt | llm | StrOutputParser())
 
-# --- 7. SIDEBAR ---
+# --- 6. SIDEBAR ---
 with st.sidebar:
     st.markdown("##") 
-    st.markdown("**Bienvenue sur votre expert social dédié.**")
+    st.markdown("### **Bienvenue sur votre expert social dédié.**")
     st.markdown("---")
     st.subheader("Contexte Juridique")
     st.info("📅 **Année Fiscale : 2026**\n\nBase à jour des dernières LFSS et Ordonnances.")
@@ -138,9 +150,9 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
     st.markdown("---")
-    st.caption("Expert Social Pro v3.1 - Déploiement Cloud Run")
+    st.caption("Expert Social Pro ©BusinessAgentAi")
 
-# --- 8. INTERFACE CHAT ---
+# --- 7. INTERFACE CHAT ---
 col_logo, col_title = st.columns([1, 12]) 
 with col_logo:
     try:
@@ -148,35 +160,36 @@ with col_logo:
     except:
         st.write("⚖️")
 with col_title:
-    st.title("Expert Social Pro 2026")
+    st.markdown("<h1 style='color: white; margin-bottom: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: white; font-style: italic;'>Analyse du BOSS, Code du travail et Code de la Sécurité sociale en temps réel.</p>", unsafe_allow_html=True)
 
-st.markdown("Analyse du BOSS, Code du travail et Code de la Sécurité sociale en temps réel.")
 st.markdown("---")
+
+assistant_avatar = "avatar-logo.png"
+user_avatar = "🧑‍💼"
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Affichage de l'historique
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
+    with st.chat_message(message["role"], avatar=assistant_avatar if message["role"] == "assistant" else user_avatar):
         st.markdown(message["content"])
 
-# Zone de saisie
 if query := st.chat_input("Posez votre question technique ici..."):
     st.session_state.messages.append({"role": "user", "content": query})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar=user_avatar):
         st.markdown(query)
     
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=assistant_avatar):
         with st.spinner("Analyse croisée des sources officielles..."):
             response = rag_chain_with_sources.invoke(query)
             st.markdown(response["answer"])
             
-            # Affichage des sources pour la traçabilité
             with st.expander("📚 Voir les extraits juridiques utilisés"):
                 for i, doc in enumerate(response["context"]):
-                    source_name = doc.metadata.get("source", "Source inconnue")
-                    st.markdown(f"**Source {i+1} : {source_name}**")
+                    raw_source = doc.metadata.get("source", "Source inconnue")
+                    source_display = format_source_name(raw_source)
+                    st.markdown(f"**Source {i+1} : {source_display}**")
                     st.caption(doc.page_content)
                     st.markdown("---")
             st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
