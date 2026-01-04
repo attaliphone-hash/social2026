@@ -47,7 +47,7 @@ def set_design(bg_image_file, sidebar_color):
         }}
         
         /* Bouton Nouvelle Conversation corrigé */
-        [data-testid="stSidebar"] button {
+        [data-testid="stSidebar"] button {{
             background-color: white !important;
             color: #024c6f !important;
             border: 1px solid #024c6f !important;
@@ -57,13 +57,13 @@ def set_design(bg_image_file, sidebar_color):
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-        }
+        }}
         /* Force la visibilité du texte "Nouvelle Conversation" */
-        [data-testid="stSidebar"] button p {
+        [data-testid="stSidebar"] button p {{
             color: #024c6f !important;
             margin: 0 !important;
             font-size: 14px !important;
-        }
+        }}
         
         .stChatMessage {{
             background-color: rgba(255, 255, 255, 0.95);
@@ -127,7 +127,6 @@ vectorstore, llm = load_system()
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
 # --- 5. PROMPT EXPERT ---
-# Consigne ajoutée pour simplifier le nom des sources
 prompt = ChatPromptTemplate.from_template("""
 Tu es un assistant expert en droit social et paie français (Expert Social Pro 2026).
 CONSIGNE : Ne suggère JAMAIS de vérifier le BOSS. Donne directement les chiffres et taux. 
