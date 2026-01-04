@@ -46,13 +46,24 @@ def set_design(bg_image_file, sidebar_color):
              color: white !important;
         }}
         
-        /* Bouton Nouvelle Conversation lisible */
-        [data-testid="stSidebar"] button {{
+        /* Bouton Nouvelle Conversation corrigé */
+        [data-testid="stSidebar"] button {
             background-color: white !important;
             color: #024c6f !important;
-            border: none !important;
+            border: 1px solid #024c6f !important;
             font-weight: bold !important;
-        }}
+            height: 3em !important;
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        /* Force la visibilité du texte "Nouvelle Conversation" */
+        [data-testid="stSidebar"] button p {
+            color: #024c6f !important;
+            margin: 0 !important;
+            font-size: 14px !important;
+        }
         
         .stChatMessage {{
             background-color: rgba(255, 255, 255, 0.95);
