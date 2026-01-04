@@ -5,16 +5,17 @@
 venv/
 __pycache__/
 
-# --- DONNÉES LOURDES ---
-chroma_db/
-# sources_pdf/  <-- J'AI ENLEVÉ CETTE LIGNE (ou mis un # devant) pour que les PDF soient envoyés !
-*.sqlite3
+# --- DONNÉES ---
+# On veut que chroma_db parte ! Donc on met un # devant :
+# chroma_db/
 
-# --- DOCUMENTATION & TEXTE ---
-# On veut que les PDF partent cette fois !
-# *.pdf
-# *.txt
-# *.md
+# On ignore les PDF pour ne pas alourdir le serveur (les .txt suffisent)
+sources_pdf/
+*.pdf
+
+# On ignore les scripts de préparation
+convert_pdf.py
+build_db.py
 
 # --- EXCEPTIONS ---
 !requirements.txt
