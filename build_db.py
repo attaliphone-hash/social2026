@@ -1,52 +1,67 @@
 import os
-import sys
 import shutil
-from langchain_community.document_loaders import TextLoader
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
+from dotenv import load_dotenv
 
-# --- CONFIGURATION ---
-MY_API_KEY = os.environ.get("GOOGLE_API_KEY")
-os.environ["GOOGLE_API_KEY"] = MY_API_KEY
-SOURCE_DIRECTORY = "."  # Vos fichiers .txt sont à la racine
-PERSIST_DIRECTORY = "chroma_db"
+# Charge les variables d'environnement (si tu as un .env local)
+load_dotenv()
 
-def main():
-    print("🚀 Vectorisation basée sur les fichiers TXT...")
-    if os.path.exists(PERSIST_DIRECTORY):
-        shutil.rmtree(PERSIST_DIRECTORY)
+# Configuration
+DATA_PATH = "./"  # Dossier où sont tes fichiers .txt
+DB_PATH = "chroma_db"
+API_KEY = os.getenv("GOOGLE_API_KEY")
 
-    # On cible les fichiers .txt présents à la racine
-    files = [f for f in os.listdir(SOURCE_DIRECTORY) if f.lower().endswith('.txt')]
-    print(f"📂 {len(files)} fichiers texte détectés.")
+if not API_KEY:
+    # Fallback pour Streamlit secrets si lancé localement sans .env mais avec secrets
+    try:
+        import streamlit as st
+        API_KEY = st.secrets["GOOGLE_API_KEY"]
+    except:
+        print("❌ ERREUR : Pas de clé API trouvée. Définissez GOOGLE_API_KEY.")
+        exit()
 
-    all_documents = []
-    for i, filename in enumerate(files, 1):
-        print(f"[{i}/{len(files)}] 📝 Lecture : {filename}...", end=" ", flush=True)
-        try:
-            loader = TextLoader(os.path.join(SOURCE_DIRECTORY, filename), encoding='utf-8')
-            all_documents.extend(loader.load())
-            print("✅")
-        except Exception as e:
-            print(f"❌ Erreur : {e}")
+def generate_data_store():
+    print("🚀 Démarrage de la construction de la base...")
+    
+    # 1. Chargement des documents
+    print(f"📂 Chargement des fichiers depuis {DATA_PATH}...")
+    # On charge tous les .txt du dossier
+    loader = DirectoryLoader(DATA_PATH, glob="*.txt", loader_cls=TextLoader)
+    documents = loader.load()
+    print(f"✅ {len(documents)} fichiers chargés.")
 
-    # Découpage et Vectorisation par paquets
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunks = text_splitter.split_documents(all_documents)
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+    # 2. Découpage (CHUNKING) - C'est ici que la magie opère
+    print("✂️ Découpage des textes en morceaux (Chunks)...")
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1500,      # Taille de chaque morceau (env. 3-4 paragraphes)
+        chunk_overlap=300,    # Chevauchement pour ne pas couper une phrase au milieu
+        add_start_index=True,
+    )
+    chunks = text_splitter.split_documents(documents)
+    print(f"✅ Documents découpés en {len(chunks)} morceaux distincts.")
 
-    vectorstore = None
-    batch_size = 100
-    for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
-        print(f"   📤 Envoi paquet {i//batch_size + 1}... ", end="", flush=True)
-        if vectorstore is None:
-            vectorstore = Chroma.from_documents(batch, embeddings, persist_directory=PERSIST_DIRECTORY)
-        else:
-            vectorstore.add_documents(batch)
-        print("✅")
-    print("\n✅ Base de données mise à jour avec succès !")
+    # 3. Création de la base Vectorielle
+    save_to_chroma(chunks)
+
+def save_to_chroma(chunks):
+    # Suppression de l'ancienne base pour repartir à propre
+    if os.path.exists(DB_PATH):
+        shutil.rmtree(DB_PATH)
+
+    print("💾 Création de la base ChromaDB (Cela peut prendre un moment)...")
+    
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=API_KEY)
+    
+    # Création et sauvegarde
+    db = Chroma.from_documents(
+        chunks, 
+        embeddings, 
+        persist_directory=DB_PATH
+    )
+    print(f"🎉 Base de données générée avec succès dans le dossier {DB_PATH} !")
 
 if __name__ == "__main__":
-    main()
+    generate_data_store()
