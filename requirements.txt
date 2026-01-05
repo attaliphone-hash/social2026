@@ -6,3 +6,4 @@ langchain-google-genai
 langchain-chroma
 langchain-text-splitters
 pypdf
+pysqlite3-binary
