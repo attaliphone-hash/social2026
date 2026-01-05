@@ -4,7 +4,7 @@ import os
 import base64 
 import streamlit as st
 import pypdf 
-import uuid # NOUVEAU : Pour gérer le reset de l'upload
+import uuid # NOUVEAU : Indispensable pour le reset du bouton upload
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
 
 # Patch critique pour Cloud Run
@@ -144,8 +144,10 @@ if not vectorstore:
     st.error("Erreur de chargement du système.")
     st.stop()
 
+# On reste sur k=10 comme dans votre version stable
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
+# On garde votre prompt original (simple et direct)
 prompt = ChatPromptTemplate.from_template("""
 Tu es un assistant expert en droit social et paie français (Expert Social Pro 2026).
 CONSIGNE : Ne suggère JAMAIS de vérifier le BOSS. Donne directement les chiffres et taux. 
@@ -200,11 +202,11 @@ def process_file(uploaded_file):
         print(f"Erreur process_file: {e}")
         return None
 
-# Initialisation des variables de session
+# Initialisation des variables
 if 'doc_ids' not in st.session_state:
     st.session_state['doc_ids'] = []
 
-# NOUVEAU : On crée une clé unique pour l'uploader si elle n'existe pas
+# NOUVEAU : La clé unique qui va nous servir à reset l'uploader
 if 'uploader_key' not in st.session_state:
     st.session_state['uploader_key'] = str(uuid.uuid4())
 
@@ -219,22 +221,22 @@ with col_title:
     st.markdown("<h1 style='color: white; margin: 0; padding: 0; font-size: 2.5rem;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 
 with col_btn1:
-    # LOGIQUE DE NETTOYAGE LORS DU RESET
+    # LOGIQUE DE NETTOYAGE COMPLETE
     if st.button("Nouvelle conversation", use_container_width=True):
-        # 1. Suppression des documents temporaires de la base vectorielle
+        # 1. Nettoyage Base de données (RGPD)
         if st.session_state['doc_ids']:
             try:
                 vectorstore.delete(ids=st.session_state['doc_ids'])
             except Exception as e:
                 print(f"Erreur suppression : {e}")
         
-        # 2. Reset des variables de session
+        # 2. Nettoyage Variables Session
         st.session_state['doc_ids'] = []
         st.session_state.messages = []
         if 'uploaded_files_history' in st.session_state:
             del st.session_state['uploaded_files_history']
             
-        # 3. NOUVEAU : On change la clé pour forcer le reset visuel de l'uploader
+        # 3. Nettoyage Visuel (On change la clé, ce qui recrée un uploader vierge)
         st.session_state['uploader_key'] = str(uuid.uuid4())
         
         st.rerun()
@@ -243,12 +245,12 @@ st.markdown("---")
 
 # --- ZONE D'UPLOAD ---
 with st.expander("📎 Joindre un document (PDF, TXT) et posez votre question", expanded=False):
-    # NOUVEAU : On ajoute l'argument key=st.session_state['uploader_key']
+    # L'argument key est CRUCIAL ici, c'est lui qui permet le reset
     uploaded_file = st.file_uploader(
         "Glissez votre fichier ici", 
         type=["pdf", "txt"], 
-        label_visibility="collapsed",
-        key=st.session_state['uploader_key'] 
+        label_visibility="collapsed", 
+        key=st.session_state['uploader_key']
     )
     
     if uploaded_file:
