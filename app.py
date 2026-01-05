@@ -3,7 +3,7 @@ import sys
 import os
 import base64 
 import streamlit as st
-import PyPDF2 
+import pypdf # CORRECTION : Utilisation de la librairie moderne
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
 
 # Patch critique pour Cloud Run
