@@ -235,7 +235,7 @@ with col_btn1:
 st.markdown("---")
 
 # --- ZONE D'UPLOAD ---
-with st.expander("📎 Joindre un document (PDF, TXT) au contexte", expanded=False):
+with st.expander("📎 Joindre un document (PDF, TXT) et posez votre question", expanded=False):
     uploaded_file = st.file_uploader("Glissez votre fichier ici", type=["pdf", "txt"], label_visibility="collapsed")
     
     if uploaded_file:
