@@ -5,7 +5,11 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 
-# Configuration
+# --- CONFIGURATION CLE API ---
+# REMPLACE "TA_CLE_ICI" PAR TA VRAIE CLÉ (celle qui commence par AIza...)
+os.environ["GOOGLE_API_KEY"] = "AIzaSyDv4t0nnSiqOQzhpkiqHpx3lsoPxumnds0" 
+
+# Configuration des dossiers
 DATA_PATH = "data"
 DB_PATH = "chroma_db"
 
@@ -58,6 +62,7 @@ def create_vector_db():
     print("--- Génération de la base (Embedding Google) ---")
     print("⏳ Cela peut prendre quelques minutes selon la taille des Codes...")
     
+    # Le modèle va maintenant trouver la clé grâce à la ligne os.environ ajoutée plus haut
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     
     vectorstore = Chroma.from_documents(
