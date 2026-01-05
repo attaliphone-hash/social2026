@@ -3,7 +3,8 @@ import sys
 import os
 import base64 
 import streamlit as st
-import pypdf # CORRECTION : Utilisation de la librairie moderne
+import pypdf 
+import uuid # NOUVEAU : Pour gérer le reset de l'upload
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
 
 # Patch critique pour Cloud Run
@@ -181,7 +182,7 @@ def process_file(uploaded_file):
     text = ""
     try:
         if uploaded_file.name.endswith('.pdf'):
-            reader = PyPDF2.PdfReader(uploaded_file)
+            reader = pypdf.PdfReader(uploaded_file)
             for page in reader.pages:
                 text += page.extract_text() or ""
         else:
@@ -193,15 +194,19 @@ def process_file(uploaded_file):
         chunks = text_splitter.split_text(text)
         metadatas = [{"source": uploaded_file.name} for _ in chunks]
         
-        # IMPORTANT : On récupère les IDs générés par Chroma
         ids = vectorstore.add_texts(texts=chunks, metadatas=metadatas)
         return ids
-    except:
+    except Exception as e:
+        print(f"Erreur process_file: {e}")
         return None
 
-# Initialisation de la mémoire des IDs documents
+# Initialisation des variables de session
 if 'doc_ids' not in st.session_state:
     st.session_state['doc_ids'] = []
+
+# NOUVEAU : On crée une clé unique pour l'uploader si elle n'existe pas
+if 'uploader_key' not in st.session_state:
+    st.session_state['uploader_key'] = str(uuid.uuid4())
 
 # Layout Header
 col_logo, col_title, col_btn1 = st.columns([0.8, 5.5, 1.7], gap="small", vertical_alignment="center")
@@ -220,7 +225,6 @@ with col_btn1:
         if st.session_state['doc_ids']:
             try:
                 vectorstore.delete(ids=st.session_state['doc_ids'])
-                print(f"Nettoyage RGPD : {len(st.session_state['doc_ids'])} chunks supprimés.")
             except Exception as e:
                 print(f"Erreur suppression : {e}")
         
@@ -229,6 +233,9 @@ with col_btn1:
         st.session_state.messages = []
         if 'uploaded_files_history' in st.session_state:
             del st.session_state['uploaded_files_history']
+            
+        # 3. NOUVEAU : On change la clé pour forcer le reset visuel de l'uploader
+        st.session_state['uploader_key'] = str(uuid.uuid4())
         
         st.rerun()
 
@@ -236,7 +243,13 @@ st.markdown("---")
 
 # --- ZONE D'UPLOAD ---
 with st.expander("📎 Joindre un document (PDF, TXT) et posez votre question", expanded=False):
-    uploaded_file = st.file_uploader("Glissez votre fichier ici", type=["pdf", "txt"], label_visibility="collapsed")
+    # NOUVEAU : On ajoute l'argument key=st.session_state['uploader_key']
+    uploaded_file = st.file_uploader(
+        "Glissez votre fichier ici", 
+        type=["pdf", "txt"], 
+        label_visibility="collapsed",
+        key=st.session_state['uploader_key'] 
+    )
     
     if uploaded_file:
         if 'uploaded_files_history' not in st.session_state:
@@ -246,7 +259,6 @@ with st.expander("📎 Joindre un document (PDF, TXT) et posez votre question", 
             with st.spinner("Cryptage et intégration en mémoire volatile..."):
                 new_ids = process_file(uploaded_file)
                 if new_ids:
-                    # On stocke les IDs pour pouvoir les supprimer plus tard
                     st.session_state['doc_ids'].extend(new_ids)
                     st.session_state['uploaded_files_history'].append(uploaded_file.name)
                     
