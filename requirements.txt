@@ -7,3 +7,4 @@ langchain-chroma
 langchain-text-splitters
 pypdf
 pysqlite3-binary
+langchain-text-splitters
