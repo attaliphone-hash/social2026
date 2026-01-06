@@ -2,12 +2,11 @@
 import sys
 import os
 
-# Correction du patch SQLite pour éviter le KeyError
+# Patch SQLite robuste pour Cloud Run
 try:
     import pysqlite3
     sys.modules['sqlite3'] = pysqlite3
 except ImportError:
-    # Si pysqlite3 n'est pas encore là, on ne fait rien pour éviter le crash
     pass
 
 import base64 
@@ -185,6 +184,18 @@ with col_btn:
 
 st.markdown("---")
 
+# Zone de téléversement rétablie
+with st.expander("📎 Analyser un document externe (PDF/TXT)", expanded=False):
+    uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"], key=st.session_state['uploader_key'], label_visibility="collapsed")
+    if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
+        with st.spinner("Intégration en cours..."):
+            new_ids = process_file(uploaded_file)
+            if new_ids:
+                st.session_state['doc_ids'].extend(new_ids)
+                if 'history' not in st.session_state: st.session_state['history'] = []
+                st.session_state['history'].append(uploaded_file.name)
+                st.rerun()
+
 # --- 8. CHAT INTERFACE ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -203,7 +214,7 @@ if query := st.chat_input("Votre question technique..."):
             response = rag_chain_with_sources.invoke(query)
             st.markdown(response["answer"])
             
-            # AFFICHAGE DES SOURCES BRUT ET COMPLET SANS NETTOYAGE (DEMANDE UTILISATEUR)
+            # Affichage des sources BRUTES (Demande utilisateur)
             st.markdown("### 📚 Sources utilisées")
             for i, doc in enumerate(response["context"]):
                 source_name = doc.metadata.get('source', 'Source inconnue')
