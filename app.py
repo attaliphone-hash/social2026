@@ -47,10 +47,6 @@ def set_design(bg_image_file, sidebar_color):
             font-weight: 500 !important;
             width: 100% !important;
         }}
-        .main .stButton > button:hover {{
-            background-color: rgba(255, 255, 255, 0.3) !important;
-            border-color: white !important;
-        }}
         .stChatMessage {{
             background-color: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
@@ -58,11 +54,6 @@ def set_design(bg_image_file, sidebar_color):
             margin-bottom: 10px;
         }}
         .stChatMessage p, .stChatMessage li {{ color: black !important; }}
-        [data-testid="stExpander"] {{
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            border: none;
-        }}
         </style>
         '''
         st.markdown(page_bg_img, unsafe_allow_html=True)
@@ -122,20 +113,22 @@ if not vectorstore:
     st.error("⚠️ Erreur : Clé API manquante ou invalide.")
     st.stop()
 
-retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
+# Augmentation du K pour assurer la visibilité du document téléversé
+retriever = vectorstore.as_retriever(search_kwargs={"k": 25})
 
 prompt = ChatPromptTemplate.from_template("""
-Tu es Expert Social Pro 2026, un assistant spécialisé pour l'analyse juridique.
+Tu es Expert Social Pro 2026, spécialisé en audit juridique.
+
 CONTEXTE : {context}
 QUESTION : {question}
 
-CONSIGNES DE RÉPONSE :
-1. ANALYSE PRIORITAIRE : Si le contexte contient un document téléversé (ex: Contrat PDF), analyse-le PRÉCISÉMENT.
-2. CONFRONTATION : Compare les clauses du document avec les règles (Code du Travail, BOSS).
-3. RÉPONSE : Liste ce qui est conforme, ce qui manque ou ce qui est risqué.
-4. FORMAT : Utilise exclusivement des listes à puces.
+CONSIGNES CRITIQUES :
+1. ANALYSE PRIORITAIRE : Tu DOIS utiliser les extraits identifiés comme "VOTRE DOCUMENT". 
+2. CONFRONTATION : Compare ligne par ligne le contenu de "VOTRE DOCUMENT" avec les règles du "CODE DU TRAVAIL" ou "BOSS" présentes dans le contexte.
+3. RÉSULTAT : Liste ce qui est conforme, ce qui est manquant (ex: mentions obligatoires) et ce qui présente un risque.
+4. ABSENCE DE DOC : Si aucun extrait ne commence par "VOTRE DOCUMENT", signale que tu ne peux pas analyser de fichier spécifique.
 
-Réponse technique :
+Réponse technique (exclusivement en listes à puces) :
 """)
 
 rag_chain_with_sources = RunnableParallel(
@@ -144,35 +137,43 @@ rag_chain_with_sources = RunnableParallel(
 
 # --- 6. SIDEBAR ---
 with st.sidebar:
-    st.markdown("##") 
-    st.markdown("### **Bienvenue sur SocialPro2026**")
-    st.markdown("---")
-    st.info("📅 **Base 2026 à jour**\n\nIncluant le BOSS et le Code du Travail.")
-    st.markdown("---")
+    st.markdown("### **SocialPro2026**")
+    st.info("📅 **Base 2026 à jour**")
     st.caption("©BusinessAgentAi")
 
-# --- 7. HEADER ET ANALYSE DE DOCUMENTS ---
+# --- 7. TRAITEMENT ROBUSTE DES DOCUMENTS ---
 def process_file(uploaded_file):
     try:
+        text = ""
         if uploaded_file.name.endswith('.pdf'):
             reader = pypdf.PdfReader(uploaded_file)
-            text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            for page in reader.pages:
+                extracted = page.extract_text()
+                if extracted: text += extracted + "\n"
         else:
             text = uploaded_file.read().decode("utf-8")
-        if not text: return None
+        
+        if not text or len(text.strip()) < 20:
+            return "ERROR_EMPTY"
+            
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         chunks = text_splitter.split_text(text)
-        return vectorstore.add_texts(texts=chunks, metadatas=[{"source": uploaded_file.name} for _ in chunks])
-    except: return None
+        
+        # Marquage explicite de la source pour le retriever
+        metadatas = [{"source": f"VOTRE DOCUMENT : {uploaded_file.name}"} for _ in chunks]
+        return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
+    except Exception as e:
+        return None
 
 if 'doc_ids' not in st.session_state: st.session_state['doc_ids'] = []
 if 'uploader_key' not in st.session_state: st.session_state['uploader_key'] = str(uuid.uuid4())
 
+# --- 8. INTERFACE ET CHAT ---
 col_logo, col_title, col_btn = st.columns([1, 5, 2], vertical_alignment="center")
 with col_logo:
     if os.path.exists("avatar-logo.png"): st.image("avatar-logo.png", width=80)
 with col_title:
-    st.markdown("<h1 style='color: white; margin: 0; font-size: 2.5rem;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: white; margin: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 with col_btn:
     if st.button("Nouvelle conversation", use_container_width=True):
         if st.session_state['doc_ids']:
@@ -186,54 +187,38 @@ with col_btn:
 st.markdown("---")
 
 with st.expander("📎 Analyser un document externe (PDF/TXT)", expanded=False):
-    uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"], key=st.session_state['uploader_key'], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"], key=st.session_state['uploader_key'])
     if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
-        with st.spinner("Intégration en cours..."):
-            new_ids = process_file(uploaded_file)
-            if new_ids:
-                st.session_state['doc_ids'].extend(new_ids)
+        with st.spinner("Analyse du texte en cours..."):
+            res = process_file(uploaded_file)
+            if res == "ERROR_EMPTY":
+                st.error("Le PDF semble être une image (scan). L'extraction de texte est impossible sans OCR.")
+            elif res:
+                st.session_state['doc_ids'].extend(res)
                 if 'history' not in st.session_state: st.session_state['history'] = []
                 st.session_state['history'].append(uploaded_file.name)
+                st.success(f"Document '{uploaded_file.name}' prêt pour l'analyse !")
                 st.rerun()
 
-# --- 8. CHAT INTERFACE ---
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
+if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    with st.chat_message(message["role"]): st.markdown(message["content"])
 
-if query := st.chat_input("Votre question technique..."):
+if query := st.chat_input("Posez votre question sur le document ou la loi..."):
     st.session_state.messages.append({"role": "user", "content": query})
-    with st.chat_message("user"):
-        st.markdown(query)
+    with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant"):
         with st.spinner("Expertise en cours..."):
             response = rag_chain_with_sources.invoke(query)
             st.markdown(response["answer"])
             
-            # AFFICHAGE DES SOURCES PAR NATURE JURIDIQUE
-            st.markdown("### 📚 Sources utilisées")
-            for i, doc in enumerate(response["context"]):
-                raw_source = doc.metadata.get('source', '').upper()
-                
-                # Identification de la nature de la source
-                if "BOSS" in raw_source:
-                    label = "BOSS"
-                elif "CODE_DU_TRAVAIL" in raw_source or "CODE DU TRAVAIL" in raw_source:
-                    label = "CODE DU TRAVAIL"
-                elif "SECURITE_SOCIALE" in raw_source or "CODE_SS" in raw_source:
-                    label = "CODE DE LA SÉCURITÉ SOCIALE"
-                elif "MEMO" in raw_source:
-                    label = "MÉMO CHIFFRES 2026"
-                else:
-                    # Pour les documents téléversés, on garde le nom du fichier
-                    label = raw_source.split('/')[-1].split('\\')[-1]
-                
-                st.markdown(f"**{label} :**")
-                st.write(doc.page_content)
-                st.markdown("---")
+            with st.expander("📚 Sources et extraits analysés"):
+                for doc in response["context"]:
+                    src = doc.metadata.get('source', '').upper()
+                    label = "BOSS" if "BOSS" in src else "CODE DU TRAVAIL" if "CODE" in src else "MÉMO 2026" if "MEMO" in src else src
+                    st.markdown(f"**Source : {label}**")
+                    st.caption(doc.page_content)
+                    st.markdown("---")
             
             st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
