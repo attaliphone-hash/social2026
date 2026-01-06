@@ -139,16 +139,16 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=avatar_img): 
         st.markdown(message["content"])
 
-if query := st.chat_input("Vérifie ce contrat..."):
+if query := st.chat_input("Posez votre question ici..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 expertise en cours...", expanded=True) as status:
             user_docs = vectorstore.similarity_search(
-                query, k=15, filter={"session_id": st.session_state['session_id']}
+                query, k=20, filter={"session_id": st.session_state['session_id']}
             )
-            law_docs = vectorstore.similarity_search(query, k=10)
+            law_docs = vectorstore.similarity_search(query, k=20)
             law_docs = [d for d in law_docs if d.metadata.get('session_id') != st.session_state['session_id']]
 
             context_parts = []
