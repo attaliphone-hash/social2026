@@ -70,7 +70,7 @@ def load_system():
 
 vectorstore, llm = load_system()
 
-# --- 6. LOGIQUE D'EXTRACTION ROBUSTE ---
+# --- 6. LOGIQUE D'EXTRACTION ---
 def process_file(uploaded_file):
     try:
         text = ""
@@ -87,7 +87,6 @@ def process_file(uploaded_file):
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         chunks = text_splitter.split_text(text)
         
-        # VARIABLE DE SESSION : On marque les chunks pour cette conversation uniquement
         metadatas = [{
             "source": f"VOTRE DOCUMENT : {uploaded_file.name}",
             "session_id": st.session_state['session_id']
@@ -100,14 +99,11 @@ def process_file(uploaded_file):
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-col_logo, col_title, col_btn = st.columns([1, 5, 2], vertical_alignment="center")
-with col_title:
-    st.markdown("<h1 style='color: white; margin: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
-with col_btn:
-    if st.button("Nouvelle conversation"):
-        st.session_state.messages = []
-        st.session_state['session_id'] = str(uuid.uuid4()) # Reset session
-        st.rerun()
+st.markdown("<h1 style='color: white;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+if st.button("Nouvelle conversation"):
+    st.session_state.messages = []
+    st.session_state['session_id'] = str(uuid.uuid4())
+    st.rerun()
 
 st.markdown("---")
 
@@ -121,7 +117,7 @@ with st.expander("📎 Analyser un document externe", expanded=False):
             st.success("Document prêt !")
             st.rerun()
 
-# --- 8. CHAT ET RAG ---
+# --- 8. CHAT ET RAG FILTRÉ AVEC CITATIONS PROPRES ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
     with st.chat_message(message["role"]): st.markdown(message["content"])
@@ -131,30 +127,50 @@ if query := st.chat_input("Vérifie ce contrat..."):
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant"):
-        # RETRIEVER FILTRÉ : On ne récupère que le Code du Travail OU le document de cette session
-        # On utilise une logique de recherche large (k=25)
-        docs = vectorstore.similarity_search(query, k=25)
+        # A. Recherche isolée du document utilisateur
+        user_docs = vectorstore.similarity_search(
+            query, k=15, filter={"session_id": st.session_state['session_id']}
+        )
         
-        # On filtre manuellement pour s'assurer que notre document est là
-        context_text = "\n\n".join([f"SOURCE {d.metadata.get('source')}:\n{d.page_content}" for d in docs])
+        # B. Recherche isolée de la loi
+        law_docs = vectorstore.similarity_search(query, k=10)
+        law_docs = [d for d in law_docs if d.metadata.get('session_id') != st.session_state['session_id']]
+
+        # C. Construction du contexte
+        context_parts = []
+        if user_docs:
+            context_parts.append("=== CONTENU DE VOTRE DOCUMENT (À ANALYSER) ===")
+            context_parts.extend([d.page_content for d in user_docs])
+        
+        context_parts.append("\n=== RÉFÉRENCES LÉGALES (CODE DU TRAVAIL / BOSS) ===")
+        context_parts.extend([d.page_content for d in law_docs])
+        context_text = "\n".join(context_parts)
 
         prompt = ChatPromptTemplate.from_template("""
-        Tu es Expert Social Pro 2026.
-        
+        Tu es Expert Social Pro 2026. Réalise un audit de conformité.
         CONTEXTE : {context}
         QUESTION : {question}
         
-        CONSIGNE : Compare le contenu de "VOTRE DOCUMENT" avec les règles du "CODE DU TRAVAIL". 
-        Si "VOTRE DOCUMENT" n'apparaît pas dans le CONTEXTE, dis que tu ne trouves pas le fichier.
+        CONSIGNE : Compare le document utilisateur aux références légales. 
+        Cite précisément les anomalies (ex: Article 2 du contrat vs Article L... du Code).
         """)
         
         chain = prompt | llm | StrOutputParser()
         full_response = chain.invoke({"context": context_text, "question": query})
         st.markdown(full_response)
         
+        # D. Affichage propre des citations (Nettoyage des chemins)
         with st.expander("📚 Sources analysées"):
-            for d in docs:
-                st.write(f"**{d.metadata.get('source')}**")
+            if user_docs:
+                st.subheader("📄 Votre Document")
+                for d in user_docs:
+                    st.caption(f"...{d.page_content[:200]}...")
+            
+            st.subheader("⚖️ Références Légales")
+            for d in law_docs:
+                # On enlève le chemin complet pour ne garder que le nom du fichier (ex: Code_du_Travail.txt)
+                clean_source = d.metadata.get('source', 'Loi').split('/')[-1]
+                st.write(f"**Source : {clean_source}**")
                 st.caption(d.page_content)
 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
