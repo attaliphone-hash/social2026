@@ -120,7 +120,6 @@ with st.expander("📎 Analyser un document externe", expanded=False):
 # --- 8. CHAT ET RAG FILTRÉ AVEC FINITIONS PRO ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
-    # Changement 3 : Icône avatar pour l'assistant
     avatar_img = "avatar-logo.png" if message["role"] == "assistant" else None
     with st.chat_message(message["role"], avatar=avatar_img): 
         st.markdown(message["content"])
@@ -130,8 +129,8 @@ if query := st.chat_input("Vérifie ce contrat..."):
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        # Changement 2 : Mention "Analyse en cours" via st.status
-        with st.status("🔍 Analyse de conformité en cours...", expanded=True) as status:
+        # Modification demandée : Expertise en cours...
+        with st.status("🔍 expertise en cours...", expanded=True) as status:
             user_docs = vectorstore.similarity_search(
                 query, k=15, filter={"session_id": st.session_state['session_id']}
             )
@@ -148,17 +147,17 @@ if query := st.chat_input("Vérifie ce contrat..."):
             context_text = "\n".join(context_parts)
 
             prompt = ChatPromptTemplate.from_template("""
-            Tu es Expert Social Pro 2026. Réalise un audit de conformité rigoureux.
+            Tu es Expert Social Pro 2026. Réalise une expertise juridique rigoureuse.
             CONTEXTE : {context}
             QUESTION : {question}
             
-            CONSIGNE : Compare le document utilisateur aux références légales. 
-            Cite précisément les anomalies.
+            CONSIGNE : Compare le document utilisateur aux références légales si présent. 
+            Cite précisément les sources.
             """)
             
             chain = prompt | llm | StrOutputParser()
             full_response = chain.invoke({"context": context_text, "question": query})
-            status.update(label="✅ Analyse terminée !", state="complete", expanded=False)
+            status.update(label="✅ Expertise terminée !", state="complete", expanded=False)
 
         st.markdown(full_response)
         
@@ -170,7 +169,7 @@ if query := st.chat_input("Vérifie ce contrat..."):
             
             st.markdown("### ⚖️ Références Légales")
             for d in law_docs:
-                # Changement 1 : Suppression du .txt et nettoyage visuel
+                # Nettoyage .txt et chemins
                 raw_source = d.metadata.get('source', 'Loi').split('/')[-1]
                 clean_source = raw_source.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
                 
