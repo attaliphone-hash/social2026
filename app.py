@@ -7,7 +7,7 @@ import pypdf
 import uuid 
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
 
-# Patch critique pour Cloud Run (nécessaire pour ChromaDB)
+# Patch critique pour Cloud Run
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -35,12 +35,9 @@ def set_design(bg_image_file, sidebar_color):
         [data-testid="stToolbar"] {{ visibility: hidden; height: 0%; }}
         [data-testid="stDecoration"] {{ visibility: hidden; height: 0%; }}
         header {{ background-color: transparent !important; }}
-        
         [data-testid="stSidebar"] > div:first-child {{ background-color: {sidebar_color}; }}
         [data-testid="stSidebar"] * {{ color: white !important; }}
-        
         .block-container {{ padding-top: 2rem !important; }}
-
         .main .stButton > button {{
             background-color: rgba(255, 255, 255, 0.1) !important;
             color: white !important;
@@ -54,7 +51,6 @@ def set_design(bg_image_file, sidebar_color):
             background-color: rgba(255, 255, 255, 0.3) !important;
             border-color: white !important;
         }}
-
         .stChatMessage {{
             background-color: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
@@ -62,7 +58,6 @@ def set_design(bg_image_file, sidebar_color):
             margin-bottom: 10px;
         }}
         .stChatMessage p, .stChatMessage li {{ color: black !important; }}
-
         [data-testid="stExpander"] {{
             background-color: rgba(255, 255, 255, 0.9);
             border-radius: 10px;
@@ -80,10 +75,8 @@ st.set_page_config(page_title="Expert Social Pro 2026", layout="wide", page_icon
 def check_password():
     if st.session_state.get("password_correct"):
         return True
-
     set_design('background.webp', '#024c6f')
     st.markdown("<h1 style='text-align: center; color: white; margin-top: 100px;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
-    
     col_a, col_b, col_c = st.columns([1, 2, 1])
     with col_b:
         password = st.text_input("Saisissez le code d'accès :", type="password")
@@ -104,20 +97,14 @@ set_design('background.webp', '#003366')
 def load_system():
     from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
     from langchain_chroma import Chroma
-    
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
     if not api_key:
         return None, None
-
-    # Passage explicite de la clé pour Cloud Run
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/text-embedding-004",
         google_api_key=api_key
     )
-    # Chargement de la base vectorielle chroma_db (générée localement)
     vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
-    
-    # Utilisation impérative de gemini-2.0-flash-exp
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-exp", 
         temperature=0,
@@ -137,7 +124,6 @@ if not vectorstore:
 
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
-# Prompt Expert Social Pro 2026 - Version Renforcée (Mesures Transitoires)
 prompt = ChatPromptTemplate.from_template("""
 Tu es Expert Social Pro 2026, un assistant spécialisé pour les gestionnaires de paie et DRH.
 CONSIGNES DE RÉPONSE :
@@ -173,28 +159,20 @@ def process_file(uploaded_file):
             text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
         else:
             text = uploaded_file.read().decode("utf-8")
-        
         if not text: return None
-
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         chunks = text_splitter.split_text(text)
-        
         return vectorstore.add_texts(texts=chunks, metadatas=[{"source": uploaded_file.name} for _ in chunks])
-    except:
-        return None
+    except: return None
 
 if 'doc_ids' not in st.session_state: st.session_state['doc_ids'] = []
 if 'uploader_key' not in st.session_state: st.session_state['uploader_key'] = str(uuid.uuid4())
 
-# Layout Header
 col_logo, col_title, col_btn = st.columns([1, 5, 2], vertical_alignment="center")
-
 with col_logo:
     if os.path.exists("avatar-logo.png"): st.image("avatar-logo.png", width=80)
-
 with col_title:
     st.markdown("<h1 style='color: white; margin: 0; font-size: 2.5rem;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
-
 with col_btn:
     if st.button("Nouvelle conversation", use_container_width=True):
         if st.session_state['doc_ids']:
@@ -207,7 +185,6 @@ with col_btn:
 
 st.markdown("---")
 
-# Zone Upload Document
 with st.expander("📎 Analyser un document externe (PDF/TXT)", expanded=False):
     uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"], key=st.session_state['uploader_key'], label_visibility="collapsed")
     if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
@@ -237,8 +214,11 @@ if query := st.chat_input("Votre question technique..."):
             response = rag_chain_with_sources.invoke(query)
             st.markdown(response["answer"])
             
+            # AFFICHAGE COMPLET DES SOURCES (CONTENU + NOM)
             with st.expander("📚 Sources utilisées"):
-                sources = set([doc.metadata.get("source", "Source interne") for doc in response["context"]])
-                for s in sources:
-                    st.write(f"- {s}")
+                for i, doc in enumerate(response["context"]):
+                    st.markdown(f"**Source {i+1} : {doc.metadata.get('source', 'Inconnue')}**")
+                    st.caption(doc.page_content)
+                    st.markdown("---")
+            
             st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
