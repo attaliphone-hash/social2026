@@ -1,7 +1,4 @@
-# --- SÉCURITÉ (CRUCIAL) ---
-.env
-
-# --- DOSSIERS SYSTÈME & GIT ---
+# --- DOSSIERS SYSTÈME ---
 .git/
 .gitignore
 .DS_Store
@@ -9,17 +6,19 @@ venv/
 .venv/
 __pycache__/
 
-# --- DONNÉES ---
-# On laisse l'app reconstruire la base au propre sur le Cloud
-chroma_db/
+# --- DONNÉES (CRUCIAL POUR SOCIALPRO) ---
+# On veut que chroma_db soit envoyé ! Donc on met un # devant :
+# chroma_db/
 
-# On ignore les PDF pour ne pas alourdir le serveur
+# On ignore les PDF sources pour ne pas alourdir (les .txt suffisent)
 sources_pdf/
 *.pdf
 
+# On ignore les scripts de préparation
+convert_pdf.py
+build_db.py
+
 # --- EXCEPTIONS ---
-# On force l'envoi des .txt pour que l'IA ait ses sources 2026
-!*.txt
 !requirements.txt
 !*.png
 !*.jpg
