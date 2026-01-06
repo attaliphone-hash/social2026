@@ -128,9 +128,7 @@ prompt = ChatPromptTemplate.from_template("""
 Tu es Expert Social Pro 2026, un assistant spécialisé pour les gestionnaires de paie et DRH.
 CONSIGNES DE RÉPONSE :
 1. Réponds toujours sous forme de liste à puces pour les conditions techniques.
-2. En cas de comparaison temporelle ou de changement de loi, identifie TOUJOURS si une clause de maintien des droits antérieurs (mesure transitoire) s'applique selon la date de signature du contrat.
-3. Ne suggère jamais de vérifier le BOSS, donne directement les taux et chiffres issus du contexte.
-4. Cite tes sources précisément (ex: BOSS, Code du travail).
+2. Cite tes sources précisément (ex: BOSS, Code du travail).
 
 Contexte : {context}
 Question : {question}
@@ -138,7 +136,6 @@ Question : {question}
 Réponse technique et précise :
 """)
 
-# Note : On n'utilise PLUS create_retrieval_chain ici, mais l'architecture RunnableParallel
 rag_chain_with_sources = RunnableParallel(
     {"context": retriever, "question": RunnablePassthrough()}
 ).assign(answer= prompt | llm | StrOutputParser())
@@ -186,17 +183,6 @@ with col_btn:
 
 st.markdown("---")
 
-with st.expander("📎 Analyser un document externe (PDF/TXT)", expanded=False):
-    uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"], key=st.session_state['uploader_key'], label_visibility="collapsed")
-    if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
-        with st.spinner("Intégration en cours..."):
-            new_ids = process_file(uploaded_file)
-            if new_ids:
-                st.session_state['doc_ids'].extend(new_ids)
-                if 'history' not in st.session_state: st.session_state['history'] = []
-                st.session_state['history'].append(uploaded_file.name)
-                st.rerun()
-
 # --- 8. CHAT INTERFACE ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -215,11 +201,12 @@ if query := st.chat_input("Votre question technique..."):
             response = rag_chain_with_sources.invoke(query)
             st.markdown(response["answer"])
             
-            with st.expander("📚 Sources utilisées"):
-                for i, doc in enumerate(response["context"]):
-                    # On affiche le nom propre du fichier (sans le chemin système)
-                    st.markdown(f"**Source {i+1} : {os.path.basename(doc.metadata.get('source', 'Inconnue'))}**")
-                    st.caption(doc.page_content)
-                    st.markdown("---")
+            # BLOC SOURCES : AFFICHAGE BRUT ET COMPLET SANS NETTOYAGE
+            st.markdown("### 📚 Sources utilisées")
+            for i, doc in enumerate(response["context"]):
+                source_name = doc.metadata.get('source', 'Source inconnue')
+                st.markdown(f"**Source {i+1} : {source_name}**")
+                st.write(doc.page_content)
+                st.markdown("---")
             
             st.session_state.messages.append({"role": "assistant", "content": response["answer"]})
