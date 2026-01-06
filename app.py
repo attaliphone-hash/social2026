@@ -117,59 +117,63 @@ with st.expander("📎 Analyser un document externe", expanded=False):
             st.success("Document prêt !")
             st.rerun()
 
-# --- 8. CHAT ET RAG FILTRÉ AVEC CITATIONS PROPRES ---
+# --- 8. CHAT ET RAG FILTRÉ AVEC FINITIONS PRO ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]): st.markdown(message["content"])
+    # Changement 3 : Icône avatar pour l'assistant
+    avatar_img = "avatar-logo.png" if message["role"] == "assistant" else None
+    with st.chat_message(message["role"], avatar=avatar_img): 
+        st.markdown(message["content"])
 
 if query := st.chat_input("Vérifie ce contrat..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"): st.markdown(query)
     
-    with st.chat_message("assistant"):
-        # A. Recherche isolée du document utilisateur
-        user_docs = vectorstore.similarity_search(
-            query, k=15, filter={"session_id": st.session_state['session_id']}
-        )
-        
-        # B. Recherche isolée de la loi
-        law_docs = vectorstore.similarity_search(query, k=10)
-        law_docs = [d for d in law_docs if d.metadata.get('session_id') != st.session_state['session_id']]
+    with st.chat_message("assistant", avatar="avatar-logo.png"):
+        # Changement 2 : Mention "Analyse en cours" via st.status
+        with st.status("🔍 Analyse de conformité en cours...", expanded=True) as status:
+            user_docs = vectorstore.similarity_search(
+                query, k=15, filter={"session_id": st.session_state['session_id']}
+            )
+            law_docs = vectorstore.similarity_search(query, k=10)
+            law_docs = [d for d in law_docs if d.metadata.get('session_id') != st.session_state['session_id']]
 
-        # C. Construction du contexte
-        context_parts = []
-        if user_docs:
-            context_parts.append("=== CONTENU DE VOTRE DOCUMENT (À ANALYSER) ===")
-            context_parts.extend([d.page_content for d in user_docs])
-        
-        context_parts.append("\n=== RÉFÉRENCES LÉGALES (CODE DU TRAVAIL / BOSS) ===")
-        context_parts.extend([d.page_content for d in law_docs])
-        context_text = "\n".join(context_parts)
+            context_parts = []
+            if user_docs:
+                context_parts.append("=== CONTENU DE VOTRE DOCUMENT ===")
+                context_parts.extend([d.page_content for d in user_docs])
+            
+            context_parts.append("\n=== RÉFÉRENCES LÉGALES ===")
+            context_parts.extend([d.page_content for d in law_docs])
+            context_text = "\n".join(context_parts)
 
-        prompt = ChatPromptTemplate.from_template("""
-        Tu es Expert Social Pro 2026. Réalise un audit de conformité.
-        CONTEXTE : {context}
-        QUESTION : {question}
-        
-        CONSIGNE : Compare le document utilisateur aux références légales. 
-        Cite précisément les anomalies (ex: Article 2 du contrat vs Article L... du Code).
-        """)
-        
-        chain = prompt | llm | StrOutputParser()
-        full_response = chain.invoke({"context": context_text, "question": query})
+            prompt = ChatPromptTemplate.from_template("""
+            Tu es Expert Social Pro 2026. Réalise un audit de conformité rigoureux.
+            CONTEXTE : {context}
+            QUESTION : {question}
+            
+            CONSIGNE : Compare le document utilisateur aux références légales. 
+            Cite précisément les anomalies.
+            """)
+            
+            chain = prompt | llm | StrOutputParser()
+            full_response = chain.invoke({"context": context_text, "question": query})
+            status.update(label="✅ Analyse terminée !", state="complete", expanded=False)
+
         st.markdown(full_response)
         
-        # D. Affichage propre des citations (Nettoyage des chemins)
-        with st.expander("📚 Sources analysées"):
+        with st.expander("📚 Sources et bases juridiques consultées"):
             if user_docs:
-                st.subheader("📄 Votre Document")
+                st.markdown("### 📄 Votre Document")
                 for d in user_docs:
-                    st.caption(f"...{d.page_content[:200]}...")
+                    st.caption(f"Extrait : {d.page_content[:200]}...")
             
-            st.subheader("⚖️ Références Légales")
+            st.markdown("### ⚖️ Références Légales")
             for d in law_docs:
-                # On enlève le chemin complet pour ne garder que le nom du fichier (ex: Code_du_Travail.txt)
-                clean_source = d.metadata.get('source', 'Loi').split('/')[-1]
+                # Changement 1 : Suppression du .txt et nettoyage visuel
+                raw_source = d.metadata.get('source', 'Loi').split('/')[-1]
+                clean_source = raw_source.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
+                
                 st.write(f"**Source : {clean_source}**")
                 st.caption(d.page_content)
 
