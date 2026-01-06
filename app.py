@@ -1,18 +1,20 @@
 # --- 1. CONFIGURATION SQLITE ET PATCH ---
 import sys
 import os
+
+# Correction du patch SQLite pour éviter le KeyError
+try:
+    import pysqlite3
+    sys.modules['sqlite3'] = pysqlite3
+except ImportError:
+    # Si pysqlite3 n'est pas encore là, on ne fait rien pour éviter le crash
+    pass
+
 import base64 
 import streamlit as st
 import pypdf 
 import uuid 
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
-
-# Patch critique pour Cloud Run
-try:
-    __import__('pysqlite3')
-    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-except ImportError:
-    pass
 
 # --- 2. FONCTIONS DESIGN & CSS ---
 def get_base64(bin_file):
@@ -201,7 +203,7 @@ if query := st.chat_input("Votre question technique..."):
             response = rag_chain_with_sources.invoke(query)
             st.markdown(response["answer"])
             
-            # BLOC SOURCES : AFFICHAGE BRUT ET COMPLET SANS NETTOYAGE
+            # AFFICHAGE DES SOURCES BRUT ET COMPLET SANS NETTOYAGE (DEMANDE UTILISATEUR)
             st.markdown("### 📚 Sources utilisées")
             for i, doc in enumerate(response["context"]):
                 source_name = doc.metadata.get('source', 'Source inconnue')
