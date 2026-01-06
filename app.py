@@ -138,6 +138,7 @@ Question : {question}
 Réponse technique et précise :
 """)
 
+# Note : On n'utilise PLUS create_retrieval_chain ici, mais l'architecture RunnableParallel
 rag_chain_with_sources = RunnableParallel(
     {"context": retriever, "question": RunnablePassthrough()}
 ).assign(answer= prompt | llm | StrOutputParser())
@@ -214,10 +215,10 @@ if query := st.chat_input("Votre question technique..."):
             response = rag_chain_with_sources.invoke(query)
             st.markdown(response["answer"])
             
-            # AFFICHAGE COMPLET DES SOURCES (CONTENU + NOM)
             with st.expander("📚 Sources utilisées"):
                 for i, doc in enumerate(response["context"]):
-                    st.markdown(f"**Source {i+1} : {doc.metadata.get('source', 'Inconnue')}**")
+                    # On affiche le nom propre du fichier (sans le chemin système)
+                    st.markdown(f"**Source {i+1} : {os.path.basename(doc.metadata.get('source', 'Inconnue'))}**")
                     st.caption(doc.page_content)
                     st.markdown("---")
             
