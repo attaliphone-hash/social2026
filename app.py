@@ -2,7 +2,6 @@
 import sys
 import os
 
-# Patch SQLite robuste pour Cloud Run
 try:
     import pysqlite3
     sys.modules['sqlite3'] = pysqlite3
@@ -123,18 +122,20 @@ if not vectorstore:
     st.error("⚠️ Erreur : Clé API manquante ou invalide.")
     st.stop()
 
-retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
+retriever = vectorstore.as_retriever(search_kwargs={"k": 20})
 
 prompt = ChatPromptTemplate.from_template("""
-Tu es Expert Social Pro 2026, un assistant spécialisé pour les gestionnaires de paie et DRH.
+Tu es Expert Social Pro 2026, un assistant spécialisé pour l'analyse juridique.
+CONTEXTE : {context}
+QUESTION : {question}
+
 CONSIGNES DE RÉPONSE :
-1. Réponds toujours sous forme de liste à puces pour les conditions techniques.
-2. Cite tes sources précisément (ex: BOSS, Code du travail).
+1. ANALYSE PRIORITAIRE : Si le contexte contient un document téléversé (ex: Contrat PDF), analyse-le PRÉCISÉMENT.
+2. CONFRONTATION : Compare les clauses du document avec les règles (Code du Travail, BOSS).
+3. RÉPONSE : Liste ce qui est conforme, ce qui manque ou ce qui est risqué.
+4. FORMAT : Utilise exclusivement des listes à puces.
 
-Contexte : {context}
-Question : {question}
-
-Réponse technique et précise :
+Réponse technique :
 """)
 
 rag_chain_with_sources = RunnableParallel(
@@ -184,7 +185,6 @@ with col_btn:
 
 st.markdown("---")
 
-# Zone de téléversement rétablie
 with st.expander("📎 Analyser un document externe (PDF/TXT)", expanded=False):
     uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"], key=st.session_state['uploader_key'], label_visibility="collapsed")
     if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
@@ -214,11 +214,25 @@ if query := st.chat_input("Votre question technique..."):
             response = rag_chain_with_sources.invoke(query)
             st.markdown(response["answer"])
             
-            # Affichage des sources BRUTES (Demande utilisateur)
+            # AFFICHAGE DES SOURCES PAR NATURE JURIDIQUE
             st.markdown("### 📚 Sources utilisées")
             for i, doc in enumerate(response["context"]):
-                source_name = doc.metadata.get('source', 'Source inconnue')
-                st.markdown(f"**Source {i+1} : {source_name}**")
+                raw_source = doc.metadata.get('source', '').upper()
+                
+                # Identification de la nature de la source
+                if "BOSS" in raw_source:
+                    label = "BOSS"
+                elif "CODE_DU_TRAVAIL" in raw_source or "CODE DU TRAVAIL" in raw_source:
+                    label = "CODE DU TRAVAIL"
+                elif "SECURITE_SOCIALE" in raw_source or "CODE_SS" in raw_source:
+                    label = "CODE DE LA SÉCURITÉ SOCIALE"
+                elif "MEMO" in raw_source:
+                    label = "MÉMO CHIFFRES 2026"
+                else:
+                    # Pour les documents téléversés, on garde le nom du fichier
+                    label = raw_source.split('/')[-1].split('\\')[-1]
+                
+                st.markdown(f"**{label} :**")
                 st.write(doc.page_content)
                 st.markdown("---")
             
