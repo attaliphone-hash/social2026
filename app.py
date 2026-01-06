@@ -7,7 +7,7 @@ import pypdf
 import uuid 
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
 
-# Patch critique pour Cloud Run (permet à ChromaDB de fonctionner sans erreur de version sqlite)
+# Patch critique pour Cloud Run (nécessaire pour ChromaDB)
 try:
     __import__('pysqlite3')
     sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -41,7 +41,6 @@ def set_design(bg_image_file, sidebar_color):
         
         .block-container {{ padding-top: 2rem !important; }}
 
-        /* Style des boutons */
         .main .stButton > button {{
             background-color: rgba(255, 255, 255, 0.1) !important;
             color: white !important;
@@ -56,7 +55,6 @@ def set_design(bg_image_file, sidebar_color):
             border-color: white !important;
         }}
 
-        /* Bulles de chat */
         .stChatMessage {{
             background-color: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
@@ -76,7 +74,7 @@ def set_design(bg_image_file, sidebar_color):
     except FileNotFoundError:
         pass
 
-# --- 3. CONFIGURATION PAGE & AUTH ---
+# --- 3. CONFIGURATION PAGE & AUTHENTIFICATION ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide", page_icon="⚖️")
 
 def check_password():
@@ -101,7 +99,7 @@ def check_password():
 check_password()
 set_design('background.webp', '#003366')
 
-# --- 4. CHARGEMENT IA (RAG) ---
+# --- 4. CHARGEMENT SYSTÈME IA ---
 @st.cache_resource
 def load_system():
     from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
@@ -111,14 +109,15 @@ def load_system():
     if not api_key:
         return None, None
 
-    # Passage explicite de la clé aux objets pour Cloud Run
+    # Passage explicite de la clé pour Cloud Run
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/text-embedding-004",
         google_api_key=api_key
     )
-    # Chargement de la base vectorielle générée par build_db.py
+    # Chargement de la base vectorielle chroma_db (générée localement)
     vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
     
+    # Utilisation impérative de gemini-2.0-flash-exp
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash-exp", 
         temperature=0,
@@ -126,7 +125,7 @@ def load_system():
     )
     return vectorstore, llm
 
-# --- 5. LOGIQUE RAG ET CHAINE ---
+# --- 5. LOGIQUE RAG ET PROMPT EXPERT ---
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
@@ -138,10 +137,14 @@ if not vectorstore:
 
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
+# Prompt Expert Social Pro 2026 - Version Renforcée (Mesures Transitoires)
 prompt = ChatPromptTemplate.from_template("""
-Tu es un assistant expert en droit social et paie français (Expert Social Pro 2026).
-CONSIGNE : Réponds toujours sous forme de liste à puces pour les conditions techniques.
-IMPORTANT : Cite tes sources en utilisant le terme "BOSS" ou "Code du travail".
+Tu es Expert Social Pro 2026, un assistant spécialisé pour les gestionnaires de paie et DRH.
+CONSIGNES DE RÉPONSE :
+1. Réponds toujours sous forme de liste à puces pour les conditions techniques.
+2. En cas de comparaison temporelle ou de changement de loi, identifie TOUJOURS si une clause de maintien des droits antérieurs (mesure transitoire) s'applique selon la date de signature du contrat.
+3. Ne suggère jamais de vérifier le BOSS, donne directement les taux et chiffres issus du contexte.
+4. Cite tes sources précisément (ex: BOSS, Code du travail).
 
 Contexte : {context}
 Question : {question}
@@ -153,7 +156,7 @@ rag_chain_with_sources = RunnableParallel(
     {"context": retriever, "question": RunnablePassthrough()}
 ).assign(answer= prompt | llm | StrOutputParser())
 
-# --- 6. SIDEBAR ET INFOS ---
+# --- 6. SIDEBAR ---
 with st.sidebar:
     st.markdown("##") 
     st.markdown("### **Bienvenue sur SocialPro2026**")
@@ -162,7 +165,7 @@ with st.sidebar:
     st.markdown("---")
     st.caption("©BusinessAgentAi")
 
-# --- 7. HEADER ET UPLOAD SECURISE ---
+# --- 7. HEADER ET ANALYSE DE DOCUMENTS ---
 def process_file(uploaded_file):
     try:
         if uploaded_file.name.endswith('.pdf'):
@@ -176,7 +179,6 @@ def process_file(uploaded_file):
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         chunks = text_splitter.split_text(text)
         
-        # Ajout temporaire à la base pour la durée de la session
         return vectorstore.add_texts(texts=chunks, metadatas=[{"source": uploaded_file.name} for _ in chunks])
     except:
         return None
@@ -205,7 +207,7 @@ with col_btn:
 
 st.markdown("---")
 
-# Zone Upload
+# Zone Upload Document
 with st.expander("📎 Analyser un document externe (PDF/TXT)", expanded=False):
     uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"], key=st.session_state['uploader_key'], label_visibility="collapsed")
     if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
@@ -217,7 +219,7 @@ with st.expander("📎 Analyser un document externe (PDF/TXT)", expanded=False):
                 st.session_state['history'].append(uploaded_file.name)
                 st.rerun()
 
-# --- 8. CHAT ---
+# --- 8. CHAT INTERFACE ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
