@@ -35,6 +35,16 @@ def set_design(bg_image_file, sidebar_color):
         [data-testid="stSidebar"] * {{ color: white !important; }}
         .stChatMessage {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }}
         .stChatMessage p, .stChatMessage li {{ color: black !important; }}
+        
+        /* Correction 1 : Texte de l'expander en blanc */
+        .stExpander details summary p {{ color: white !important; }}
+        
+        /* Style pour aligner le bouton à droite */
+        div[data-testid="column"]:nth-child(2) {{
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }}
         </style>
         '''
         st.markdown(page_bg_img, unsafe_allow_html=True)
@@ -95,15 +105,20 @@ def process_file(uploaded_file):
         return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
     except Exception: return None
 
-# --- 7. INTERFACE ---
+# --- 7. INTERFACE (Correction 2 : Titre et Bouton alignés) ---
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-st.markdown("<h1 style='color: white;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
-if st.button("Nouvelle conversation"):
-    st.session_state.messages = []
-    st.session_state['session_id'] = str(uuid.uuid4())
-    st.rerun()
+col_titre, col_bouton = st.columns([4, 1])
+
+with col_titre:
+    st.markdown("<h1 style='color: white; margin: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+
+with col_bouton:
+    if st.button("Nouvelle conversation"):
+        st.session_state.messages = []
+        st.session_state['session_id'] = str(uuid.uuid4())
+        st.rerun()
 
 st.markdown("---")
 
@@ -129,7 +144,6 @@ if query := st.chat_input("Vérifie ce contrat..."):
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        # Modification demandée : Expertise en cours...
         with st.status("🔍 expertise en cours...", expanded=True) as status:
             user_docs = vectorstore.similarity_search(
                 query, k=15, filter={"session_id": st.session_state['session_id']}
@@ -169,10 +183,8 @@ if query := st.chat_input("Vérifie ce contrat..."):
             
             st.markdown("### ⚖️ Références Légales")
             for d in law_docs:
-                # Nettoyage .txt et chemins
                 raw_source = d.metadata.get('source', 'Loi').split('/')[-1]
                 clean_source = raw_source.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
-                
                 st.write(f"**Source : {clean_source}**")
                 st.caption(d.page_content)
 
