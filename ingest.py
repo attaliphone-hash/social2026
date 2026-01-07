@@ -1,13 +1,16 @@
 import os
 import shutil
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 
-# Configuration
+# --- CONFIGURATION ---
 DATA_PATH = "data"
 DB_PATH = "chroma_db"
+
+# --- SÉCURITÉ CLÉ API ---
+# On ne met RIEN ici. On utilisera la commande 'export' dans le terminal.
 
 def create_vector_db():
     if os.path.exists(DB_PATH):
@@ -36,22 +39,34 @@ def create_vector_db():
                 loader = TextLoader(file_path, encoding="utf-8") 
                 documents.extend(loader.load())
                 files_found = True
+            elif filename.endswith(".csv"):
+                print(f"📊 Lecture CSV (Barèmes) : {filename}")
+                # Configuré pour le fichier BOSS (délimiteur ; et encodage latin-1)
+                loader = CSVLoader(file_path, csv_args={'delimiter': ';'}, encoding="latin-1")
+                documents.extend(loader.load())
+                files_found = True
+                
         except Exception as e:
             print(f"❌ Erreur sur {filename}: {e}")
 
     if not files_found:
-        print("⚠️ Aucun fichier valide trouvé.")
+        print("⚠️ Aucun fichier valide trouvé dans /data.")
         return
 
-    print(f"--- Découpage de {len(documents)} pages brutes ---")
+    print(f"--- Découpage de {len(documents)} éléments bruts ---")
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     chunks = text_splitter.split_documents(documents)
     print(f"✂️ Résultat : {len(chunks)} morceaux de texte prêts.")
 
-    print("--- Génération de la base ---")
+    print("--- Génération de la base (Vecteurs) ---")
+    # L'IA ira chercher la clé dans l'environnement du terminal
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-    vectorstore = Chroma.from_documents(documents=chunks, embedding=embeddings, persist_directory=DB_PATH)
-    print("✅ SUCCÈS : Base de connaissances générée !")
+    vectorstore = Chroma.from_documents(
+        documents=chunks, 
+        embedding=embeddings, 
+        persist_directory=DB_PATH
+    )
+    print("✅ SUCCÈS : Base de connaissances générée (PDF + TXT + CSV) !")
 
 if __name__ == "__main__":
     create_vector_db()
