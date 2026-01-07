@@ -1,48 +1,89 @@
 import sys
 import os
 import uuid
+import base64 
+import streamlit as st
+import pypdf 
+
+# --- 1. PATCH SQLITE POUR CLOUD RUN ---
 try:
     import pysqlite3
     sys.modules['sqlite3'] = pysqlite3
 except ImportError:
     pass
 
-import base64 
-import streamlit as st
-import pypdf 
 from langchain_text_splitters import RecursiveCharacterTextSplitter 
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# --- INITIALISATION SESSION ---
+# --- 2. CONFIGURATION PAGE ---
+st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
+
+# --- 3. DESIGN ET NETTOYAGE INTERFACE ---
+def get_base64(bin_file):
+    if os.path.exists(bin_file):
+        with open(bin_file, 'rb') as f:
+            return base64.b64encode(f.read()).decode()
+    return ""
+
+def apply_pro_design():
+    # Suppression radicale des éléments Streamlit (Header, Menu, Footer)
+    st.markdown("""
+        <style>
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden !important; height: 0px;}
+        footer {visibility: hidden;}
+        [data-testid="stHeader"] {display: none;}
+        .stApp { margin-top: -80px; }
+        
+        .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }
+        .stChatMessage p, .stChatMessage li { color: black !important; }
+        .stExpander details summary p { color: white !important; }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    bg_data = get_base64('background.webp')
+    if bg_data:
+        st.markdown(f"""
+            <style>
+            .stApp {{
+                background-image: url("data:image/webp;base64,{bg_data}");
+                background-size: cover;
+                background-attachment: fixed;
+            }}
+            </style>
+        """, unsafe_allow_html=True)
+
+# --- 4. SÉCURITÉ ---
+def check_password():
+    if st.session_state.get("password_correct"):
+        return True
+    
+    apply_pro_design()
+    st.markdown("<br><br><br><br>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: white;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
+    
+    col_l, col_m, col_r = st.columns([1, 2, 1])
+    with col_m:
+        pwd = st.text_input("Code d'accès :", type="password")
+        if st.button("Se connecter"):
+            valid_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
+            if pwd == valid_pwd:
+                st.session_state["password_correct"] = True
+                st.rerun()
+            else:
+                st.error("Code incorrect.")
+    st.stop()
+
+check_password()
+apply_pro_design()
+
+# --- 5. INITIALISATION IA ---
 if 'session_id' not in st.session_state:
     st.session_state['session_id'] = str(uuid.uuid4())
 
-# --- DESIGN ---
-def get_base64(bin_file):
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
-
-def set_design(bg_image_file, sidebar_color):
-    try:
-        bin_str = get_base64(bg_image_file)
-        extension = "webp" if bg_image_file.endswith(".webp") else "png"
-        page_bg_img = f'''
-        <style>
-        .stApp {{ background-image: url("data:image/{extension};base64,{bin_str}"); background-size: cover; background-attachment: fixed; }}
-        [data-testid="stSidebar"] > div:first-child {{ background-color: {sidebar_color}; }}
-        [data-testid="stSidebar"] * {{ color: white !important; }}
-        .stChatMessage {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }}
-        .stChatMessage p, .stChatMessage li {{ color: black !important; }}
-        </style>
-        '''
-        st.markdown(page_bg_img, unsafe_allow_html=True)
-    except FileNotFoundError: pass
-
-# --- CONFIGURATION NOMS PROS ---
 NOMS_PROS = {
     "barème officiel": "🏛️ BOSS - BARÈMES OFFICIELS 2025",
     "MEMO_CHIFFRES": "📑 Barèmes Sociaux 2026 (Anticipation Officielle)",
@@ -62,11 +103,6 @@ def nettoyer_nom_source(raw_source):
         if cle in nom_fichier: return nom_pro
     return nom_fichier.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
 
-# --- CONFIGURATION PAGE ---
-st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
-check_password = lambda: True # Simplifié ici pour le code complet
-set_design('background.webp', '#003366')
-
 @st.cache_resource
 def load_system():
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
@@ -77,26 +113,26 @@ def load_system():
 
 vectorstore, llm = load_system()
 
-# --- LOGIQUE CHAT AVEC ROUTAGE ---
+# --- 6. INTERFACE ET CHAT ---
+st.markdown("<h1 style='color: white;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]): st.markdown(message["content"])
+    avatar = "avatar-logo.png" if message["role"] == "assistant" else None
+    with st.chat_message(message["role"], avatar=avatar):
+        st.markdown(message["content"])
 
 if query := st.chat_input("Posez votre question..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        with st.status("🔍 Expertise juridique en cours...", expanded=True):
+        with st.status("🔍 Analyse des sources officielles...", expanded=True):
             
-            # RECHERCHE AVEC TRI DE PRIORITÉ
+            # RECHERCHE AVEC TRI DE PRIORITÉ (Le CSV et le Mémo passent devant)
             raw_docs = vectorstore.similarity_search(query, k=20)
-            
-            # On sépare les sources prioritaires (Barèmes/Mémo) du reste
             docs_prioritaires = [d for d in raw_docs if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
             docs_doctrine = [d for d in raw_docs if d not in docs_prioritaires]
-            
-            # On réassemble : Les barèmes TOUJOURS en premier pour l'IA
             law_docs = docs_prioritaires + docs_doctrine
             
             context_parts = []
@@ -111,9 +147,9 @@ if query := st.chat_input("Posez votre question..."):
             
             HIÉRARCHIE DES RÉFÉRENCES :
             1. Pour tout MONTANT ou CHIFFRE de 2025, utilise prioritairement [🏛️ BOSS - BARÈMES OFFICIELS 2025].
-            2. Pour tout MONTANT ou CHIFFRE de 2026, utilise prioritairement [📑 Barèmes Sociaux 2026 (Anticipation Officielle)].
-            3. Cite systématiquement la source entre crochets.
+            2. Pour tout MONTANT ou CHIFFRE de 2026, utilise exclusivement [📑 Barèmes Sociaux 2026 (Anticipation Officielle)].
             
+            CONSIGNE : Cite la source entre crochets pour chaque chiffre.
             CONTEXTE : {context}
             QUESTION : {question}
             """)
