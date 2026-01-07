@@ -1,196 +1,190 @@
-import streamlit as st
+# --- 1. CONFIGURATION SQLITE ET PATCH ---
+import sys
 import os
-import tempfile
-import base64
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_chroma import Chroma
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+import uuid
 
-# --- CONFIGURATION DE LA PAGE ---
-st.set_page_config(
-    page_title="Expert Social Pro 2026",
-    page_icon="⚖️",
-    layout="wide"
-)
+try:
+    import pysqlite3
+    sys.modules['sqlite3'] = pysqlite3
+except ImportError:
+    pass
 
-# --- GESTION DU FOND D'ÉCRAN ---
+import base64 
+import streamlit as st
+import pypdf 
+from langchain_text_splitters import RecursiveCharacterTextSplitter 
+
+# --- 2. INITIALISATION SESSION ---
+if 'session_id' not in st.session_state:
+    st.session_state['session_id'] = str(uuid.uuid4())
+
+# --- 3. FONCTIONS DESIGN ---
 def get_base64(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
     return base64.b64encode(data).decode()
 
-def set_background(png_file):
-    bin_str = get_base64(png_file)
-    page_bg_img = '''
-    <style>
-    .stApp {
-    background-image: url("data:image/png;base64,%s");
-    background-size: cover;
-    }
-    </style>
-    ''' % bin_str
-    st.markdown(page_bg_img, unsafe_allow_html=True)
+def set_design(bg_image_file, sidebar_color):
+    try:
+        bin_str = get_base64(bg_image_file)
+        extension = "webp" if bg_image_file.endswith(".webp") else "png"
+        page_bg_img = f'''
+        <style>
+        .stApp {{ background-image: url("data:image/{extension};base64,{bin_str}"); background-size: cover; background-attachment: fixed; }}
+        [data-testid="stSidebar"] > div:first-child {{ background-color: {sidebar_color}; }}
+        [data-testid="stSidebar"] * {{ color: white !important; }}
+        .stChatMessage {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }}
+        .stChatMessage p, .stChatMessage li {{ color: black !important; }}
+        
+        /* Texte de l'expander en blanc */
+        .stExpander details summary p {{ color: white !important; }}
+        
+        /* Style pour aligner le bouton à droite */
+        div[data-testid="column"]:nth-child(2) {{
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }}
 
-# Chargement du fond (support PNG ou WEBP)
-if os.path.exists("background.png"):
-    set_background("background.png")
-elif os.path.exists("background.webp"):
-    set_background("background.webp")
+        /* --- CORRECTION : MASQUER LE HEADER ET LE MENU --- */
+        header[data-testid="stHeader"] {{
+            visibility: hidden;
+            height: 0px;
+        }}
+        /* Remonter le contenu pour ne pas laisser un vide en haut */
+        .block-container {{
+            padding-top: 1rem;
+        }}
+        </style>
+        '''
+        st.markdown(page_bg_img, unsafe_allow_html=True)
+    except FileNotFoundError: pass
 
-# --- STYLES CSS ---
-st.markdown("""
-<style>
-    .main { background-color: transparent; }
-    .stChatMessage { background-color: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .stButton>button { width: 100%; border-radius: 5px; }
-    h1 { color: #2c3e50; }
-</style>
-""", unsafe_allow_html=True)
+# --- 4. CONFIGURATION PAGE ---
+st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- INITIALISATION SESSION ---
-if "session_id" not in st.session_state:
-    st.session_state.session_id = os.urandom(4).hex()
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "uploader_key" not in st.session_state:
-    st.session_state.uploader_key = 0
-
-# --- CHARGEMENT DU CERVEAU (MODEL & DB) ---
-api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    st.error("❌ CLÉ API MANQUANTE. Vérifiez vos variables d'environnement.")
+def check_password():
+    if st.session_state.get("password_correct"): return True
+    set_design('background.webp', '#024c6f')
+    st.markdown("<h1 style='text-align: center; color: white;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
+    password = st.text_input("Code d'accès :", type="password")
+    if st.button("Se connecter"):
+        if password == (os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")):
+            st.session_state["password_correct"] = True
+            st.rerun()
     st.stop()
 
-# Modèle IA
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-exp",
-    temperature=0,
-    api_key=api_key
-)
+check_password()
+set_design('background.webp', '#003366')
 
-# Base de données Vectorielle
-embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
-vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
+# --- 5. CHARGEMENT SYSTÈME IA ---
+@st.cache_resource
+def load_system():
+    from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+    from langchain_chroma import Chroma
+    api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
+    vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
+    return vectorstore, llm
 
-# --- BARRE LATÉRALE (UPLOAD) ---
-with st.sidebar:
-    st.image("avatar-logo.png", width=80)
-    st.title("Expert Social 2026")
-    st.markdown("---")
-    
-    # Upload fichier temporaire
-    uploaded_file = st.file_uploader(
-        "📎 Analyser un document (PDF/TXT)", 
-        type=["pdf", "txt"],
-        key=f"uploader_{st.session_state.uploader_key}"
-    )
-    
-    if uploaded_file:
-        with st.status("📥 Lecture en cours...", expanded=True):
-            try:
-                # Sauvegarde temporaire
-                with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp:
-                    tmp.write(uploaded_file.getvalue())
-                    tmp_path = tmp.name
-                
-                # Chargement selon le type
-                if uploaded_file.name.endswith(".pdf"):
-                    loader = PyPDFLoader(tmp_path)
-                else:
-                    loader = TextLoader(tmp_path)
-                    
-                docs = loader.load()
-                
-                # Ajout métadonnées (Session ID + Nom Source)
-                for doc in docs:
-                    doc.metadata["session_id"] = st.session_state.session_id
-                    doc.metadata["source"] = f"📁 {uploaded_file.name}"
-                
-                # Découpage et Vectorisation
-                text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-                chunks = text_splitter.split_documents(docs)
-                
-                vectorstore.add_documents(chunks)
-                
-                os.unlink(tmp_path) # Nettoyage
-                st.success("✅ Document mémorisé !")
-                
-            except Exception as e:
-                st.error(f"Erreur : {e}")
+vectorstore, llm = load_system()
 
-    st.markdown("---")
-    if st.button("🧹 Nouvelle Conversation"):
+# --- 6. LOGIQUE D'EXTRACTION ---
+def process_file(uploaded_file):
+    try:
+        text = ""
+        if uploaded_file.name.endswith('.pdf'):
+            reader = pypdf.PdfReader(uploaded_file)
+            for page in reader.pages:
+                extracted = page.extract_text()
+                if extracted: text += extracted + "\n"
+        else:
+            text = uploaded_file.read().decode("utf-8")
+        
+        if not text or len(text.strip()) < 20: return "ERROR_EMPTY"
+            
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+        chunks = text_splitter.split_text(text)
+        
+        metadatas = [{
+            "source": f"VOTRE DOCUMENT : {uploaded_file.name}",
+            "session_id": st.session_state['session_id']
+        } for _ in chunks]
+        
+        return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
+    except Exception: return None
+
+# --- 7. INTERFACE ---
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+col_titre, col_bouton = st.columns([4, 1])
+
+with col_titre:
+    st.markdown("<h1 style='color: white; margin: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+
+with col_bouton:
+    if st.button("Nouvelle conversation"):
         st.session_state.messages = []
-        st.session_state.uploader_key += 1
+        st.session_state['session_id'] = str(uuid.uuid4())
         st.rerun()
 
-# --- INTERFACE DE CHAT ---
-st.title("⚖️ Assistant Juridique & RH")
-st.caption("Expertise fiable basée sur le Code du Travail, le BOSS et la Jurisprudence 2026.")
+st.markdown("---")
 
-# Affichage de l'historique
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar="avatar-logo.png" if msg["role"] == "assistant" else None):
-        st.markdown(msg["content"])
+with st.expander("📎 Analyser un document externe", expanded=False):
+    uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"])
+    if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
+        res = process_file(uploaded_file)
+        if res:
+            if 'history' not in st.session_state: st.session_state['history'] = []
+            st.session_state['history'].append(uploaded_file.name)
+            st.success("Document prêt !")
+            st.rerun()
 
-# --- LOGIQUE DE RÉPONSE ---
-if query := st.chat_input("Posez votre question juridique..."):
-    
-    # 1. Message Utilisateur
+# --- 8. CHAT ET RAG FILTRÉ AVEC FINITIONS PRO ---
+if "messages" not in st.session_state: st.session_state.messages = []
+for message in st.session_state.messages:
+    avatar_img = "avatar-logo.png" if message["role"] == "assistant" else None
+    with st.chat_message(message["role"], avatar=avatar_img): 
+        st.markdown(message["content"])
+
+if query := st.chat_input("Posez votre question ici..."):
     st.session_state.messages.append({"role": "user", "content": query})
-    with st.chat_message("user"):
-        st.markdown(query)
-
-    # 2. Réponse IA
+    with st.chat_message("user"): st.markdown(query)
+    
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        with st.status("🔍 Analyse juridique en cours...", expanded=True) as status:
-            
-            # A. RECHERCHE DOCUMENTAIRE
-            # Docs utilisateur (Session en cours uniquement)
+        with st.status("🔍 expertise en cours...", expanded=True) as status:
             user_docs = vectorstore.similarity_search(
-                query, k=10, filter={"session_id": st.session_state.session_id}
+                query, k=20, filter={"session_id": st.session_state['session_id']}
             )
-            
-            # Docs juridiques (Tout sauf session en cours)
-            raw_law_docs = vectorstore.similarity_search(query, k=20)
-            law_docs = [d for d in raw_law_docs if d.metadata.get("session_id") != st.session_state.session_id]
+            law_docs = vectorstore.similarity_search(query, k=20)
+            law_docs = [d for d in law_docs if d.metadata.get('session_id') != st.session_state['session_id']]
 
-            # B. PRÉPARATION DU CONTEXTE
-            context_text = ""
-            
+            context_parts = []
             if user_docs:
-                context_text += "\n=== DOCUMENT UTILISATEUR ===\n"
-                for d in user_docs:
-                    context_text += d.page_content + "\n"
+                context_parts.append("=== CONTENU DE VOTRE DOCUMENT ===")
+                context_parts.extend([d.page_content for d in user_docs])
             
-            context_text += "\n=== RÉFÉRENCES JURIDIQUES (LOI, BOSS, JURISPRUDENCE) ===\n"
-            for d in law_docs:
-                src = d.metadata.get('source', 'Source inconnue')
-                context_text += f"[Source: {src}]\n{d.page_content}\n"
+            context_parts.append("\n=== RÉFÉRENCES LÉGALES ===")
+            context_parts.extend([d.page_content for d in law_docs])
+            context_text = "\n".join(context_parts)
 
-            # C. PROMPT
             prompt = ChatPromptTemplate.from_template("""
-            Tu es Expert Social Pro 2026.
+            Tu es Expert Social Pro 2026. Réalise une expertise juridique rigoureuse.
             CONTEXTE : {context}
             QUESTION : {question}
             
-            CONSIGNE :
-            - Compare le document utilisateur aux références légales si présent.
-            - Cite précisément les sources utilisées (Code du Travail, BOSS, Jurisprudence).
-            - Si la réponse n'est pas dans le contexte, dis-le.
+            CONSIGNE : Compare le document utilisateur aux références légales si présent. 
+            Cite précisément les sources.
             """)
             
             chain = prompt | llm | StrOutputParser()
             full_response = chain.invoke({"context": context_text, "question": query})
-            
             status.update(label="✅ Expertise terminée !", state="complete", expanded=False)
 
         st.markdown(full_response)
         
-        # D. AFFICHAGE DES SOURCES (Version Standard)
         with st.expander("📚 Sources et bases juridiques consultées"):
             if user_docs:
                 st.markdown("### 📄 Votre Document")
@@ -198,15 +192,10 @@ if query := st.chat_input("Posez votre question juridique..."):
                     st.caption(f"Extrait : {d.page_content[:200]}...")
             
             st.markdown("### ⚖️ Références Légales")
-            sources_vues = set()
             for d in law_docs:
-                src = d.metadata.get('source', 'Inconnue')
-                # Petit nettoyage visuel simple pour éviter les chemins complets moches
-                src_clean = os.path.basename(src).replace('.txt', '').replace('.pdf', '').replace('_', ' ')
-                
-                if src_clean not in sources_vues:
-                    st.write(f"**Source : {src_clean}**")
-                    st.caption(d.page_content[:300] + "...")
-                    sources_vues.add(src_clean)
+                raw_source = d.metadata.get('source', 'Loi').split('/')[-1]
+                clean_source = raw_source.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
+                st.write(f"**Source : {clean_source}**")
+                st.caption(d.page_content)
 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
