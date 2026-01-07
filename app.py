@@ -16,7 +16,7 @@ st.set_page_config(
 )
 
 # --- DICTIONNAIRE DE RENOMMAGE (Le "Maquillage" des sources) ---
-# C'est ici qu'on transforme les noms de fichiers techniques en noms clairs pour l'IA et l'utilisateur
+# L'IA utilisera ces noms exacts pour citer ses sources.
 NOMS_PROS = {
     "MEMO_CHIFFRES": "🔢 Barèmes Sociaux Officiels 2026",
     "MEMO_JURISPRUDENCE": "⚖️ Jurisprudence de Référence (Socle)",
@@ -30,19 +30,18 @@ NOMS_PROS = {
 }
 
 def nettoyer_nom_source(raw_source):
-    """Transforme 'data/MEMO_CHIFFRES.txt' en '🔢 Barèmes Sociaux Officiels 2026'"""
+    """Transforme un chemin de fichier technique en nom lisible et officiel."""
     if not raw_source:
         return "Source Inconnue"
         
-    # On nettoie le chemin
     nom_fichier = os.path.basename(raw_source)
     
-    # On cherche si un mot-clé connu est dans le nom
+    # Priorité 1 : Correspondance exacte avec nos clés
     for cle, nom_pro in NOMS_PROS.items():
         if cle in nom_fichier:
             return nom_pro
             
-    # Sinon on renvoie le nom du fichier nettoyé
+    # Priorité 2 : Nettoyage générique si pas dans le dictionnaire
     return nom_fichier.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
 
 # --- STYLES CSS ---
@@ -52,7 +51,6 @@ st.markdown("""
     .stChatMessage { background-color: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .stButton>button { width: 100%; border-radius: 5px; }
     h1 { color: #2c3e50; }
-    .source-box { font-size: 0.85em; color: #555; border-left: 3px solid #2980b9; padding-left: 10px; margin-top: 5px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -77,6 +75,7 @@ llm = ChatGoogleGenerativeAI(
 )
 
 embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
+# On charge la base existante
 vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
 
 # --- BARRE LATÉRALE (UPLOAD) ---
@@ -105,10 +104,10 @@ with st.sidebar:
                     
                 docs = loader.load()
                 
-                # Ajout de métadonnées pour identifier que c'est CE document utilisateur
+                # Marquage du document pour cette session uniquement
                 for doc in docs:
                     doc.metadata["session_id"] = st.session_state.session_id
-                    doc.metadata["source"] = f"📁 {uploaded_file.name}" # Nom explicite
+                    doc.metadata["source"] = f"📁 {uploaded_file.name}"
                 
                 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
                 chunks = text_splitter.split_documents(docs)
@@ -136,7 +135,7 @@ for msg in st.session_state.messages:
 
 # --- LOGIQUE DE RÉPONSE ---
 if query := st.chat_input("Posez votre question juridique..."):
-    # 1. Affichage utilisateur
+    # 1. Affichage message utilisateur
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
@@ -145,84 +144,93 @@ if query := st.chat_input("Posez votre question juridique..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours...", expanded=True) as status:
             
-            # A. RECHERCHE DANS LE DOCUMENT UTILISATEUR (Filtré par session)
+            # A. RECHERCHE LARGE (Pour ne rien rater)
+            # Docs utilisateurs
             user_results = vectorstore.similarity_search(
-                query, 
-                k=10, 
-                filter={"session_id": st.session_state.session_id}
+                query, k=10, filter={"session_id": st.session_state.session_id}
             )
             
-            # B. RECHERCHE DANS LA LOI (Tout sauf la session actuelle)
-            # On cherche large (k=20) pour être sûr de trouver la jurisprudence
+            # Docs officiels (Tout ce qui n'est pas session courante)
             all_results = vectorstore.similarity_search(query, k=20)
-            
-            # On filtre manuellement pour ne garder que les documents "Officiels" (ceux qui n'ont PAS le session_id actuel)
             law_results = [
                 doc for doc in all_results 
                 if doc.metadata.get("session_id") != st.session_state.session_id
             ]
 
-            # C. CONSTRUCTION DU CONTEXTE "ÉTIQUETÉ"
+            # B. PRÉPARATION DU CONTEXTE INVISIBLE
             context_parts = []
             
-            # Bloc 1 : Le document de l'utilisateur (s'il existe)
             if user_results:
                 context_parts.append("\n=== 📂 DOCUMENT SOUMIS PAR L'UTILISATEUR ===")
                 for doc in user_results:
                     context_parts.append(f"{doc.page_content}")
             
-            # Bloc 2 : Les sources officielles (Loi, Jurisprudence, Chiffres)
             context_parts.append("\n=== 🏛️ RÉFÉRENCES LÉGALES ET BARÈMES OFFICIELS ===")
             for doc in law_results:
                 nom_source_pro = nettoyer_nom_source(doc.metadata.get("source", ""))
-                # On injecte l'étiquette [SOURCE OFFICIELLE : ...] juste avant le texte
+                # On injecte l'étiquette exacte pour que l'IA puisse la citer
                 context_parts.append(f"[SOURCE OFFICIELLE : {nom_source_pro}]\n{doc.page_content}")
 
             final_context = "\n".join(context_parts)
 
-            # D. PROMPT STRICT
+            # C. PROMPT STRICT (Le Cerveau)
             prompt_template = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026, un assistant juridique de haut niveau.
+            Tu es l'Expert Social Pro 2026.
             
-            RÈGLES ABSOLUES :
-            1. Tes réponses doivent être juridiquement précises et basées PRIORITAIREMENT sur les [RÉFÉRENCES LÉGALES ET BARÈMES OFFICIELS].
-            2. Si l'information provient d'un bloc marqué "[SOURCE OFFICIELLE : ...]", tu dois citer cette source explicitement.
-            3. Ne confonds JAMAIS le "DOCUMENT SOUMIS PAR L'UTILISATEUR" avec les sources officielles.
-            4. Si la réponse contient des chiffres (montants, taux), vérifie-les dans les Barèmes Officiels fournis.
+            CONSIGNE CRUCIALE SUR LES SOURCES :
+            1. Base ta réponse sur les [RÉFÉRENCES LÉGALES ET BARÈMES OFFICIELS].
+            2. Quand tu utilises une info, tu DOIS citer explicitement le nom de la source entre crochets.
+            3. Exemple : "Selon les [🔢 Barèmes Sociaux Officiels 2026]..." ou "L'article L1234 du [📕 Code du Travail]...".
             
             CONTEXTE :
             {context}
             
-            QUESTION DE L'UTILISATEUR :
+            QUESTION :
             {question}
             """)
             
             chain = prompt_template | llm | StrOutputParser()
-            response = chain.invoke({"context": final_context, "question": query})
+            full_response = chain.invoke({"context": final_context, "question": query})
             
             status.update(label="✅ Expertise terminée !", state="complete", expanded=False)
 
-        # 3. Affichage Réponse
-        st.markdown(response)
+        # 3. Affichage de la réponse IA
+        st.markdown(full_response)
         
-        # 4. Affichage des Sources (Proprement)
-        with st.expander("📚 Sources et bases juridiques consultées"):
-            # Sources Utilisateur
+        # 4. AFFICHAGE FILTRÉ DES SOURCES (Le nettoyage)
+        with st.expander("📚 Sources réellement utilisées"):
+            
+            # Cas 1 : Documents utilisateurs (toujours affichés si trouvés)
             if user_results:
-                st.markdown("#### 📂 Document Utilisateur")
+                st.markdown("#### 📂 Votre Document")
                 for doc in user_results:
                     st.caption(f"Extrait : *{doc.page_content[:150]}...*")
             
-            # Sources Officielles (Dédoublonnées par nom)
+            # Cas 2 : Sources Officielles (FILTRAGE STRICT)
+            sources_affichees = set()
+            header_displayed = False
+            
             if law_results:
-                st.markdown("#### 🏛️ Sources Officielles")
-                sources_affichees = set()
                 for doc in law_results:
                     nom = nettoyer_nom_source(doc.metadata.get("source", ""))
-                    if nom not in sources_affichees:
+                    
+                    # LOGIQUE DE FILTRE :
+                    # On affiche la source SEULEMENT si son nom apparaît dans le texte de la réponse
+                    # Ou si c'est la jurisprudence socle (souvent implicite mais cruciale)
+                    est_cite = nom in full_response
+                    est_jurisprudence = "Jurisprudence" in nom and "jurisprudence" in full_response.lower()
+                    
+                    if (est_cite or est_jurisprudence) and (nom not in sources_affichees):
+                        if not header_displayed:
+                            st.markdown("#### 🏛️ Références Officielles Citées")
+                            header_displayed = True
+                            
                         st.markdown(f"**🔹 {nom}**")
-                        # Petit extrait pour prouver la source
                         st.caption(f"_{doc.page_content[:200]}..._") 
                         sources_affichees.add(nom)
+            
+            # Message si aucune source n'est citée explicitement (cas rare de réponse générique)
+            if not header_displayed and not user_results:
+                st.caption("L'analyse est basée sur le contexte général des bases juridiques fournies.")
 
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
