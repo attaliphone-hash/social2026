@@ -39,31 +39,36 @@ def set_design(bg_image_file, sidebar_color):
         [data-testid="stSidebar"] * {{ color: white !important; }}
         .stChatMessage {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }}
         .stChatMessage p, .stChatMessage li {{ color: black !important; }}
-        
-        /* Texte de l'expander en blanc */
         .stExpander details summary p {{ color: white !important; }}
-        
-        /* Style pour aligner le bouton à droite */
-        div[data-testid="column"]:nth-child(2) {{
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }}
-
-        /* Masquer le header */
-        header[data-testid="stHeader"] {{
-            visibility: hidden;
-            height: 0px;
-        }}
-        .block-container {{
-            padding-top: 1rem;
-        }}
+        div[data-testid="column"]:nth-child(2) {{ display: flex; justify-content: flex-end; align-items: center; }}
+        header[data-testid="stHeader"] {{ visibility: hidden; height: 0px; }}
+        .block-container {{ padding-top: 1rem; }}
         </style>
         '''
         st.markdown(page_bg_img, unsafe_allow_html=True)
     except FileNotFoundError: pass
 
-# --- 4. CONFIGURATION PAGE ---
+# --- 4. CONFIGURATION NOMS PROS (Le Maquillage) ---
+NOMS_PROS = {
+    "MEMO_CHIFFRES": "🔢 Barèmes Sociaux Officiels 2026",
+    "MEMO_JURISPRUDENCE": "⚖️ Jurisprudence de Référence (Socle)",
+    "JURISPRUDENCE_SOCLE": "⚖️ Jurisprudence de Référence (Socle)",
+    "Code_du_Travail": "📕 Code du Travail",
+    "Code_Securite_Sociale": "📗 Code de la Sécurité Sociale",
+    "BOSS": "🌐 Doctrine Administrative (BOSS)",
+    "Indemnites_Rupture": "🌐 BOSS - Indemnités",
+    "Protection_sociale": "🌐 BOSS - Protection Sociale",
+    "Frais_professionnels": "🌐 BOSS - Frais Pros"
+}
+
+def nettoyer_nom_source(raw_source):
+    if not raw_source: return "Source Inconnue"
+    nom_fichier = os.path.basename(raw_source)
+    for cle, nom_pro in NOMS_PROS.items():
+        if cle in nom_fichier: return nom_pro
+    return nom_fichier.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
+
+# --- 5. CONFIGURATION PAGE & SÉCURITÉ ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
 def check_password():
@@ -80,7 +85,7 @@ def check_password():
 check_password()
 set_design('background.webp', '#003366')
 
-# --- 5. CHARGEMENT SYSTÈME IA ---
+# --- 6. CHARGEMENT SYSTÈME IA ---
 @st.cache_resource
 def load_system():
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
@@ -91,7 +96,7 @@ def load_system():
 
 vectorstore, llm = load_system()
 
-# --- 6. LOGIQUE D'EXTRACTION ---
+# --- 7. LOGIQUE D'EXTRACTION ---
 def process_file(uploaded_file):
     try:
         text = ""
@@ -116,12 +121,10 @@ def process_file(uploaded_file):
         return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
     except Exception: return None
 
-# --- 7. INTERFACE ---
+# --- 8. INTERFACE ---
 col_titre, col_bouton = st.columns([4, 1])
-
 with col_titre:
     st.markdown("<h1 style='color: white; margin: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
-
 with col_bouton:
     if st.button("Nouvelle conversation"):
         st.session_state.messages = []
@@ -140,7 +143,7 @@ with st.expander("📎 Analyser un document externe", expanded=False):
             st.success("Document prêt !")
             st.rerun()
 
-# --- 8. CHAT ---
+# --- 9. CHAT ET FILTRAGE INTELLIGENT ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
     avatar_img = "avatar-logo.png" if message["role"] == "assistant" else None
@@ -154,38 +157,36 @@ if query := st.chat_input("Posez votre question ici..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 expertise en cours...", expanded=True) as status:
             
-            # Recherche brute sans filtre
-            user_docs = vectorstore.similarity_search(
-                query, k=20, filter={"session_id": st.session_state['session_id']}
-            )
+            # 1. Recherche Large
+            user_docs = vectorstore.similarity_search(query, k=20, filter={"session_id": st.session_state['session_id']})
             raw_law_docs = vectorstore.similarity_search(query, k=20)
             law_docs = [d for d in raw_law_docs if d.metadata.get('session_id') != st.session_state['session_id']]
 
+            # 2. Construction Contexte avec Noms Pros
             context_parts = []
             if user_docs:
-                context_parts.append("=== DOCUMENT UTILISATEUR (A ANALYSER) ===")
+                context_parts.append("=== DOCUMENT UTILISATEUR ===")
                 context_parts.extend([d.page_content for d in user_docs])
             
-            # On donne tout à l'IA, sans maquillage
-            context_parts.append("\n=== BIBLIOTHÈQUE JURIDIQUE (CONTIENT DU BRUIT) ===")
+            context_parts.append("\n=== RÉFÉRENCES LÉGALES DISPONIBLES ===")
             for d in law_docs:
-                src = d.metadata.get('source', 'Inconnue').split('/')[-1]
-                context_parts.append(f"[SOURCE DISPONIBLE : {src}]\n{d.page_content}")
+                # ICI : On transforme MEMO_CHIFFRES en 'Barèmes...' AVANT de le donner à l'IA
+                nom_pro = nettoyer_nom_source(d.metadata.get('source', ''))
+                context_parts.append(f"[SOURCE : {nom_pro}]\n{d.page_content}")
             
             context_text = "\n".join(context_parts)
 
-            # C'EST ICI QUE TOUT SE JOUE : L'INTELLIGENCE AU LIEU DU CODE
+            # 3. Prompt Strict
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026.
             
             CONTEXTE : {context}
             QUESTION : {question}
             
-            INSTRUCTIONS CRITIQUES :
-            1. Tu as accès à plusieurs extraits de documents dans la "BIBLIOTHÈQUE JURIDIQUE".
-            2. ATTENTION : Beaucoup de documents contiennent les mots-clés de la question mais sont HORS SUJET (exemple : un texte sur le licenciement qui parle du PASS pour un calcul n'est PAS la source officielle du montant du PASS).
-            3. Ta mission est d'identifier LA source officielle et pertinente, et d'ignorer les "bruits".
-            4. Cite explicitement la source que tu as retenue dans ta réponse.
+            CONSIGNES :
+            1. Base ta réponse UNIQUEMENT sur les sources pertinentes fournies.
+            2. ATTENTION : Si tu utilises une info, tu DOIS citer le nom de la source entre crochets, EXACTEMENT comme indiqué dans le contexte.
+            3. Exemple : "Selon les [🔢 Barèmes Sociaux Officiels 2026]...".
             """)
             
             chain = prompt | llm | StrOutputParser()
@@ -194,24 +195,35 @@ if query := st.chat_input("Posez votre question ici..."):
 
         st.markdown(full_response)
         
-        # Affichage transparent : On montre ce que le moteur a trouvé, sans filtre
-        with st.expander("📚 Sources brutes consultées (Transparence)"):
+        # 4. FILTRE D'AFFICHAGE (Le retour du filtre propre)
+        with st.expander("📚 Sources réellement utilisées"):
             if user_docs:
                 st.markdown("### 📄 Votre Document")
                 for d in user_docs:
                     st.caption(f"Extrait : {d.page_content[:200]}...")
             
-            st.markdown("### ⚖️ Bibliothèque Juridique")
-            sources_vues = set()
+            # Logique de filtre : On n'affiche que ce que l'IA a cité
+            sources_affichees = set()
+            header_displayed = False
+            
             for d in law_docs:
-                raw_source = d.metadata.get('source', 'Loi').split('/')[-1]
-                # Nettoyage visuel simple
-                clean_source = raw_source.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
+                nom = nettoyer_nom_source(d.metadata.get('source', ''))
                 
-                # On évite juste de répéter 10 fois le même nom de fichier
-                if clean_source not in sources_vues:
-                    st.write(f"**Document disponible : {clean_source}**")
-                    st.caption(d.page_content[:300] + "...")
-                    sources_vues.add(clean_source)
+                # Vérification : Est-ce que le nom (ex: "Barèmes...") est dans la réponse de l'IA ?
+                est_cite = nom in full_response
+                # Sécurité : Si c'est de la jurisprudence, on l'affiche souvent car c'est utile
+                est_jurisprudence = "Jurisprudence" in nom and "jurisprudence" in full_response.lower()
+
+                if (est_cite or est_jurisprudence) and (nom not in sources_affichees):
+                    if not header_displayed:
+                        st.markdown("### ⚖️ Références Officielles Citées")
+                        header_displayed = True
+                    
+                    st.write(f"**🔹 {nom}**")
+                    st.caption(f"_{d.page_content[:250]}..._")
+                    sources_affichees.add(nom)
+            
+            if not header_displayed and not user_docs:
+                st.caption("Réponse basée sur l'analyse générale des textes de loi fournis.")
 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
