@@ -21,7 +21,7 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- 3. DESIGN PRO AJUSTÉ (Équilibre Padding/Header) ---
+# --- 3. DESIGN PRO (Padding & Header) ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, 'rb') as f:
@@ -29,20 +29,13 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    # Suppression du header tout en gardant un padding propre pour le titre
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
         header {visibility: hidden !important; height: 0px;}
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
-        
-        /* Ajustement précis du haut de page */
-        .block-container { 
-            padding-top: 3rem !important; 
-            padding-bottom: 1rem !important; 
-        }
-        
+        .block-container { padding-top: 3.5rem !important; }
         .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
         .stExpander details summary p { color: white !important; font-weight: bold; }
@@ -66,12 +59,12 @@ def check_password():
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         pwd = st.text_input("Code d'accès :", type="password")
-        if st.button("Déverrouiller"):
+        if st.button("Se connecter"):
             valid_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
             if pwd == str(valid_pwd):
                 st.session_state["password_correct"] = True
                 st.rerun()
-            else: st.error("Code incorrect.")
+            else: st.error("Code erroné.")
     st.stop()
 
 check_password()
@@ -126,16 +119,14 @@ def process_file(uploaded_file):
         return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
     except Exception: return None
 
-# --- 7. INTERFACE STABLE ---
+# --- 7. INTERFACE ---
 col_t, col_b = st.columns([4, 1])
-with col_t: st.markdown("<h1 style='color: white; margin-bottom: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+with col_t: st.markdown("<h1 style='color: white; margin-top: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 with col_b:
     if st.button("Nouvelle session"):
         st.session_state.messages = []
         st.session_state['session_id'] = str(uuid.uuid4())
         st.rerun()
-
-st.markdown("<br>", unsafe_allow_html=True)
 
 with st.expander("📎 Analyser un document externe", expanded=False):
     uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"])
@@ -158,32 +149,29 @@ if query := st.chat_input("Posez votre question..."):
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Recherche multi-sources...", expanded=True):
-            # 1. Recherche Hard Barèmes
             raw_law = vectorstore.similarity_search(query, k=25)
-            
-            # 2. Séparation forcée
-            barèmes_docs = [d for d in raw_law if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
-            doctrine_docs = [d for d in raw_law if d not in barèmes_docs]
             user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
             
-            # 3. Construction du contexte avec étiquettes d'autorité
+            barèmes_docs = [d for d in raw_law if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
+            doctrine_docs = [d for d in raw_law if d not in barèmes_docs]
+            
             context = []
             if barèmes_docs:
                 context.append("### SOURCES DE RÉFÉRENCE (CHIFFRES OFFICIELS) ###")
                 context.extend([f"[SOURCE : {nettoyer_nom_source(d.metadata.get('source',''))}]\n{d.page_content}" for d in barèmes_docs])
             
             if doctrine_docs:
-                context.append("\n### DOCTRINE ADMINISTRATIVE (RÈGLES ET EXEMPLES) ###")
+                context.append("\n### DOCTRINE ADMINISTRATIVE (RÈGLES) ###")
                 context.extend([f"[SOURCE : {nettoyer_nom_source(d.metadata.get('source',''))}]\n{d.page_content}" for d in doctrine_docs])
 
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026.
+            Tu es l'Expert Social Pro 2026. 
             
-            CONSIGNE D'OR :
-            Si la question porte sur un chiffre (PASS, SMIC, Plafond), utilise EXCLUSIVEMENT la section 'SOURCES DE RÉFÉRENCE'.
-            N'utilise la section 'DOCTRINE' que pour expliquer les règles ou donner du contexte.
+            CONSIGNE CRUCIALE :
+            - Si la question mentionne '2025', cherche EXCLUSIVEMENT dans [🏛️ BOSS - BARÈMES OFFICIELS 2025]. 
+            - Ne réponds pas pour 2026 si la question porte sur 2025.
+            - Cite toujours la source entre crochets.
             
-            Cite la source entre crochets.
             CONTEXTE : {context}
             QUESTION : {question}
             """)
@@ -191,4 +179,16 @@ if query := st.chat_input("Posez votre question..."):
             full_response = (prompt | llm | StrOutputParser()).invoke({"context": "\n".join(context), "question": query})
 
         st.markdown(full_response)
+        
+        # --- RETOUR DU MENU DÉPLOYABLE ---
+        with st.expander("📚 Sources réellement utilisées"):
+            used = set()
+            total_docs = barèmes_docs + doctrine_docs
+            for d in total_docs:
+                nom = nettoyer_nom_source(d.metadata.get('source', ''))
+                # On affiche la source si elle est mentionnée dans la réponse de l'IA
+                if nom in full_response and nom not in used:
+                    st.write(f"**🔹 {nom}**")
+                    used.add(nom)
+                    
     st.session_state.messages.append({"role": "assistant", "content": full_response})
