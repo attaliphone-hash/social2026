@@ -5,7 +5,7 @@ import base64
 import streamlit as st
 import pypdf 
 
-# --- 1. PATCH SQLITE ---
+# --- 1. PATCH SQLITE POUR CLOUD RUN ---
 try:
     import pysqlite3
     sys.modules['sqlite3'] = pysqlite3
@@ -21,7 +21,7 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- 3. DESIGN PRO (Zéro bandeau blanc) ---
+# --- 3. DESIGN PRO (Zéro bandeau blanc / Menu masqué) ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, 'rb') as f:
@@ -37,9 +37,11 @@ def apply_pro_design():
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; }
         .stApp { margin-top: -60px; } 
-        .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }
-        .stChatMessage p, .stChatMessage li { color: black !important; }
-        .stExpander details summary p { color: white !important; }
+        
+        /* Style des bulles de chat */
+        .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
+        .stChatMessage p, .stChatMessage li { color: black !important; font-size: 16px; }
+        .stExpander details summary p { color: white !important; font-weight: bold; }
         </style>
     """, unsafe_allow_html=True)
     
@@ -51,7 +53,7 @@ def apply_pro_design():
             </style>
         """, unsafe_allow_html=True)
 
-# --- 4. SÉCURITÉ ---
+# --- 4. SÉCURITÉ ACCÈS ---
 def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
@@ -59,19 +61,19 @@ def check_password():
     st.markdown("<h1 style='text-align: center; color: white;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
-        pwd = st.text_input("Code d'accès :", type="password")
-        if st.button("Se connecter"):
+        pwd = st.text_input("Veuillez saisir votre code d'accès :", type="password")
+        if st.button("Déverrouiller"):
             valid_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
             if pwd == str(valid_pwd):
                 st.session_state["password_correct"] = True
                 st.rerun()
-            else: st.error("Code erroné.")
+            else: st.error("Code incorrect.")
     st.stop()
 
 check_password()
 apply_pro_design()
 
-# --- 5. INITIALISATION IA ---
+# --- 5. INITIALISATION IA & DICTIONNAIRE ---
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
@@ -103,7 +105,7 @@ def load_system():
 
 vectorstore, llm = load_system()
 
-# --- 6. EXTRACTION DOCUMENT ---
+# --- 6. GESTION DES DOCUMENTS UTILISATEURS ---
 def process_file(uploaded_file):
     try:
         text = ""
@@ -120,7 +122,7 @@ def process_file(uploaded_file):
         return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
     except Exception: return None
 
-# --- 7. INTERFACE ---
+# --- 7. INTERFACE PRINCIPALE ---
 col_t, col_b = st.columns([4, 1])
 with col_t: st.markdown("<h1 style='color: white;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 with col_b:
@@ -131,48 +133,52 @@ with col_b:
 
 st.markdown("---")
 with st.expander("📎 Analyser un document externe", expanded=False):
-    uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"])
+    uploaded_file = st.file_uploader("Fichier (PDF ou TXT)", type=["pdf", "txt"])
     if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
         if process_file(uploaded_file):
             if 'history' not in st.session_state: st.session_state['history'] = []
             st.session_state['history'].append(uploaded_file.name)
-            st.success("Document prêt !")
+            st.success("Document analysé avec succès !")
             st.rerun()
 
-# --- 8. CHAT ---
+# --- 8. MOTEUR DE CHAT ET RAG PRIORITAIRE ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=("avatar-logo.png" if message["role"] == "assistant" else None)):
         st.markdown(message["content"])
 
-if query := st.chat_input("Posez votre question..."):
+if query := st.chat_input("Posez votre question juridique ou sociale..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse en cours...", expanded=True):
+            # Recherche filtrée session
             user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
+            # Recherche base globale
             raw_law = vectorstore.similarity_search(query, k=25)
             law_docs = [d for d in raw_law if d.metadata.get('session_id') != st.session_state['session_id']]
             
-            # TRI DE PRIORITÉ CRUCIAL
+            # --- TRI DE PRIORITÉ (OBJECTIF 2) ---
             prioritaires = [d for d in law_docs if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
             autres = [d for d in law_docs if d not in prioritaires]
             final_docs = prioritaires + autres
             
+            # Construction du contexte
             context = []
             if user_docs:
                 context.append("=== DOC UTILISATEUR ===\n" + "\n".join([d.page_content for d in user_docs]))
             context.append("=== RÉFÉRENCES LÉGALES ===\n" + "\n".join([f"[SOURCE : {nettoyer_nom_source(d.metadata.get('source',''))}]\n{d.page_content}" for d in final_docs]))
 
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026.
+            Tu es l'Expert Social Pro 2026. Réponds avec précision.
             
-            RÈGLES DE RÉPONSE :
-            1. Pour les données de 2025, utilise [🏛️ BOSS - BARÈMES OFFICIELS 2025]. 
-            2. Pour les données de 2026, utilise [📑 Barèmes Sociaux 2026 (Anticipation Officielle)].
-            3. Ne dis JAMAIS que l'information est manquante si elle figure dans l'une de ces deux sources.
+            RÈGLES DE RÉFÉRENCE (OBJECTIF 3) :
+            1. Pour les données de 2025, utilise prioritairement [🏛️ BOSS - BARÈMES OFFICIELS 2025]. 
+            2. Pour les données de 2026, utilise prioritairement [📑 Barèmes Sociaux 2026 (Anticipation Officielle)].
+            3. Ne dis jamais que l'info est manquante si elle est présente dans les références légales ci-jointes.
             
+            CONSIGNE : Cite la source entre crochets pour chaque montant.
             CONTEXTE : {context}
             QUESTION : {question}
             """)
@@ -182,9 +188,11 @@ if query := st.chat_input("Posez votre question..."):
         st.markdown(full_response)
         with st.expander("📚 Sources réellement utilisées"):
             used = set()
+            if user_docs: st.write("**📄 Votre document**")
             for d in final_docs:
                 nom = nettoyer_nom_source(d.metadata.get('source', ''))
                 if nom in full_response and nom not in used:
                     st.write(f"**🔹 {nom}**")
                     used.add(nom)
+
     st.session_state.messages.append({"role": "assistant", "content": full_response})
