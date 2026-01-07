@@ -36,7 +36,7 @@ def set_design(bg_image_file, sidebar_color):
         .stChatMessage {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }}
         .stChatMessage p, .stChatMessage li {{ color: black !important; }}
         
-        /* Correction 1 : Texte de l'expander en blanc */
+        /* Texte de l'expander en blanc */
         .stExpander details summary p {{ color: white !important; }}
         
         /* Style pour aligner le bouton à droite */
@@ -44,6 +44,16 @@ def set_design(bg_image_file, sidebar_color):
             display: flex;
             justify-content: flex-end;
             align-items: center;
+        }}
+
+        /* --- CORRECTION : MASQUER LE HEADER ET LE MENU --- */
+        header[data-testid="stHeader"] {{
+            visibility: hidden;
+            height: 0px;
+        }}
+        /* Remonter le contenu pour ne pas laisser un vide en haut */
+        .block-container {{
+            padding-top: 1rem;
         }}
         </style>
         '''
@@ -105,7 +115,7 @@ def process_file(uploaded_file):
         return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
     except Exception: return None
 
-# --- 7. INTERFACE (Correction 2 : Titre et Bouton alignés) ---
+# --- 7. INTERFACE ---
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
