@@ -36,8 +36,8 @@ def set_design(bg_image_file, sidebar_color):
         .stChatMessage {{ background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }}
         .stChatMessage p, .stChatMessage li {{ color: black !important; }}
         
-        /* Texte de l'expander en blanc */
-        .stExpander details summary p {{ color: white !important; }}
+        /* Texte de l'expander */
+        .stExpander details summary p {{ color: #024c6f !important; }}
         
         /* Style pour aligner le bouton à droite */
         div[data-testid="column"]:nth-child(2) {{
@@ -66,7 +66,7 @@ st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 def check_password():
     if st.session_state.get("password_correct"): return True
     set_design('background.webp', '#024c6f')
-    st.markdown("<h1 style='text-align: center; color: white;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
     password = st.text_input("Code d'accès :", type="password")
     if st.button("Se connecter"):
         if password == (os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")):
@@ -122,7 +122,7 @@ from langchain_core.output_parsers import StrOutputParser
 col_titre, col_bouton = st.columns([4, 1])
 
 with col_titre:
-    st.markdown("<h1 style='color: white; margin: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #024c6f; margin: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 
 with col_bouton:
     if st.button("Nouvelle conversation"):
