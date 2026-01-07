@@ -48,18 +48,18 @@ def set_design(bg_image_file, sidebar_color):
         st.markdown(page_bg_img, unsafe_allow_html=True)
     except FileNotFoundError: pass
 
-# --- 4. CONFIGURATION NOMS PROS (Mise à jour) ---
+# --- 4. CONFIGURATION NOMS PROS (Réparée pour affichage garanti) ---
 NOMS_PROS = {
     "barème officiel": "🏛️ BOSS - BARÈMES OFFICIELS 2025",
     "MEMO_CHIFFRES": "📑 Barèmes Sociaux 2026 (Anticipation)",
+    "Frais": "🌐 BOSS - Doctrine : Frais Pros",
+    "Avantages": "🌐 BOSS - Doctrine : Avantages Nature",
+    "Indemnités": "🌐 BOSS - Doctrine : Indemnités",
+    "Assiette": "🌐 BOSS - Doctrine : Assiette",
+    "Allègements": "🌐 BOSS - Doctrine : Allègements",
     "MEMO_JURISPRUDENCE": "⚖️ Jurisprudence de Référence (Socle)",
-    "JURISPRUDENCE_SOCLE": "⚖️ Jurisprudence de Référence (Socle)",
     "Code_du_Travail": "📕 Code du Travail",
-    "Code_Securite_Sociale": "📗 Code de la Sécurité Sociale",
-    "BOSS": "🌐 Doctrine Administrative (BOSS)",
-    "Indemnites_Rupture": "🌐 BOSS - Indemnités",
-    "Protection_sociale": "🌐 BOSS - Protection Sociale",
-    "Frais_professionnels": "🌐 BOSS - Frais Pros"
+    "Code_Securite_Sociale": "📗 Code de la Sécurité Sociale"
 }
 
 def nettoyer_nom_source(raw_source):
@@ -108,17 +108,10 @@ def process_file(uploaded_file):
                 if extracted: text += extracted + "\n"
         else:
             text = uploaded_file.read().decode("utf-8")
-        
         if not text or len(text.strip()) < 20: return "ERROR_EMPTY"
-            
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         chunks = text_splitter.split_text(text)
-        
-        metadatas = [{
-            "source": f"VOTRE DOCUMENT : {uploaded_file.name}",
-            "session_id": st.session_state['session_id']
-        } for _ in chunks]
-        
+        metadatas = [{"source": f"VOTRE DOCUMENT : {uploaded_file.name}", "session_id": st.session_state['session_id']} for _ in chunks]
         return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
     except Exception: return None
 
@@ -148,8 +141,7 @@ with st.expander("📎 Analyser un document externe", expanded=False):
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
     avatar_img = "avatar-logo.png" if message["role"] == "assistant" else None
-    with st.chat_message(message["role"], avatar=avatar_img): 
-        st.markdown(message["content"])
+    with st.chat_message(message["role"], avatar=avatar_img): st.markdown(message["content"])
 
 if query := st.chat_input("Posez votre question ici..."):
     st.session_state.messages.append({"role": "user", "content": query})
@@ -157,7 +149,6 @@ if query := st.chat_input("Posez votre question ici..."):
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 expertise en cours...", expanded=True) as status:
-            
             user_docs = vectorstore.similarity_search(query, k=20, filter={"session_id": st.session_state['session_id']})
             raw_law_docs = vectorstore.similarity_search(query, k=20)
             law_docs = [d for d in raw_law_docs if d.metadata.get('session_id') != st.session_state['session_id']]
@@ -174,18 +165,20 @@ if query := st.chat_input("Posez votre question ici..."):
             
             context_text = "\n".join(context_parts)
 
-            # Prompt mis à jour avec la hiérarchie 2025/2026
+            # PROMPT ÉQUILIBRÉ : Priorité aux barèmes officiels sans ignorer la doctrine
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026. Réalise une expertise juridique précise.
+            Tu es l'Expert Social Pro 2026. Réalise une expertise juridique.
+            
+            HIÉRARCHIE DES RÉFÉRENCES :
+            1. Pour TOUS les montants numériques et plafonds de 2025, ta source de référence PRIORITAIRE est [🏛️ BOSS - BARÈMES OFFICIELS 2025].
+            2. Pour 2026, utilise exclusivement [📑 Barèmes Sociaux 2026 (Anticipation)].
+            3. Si un montant de barème est cité dans un document de "Doctrine" (PDF), vérifie toujours s'il correspond à la source [🏛️ BOSS - BARÈMES OFFICIELS 2025]. En cas de différence, privilégie le chiffre du barème tout en expliquant la nuance de la doctrine.
             
             CONTEXTE : {context}
             QUESTION : {question}
             
-            CONSIGNES :
-            1. Pour les montants et chiffres de 2025, utilise prioritairement la source [🏛️ BOSS - BARÈMES OFFICIELS 2025].
-            2. Pour les montants de 2026 (ex: PASS 2026), utilise la source [📑 Barèmes Sociaux 2026 (Anticipation)].
-            3. Base ta réponse UNIQUEMENT sur les sources pertinentes fournies.
-            4. Tu DOIS citer le nom de la source utilisée entre crochets.
+            CONSIGNE DE CITATION :
+            Tu DOIS citer le nom de la source entre crochets à chaque fois que tu donnes un chiffre ou une règle.
             """)
             
             chain = prompt | llm | StrOutputParser()
@@ -197,27 +190,18 @@ if query := st.chat_input("Posez votre question ici..."):
         with st.expander("📚 Sources réellement utilisées"):
             if user_docs:
                 st.markdown("### 📄 Votre Document")
-                for d in user_docs:
-                    st.caption(f"Extrait : {d.page_content[:200]}...")
+                for d in user_docs: st.caption(f"Extrait : {d.page_content[:200]}...")
             
             sources_affichees = set()
             header_displayed = False
-            
             for d in law_docs:
                 nom = nettoyer_nom_source(d.metadata.get('source', ''))
-                est_cite = nom in full_response
-                est_jurisprudence = "Jurisprudence" in nom and "jurisprudence" in full_response.lower()
-
-                if (est_cite or est_jurisprudence) and (nom not in sources_affichees):
+                if nom in full_response and nom not in sources_affichees:
                     if not header_displayed:
                         st.markdown("### ⚖️ Références Officielles Citées")
                         header_displayed = True
-                    
                     st.write(f"**🔹 {nom}**")
                     st.caption(f"_{d.page_content[:250]}..._")
                     sources_affichees.add(nom)
-            
-            if not header_displayed and not user_docs:
-                st.caption("Réponse basée sur l'analyse générale des textes de loi fournis.")
 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
