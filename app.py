@@ -137,7 +137,7 @@ with st.expander("📎 Analyser un document externe", expanded=False):
             st.success("Document intégré !")
             st.rerun()
 
-# --- 8. CHAT ET HARD ROUTING ---
+# --- 8. CHAT ET HARD ROUTING ASSOUPLI ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=("avatar-logo.png" if message["role"] == "assistant" else None)):
@@ -148,29 +148,36 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        with st.status("🔍 Recherche multi-sources...", expanded=True):
-            raw_law = vectorstore.similarity_search(query, k=25)
+        with st.status("🔍 Recherche en cours...", expanded=True):
+            # Boost de recherche à k=40 pour ne rien rater
+            raw_law = vectorstore.similarity_search(query, k=40)
             user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
             
             barèmes_docs = [d for d in raw_law if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
             doctrine_docs = [d for d in raw_law if d not in barèmes_docs]
             
             context = []
-            if barèmes_docs:
-                context.append("### SOURCES DE RÉFÉRENCE (CHIFFRES OFFICIELS) ###")
-                context.extend([f"[SOURCE : {nettoyer_nom_source(d.metadata.get('source',''))}]\n{d.page_content}" for d in barèmes_docs])
+            if user_docs:
+                context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
             
-            if doctrine_docs:
-                context.append("\n### DOCTRINE ADMINISTRATIVE (RÈGLES) ###")
-                context.extend([f"[SOURCE : {nettoyer_nom_source(d.metadata.get('source',''))}]\n{d.page_content}" for d in doctrine_docs])
+            context.append("\n### RÉFÉRENCES OFFICIELLES ET BARÈMES ###")
+            for d in barèmes_docs:
+                nom = nettoyer_nom_source(d.metadata.get('source',''))
+                context.append(f"[SOURCE : {nom}]\n{d.page_content}")
+            
+            context.append("\n### DOCTRINE ADMINISTRATIVE ###")
+            for d in doctrine_docs:
+                nom = nettoyer_nom_source(d.metadata.get('source',''))
+                context.append(f"[SOURCE : {nom}]\n{d.page_content}")
 
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026. 
             
-            CONSIGNE CRUCIALE :
-            - Si la question mentionne '2025', cherche EXCLUSIVEMENT dans [🏛️ BOSS - BARÈMES OFFICIELS 2025]. 
-            - Ne réponds pas pour 2026 si la question porte sur 2025.
-            - Cite toujours la source entre crochets.
+            MISSION :
+            - Pour les chiffres de 2025, utilise prioritairement [🏛️ BOSS - BARÈMES OFFICIELS 2025].
+            - Pour les chiffres de 2026, utilise [📑 Barèmes Sociaux 2026 (Anticipation Officielle)].
+            - Si l'information est présente dans le contexte, donne-la obligatoirement.
+            - Cite ta source entre crochets.
             
             CONTEXTE : {context}
             QUESTION : {question}
@@ -180,13 +187,10 @@ if query := st.chat_input("Posez votre question..."):
 
         st.markdown(full_response)
         
-        # --- RETOUR DU MENU DÉPLOYABLE ---
-        with st.expander("📚 Sources réellement utilisées"):
+        with st.expander("📚 Sources consultées"):
             used = set()
-            total_docs = barèmes_docs + doctrine_docs
-            for d in total_docs:
+            for d in raw_law:
                 nom = nettoyer_nom_source(d.metadata.get('source', ''))
-                # On affiche la source si elle est mentionnée dans la réponse de l'IA
                 if nom in full_response and nom not in used:
                     st.write(f"**🔹 {nom}**")
                     used.add(nom)
