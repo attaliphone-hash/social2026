@@ -48,9 +48,10 @@ def set_design(bg_image_file, sidebar_color):
         st.markdown(page_bg_img, unsafe_allow_html=True)
     except FileNotFoundError: pass
 
-# --- 4. CONFIGURATION NOMS PROS (Le Maquillage) ---
+# --- 4. CONFIGURATION NOMS PROS (Mise à jour) ---
 NOMS_PROS = {
-    "MEMO_CHIFFRES": "🔢 Barèmes Sociaux Officiels 2026",
+    "barème officiel": "🏛️ BOSS - BARÈMES OFFICIELS 2025",
+    "MEMO_CHIFFRES": "📑 Barèmes Sociaux 2026 (Anticipation)",
     "MEMO_JURISPRUDENCE": "⚖️ Jurisprudence de Référence (Socle)",
     "JURISPRUDENCE_SOCLE": "⚖️ Jurisprudence de Référence (Socle)",
     "Code_du_Travail": "📕 Code du Travail",
@@ -157,12 +158,10 @@ if query := st.chat_input("Posez votre question ici..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 expertise en cours...", expanded=True) as status:
             
-            # 1. Recherche Large
             user_docs = vectorstore.similarity_search(query, k=20, filter={"session_id": st.session_state['session_id']})
             raw_law_docs = vectorstore.similarity_search(query, k=20)
             law_docs = [d for d in raw_law_docs if d.metadata.get('session_id') != st.session_state['session_id']]
 
-            # 2. Construction Contexte avec Noms Pros
             context_parts = []
             if user_docs:
                 context_parts.append("=== DOCUMENT UTILISATEUR ===")
@@ -170,23 +169,23 @@ if query := st.chat_input("Posez votre question ici..."):
             
             context_parts.append("\n=== RÉFÉRENCES LÉGALES DISPONIBLES ===")
             for d in law_docs:
-                # ICI : On transforme MEMO_CHIFFRES en 'Barèmes...' AVANT de le donner à l'IA
                 nom_pro = nettoyer_nom_source(d.metadata.get('source', ''))
                 context_parts.append(f"[SOURCE : {nom_pro}]\n{d.page_content}")
             
             context_text = "\n".join(context_parts)
 
-            # 3. Prompt Strict
+            # Prompt mis à jour avec la hiérarchie 2025/2026
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026.
+            Tu es l'Expert Social Pro 2026. Réalise une expertise juridique précise.
             
             CONTEXTE : {context}
             QUESTION : {question}
             
             CONSIGNES :
-            1. Base ta réponse UNIQUEMENT sur les sources pertinentes fournies.
-            2. ATTENTION : Si tu utilises une info, tu DOIS citer le nom de la source entre crochets, EXACTEMENT comme indiqué dans le contexte.
-            3. Exemple : "Selon les [🔢 Barèmes Sociaux Officiels 2026]...".
+            1. Pour les montants et chiffres de 2025, utilise prioritairement la source [🏛️ BOSS - BARÈMES OFFICIELS 2025].
+            2. Pour les montants de 2026 (ex: PASS 2026), utilise la source [📑 Barèmes Sociaux 2026 (Anticipation)].
+            3. Base ta réponse UNIQUEMENT sur les sources pertinentes fournies.
+            4. Tu DOIS citer le nom de la source utilisée entre crochets.
             """)
             
             chain = prompt | llm | StrOutputParser()
@@ -195,23 +194,18 @@ if query := st.chat_input("Posez votre question ici..."):
 
         st.markdown(full_response)
         
-        # 4. FILTRE D'AFFICHAGE (Le retour du filtre propre)
         with st.expander("📚 Sources réellement utilisées"):
             if user_docs:
                 st.markdown("### 📄 Votre Document")
                 for d in user_docs:
                     st.caption(f"Extrait : {d.page_content[:200]}...")
             
-            # Logique de filtre : On n'affiche que ce que l'IA a cité
             sources_affichees = set()
             header_displayed = False
             
             for d in law_docs:
                 nom = nettoyer_nom_source(d.metadata.get('source', ''))
-                
-                # Vérification : Est-ce que le nom (ex: "Barèmes...") est dans la réponse de l'IA ?
                 est_cite = nom in full_response
-                # Sécurité : Si c'est de la jurisprudence, on l'affiche souvent car c'est utile
                 est_jurisprudence = "Jurisprudence" in nom and "jurisprudence" in full_response.lower()
 
                 if (est_cite or est_jurisprudence) and (nom not in sources_affichees):
