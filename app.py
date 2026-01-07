@@ -5,7 +5,7 @@ import base64
 import streamlit as st
 import pypdf 
 
-# --- 1. PATCH SQLITE POUR CLOUD RUN ---
+# --- 1. PATCH SQLITE ---
 try:
     import pysqlite3
     sys.modules['sqlite3'] = pysqlite3
@@ -21,7 +21,7 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- 3. DESIGN PRO (Zéro bandeau blanc / Menu masqué) ---
+# --- 3. DESIGN PRO AJUSTÉ (Équilibre Padding/Header) ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, 'rb') as f:
@@ -29,18 +29,22 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
+    # Suppression du header tout en gardant un padding propre pour le titre
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
         header {visibility: hidden !important; height: 0px;}
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
-        .block-container { padding-top: 1rem !important; }
-        .stApp { margin-top: -60px; } 
         
-        /* Style des bulles de chat */
+        /* Ajustement précis du haut de page */
+        .block-container { 
+            padding-top: 3rem !important; 
+            padding-bottom: 1rem !important; 
+        }
+        
         .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
-        .stChatMessage p, .stChatMessage li { color: black !important; font-size: 16px; }
+        .stChatMessage p, .stChatMessage li { color: black !important; }
         .stExpander details summary p { color: white !important; font-weight: bold; }
         </style>
     """, unsafe_allow_html=True)
@@ -53,7 +57,7 @@ def apply_pro_design():
             </style>
         """, unsafe_allow_html=True)
 
-# --- 4. SÉCURITÉ ACCÈS ---
+# --- 4. SÉCURITÉ ---
 def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
@@ -61,7 +65,7 @@ def check_password():
     st.markdown("<h1 style='text-align: center; color: white;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
-        pwd = st.text_input("Veuillez saisir votre code d'accès :", type="password")
+        pwd = st.text_input("Code d'accès :", type="password")
         if st.button("Déverrouiller"):
             valid_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
             if pwd == str(valid_pwd):
@@ -73,7 +77,7 @@ def check_password():
 check_password()
 apply_pro_design()
 
-# --- 5. INITIALISATION IA & DICTIONNAIRE ---
+# --- 5. INITIALISATION IA ---
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
@@ -105,7 +109,7 @@ def load_system():
 
 vectorstore, llm = load_system()
 
-# --- 6. GESTION DES DOCUMENTS UTILISATEURS ---
+# --- 6. FONCTIONS ---
 def process_file(uploaded_file):
     try:
         text = ""
@@ -122,63 +126,64 @@ def process_file(uploaded_file):
         return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
     except Exception: return None
 
-# --- 7. INTERFACE PRINCIPALE ---
+# --- 7. INTERFACE STABLE ---
 col_t, col_b = st.columns([4, 1])
-with col_t: st.markdown("<h1 style='color: white;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+with col_t: st.markdown("<h1 style='color: white; margin-bottom: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 with col_b:
-    if st.button("Nouvelle conversation"):
+    if st.button("Nouvelle session"):
         st.session_state.messages = []
         st.session_state['session_id'] = str(uuid.uuid4())
         st.rerun()
 
-st.markdown("---")
+st.markdown("<br>", unsafe_allow_html=True)
+
 with st.expander("📎 Analyser un document externe", expanded=False):
-    uploaded_file = st.file_uploader("Fichier (PDF ou TXT)", type=["pdf", "txt"])
+    uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"])
     if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
         if process_file(uploaded_file):
             if 'history' not in st.session_state: st.session_state['history'] = []
             st.session_state['history'].append(uploaded_file.name)
-            st.success("Document analysé avec succès !")
+            st.success("Document intégré !")
             st.rerun()
 
-# --- 8. MOTEUR DE CHAT ET RAG PRIORITAIRE ---
+# --- 8. CHAT ET HARD ROUTING ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=("avatar-logo.png" if message["role"] == "assistant" else None)):
         st.markdown(message["content"])
 
-if query := st.chat_input("Posez votre question juridique ou sociale..."):
+if query := st.chat_input("Posez votre question..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        with st.status("🔍 Analyse en cours...", expanded=True):
-            # Recherche filtrée session
-            user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
-            # Recherche base globale
+        with st.status("🔍 Recherche multi-sources...", expanded=True):
+            # 1. Recherche Hard Barèmes
             raw_law = vectorstore.similarity_search(query, k=25)
-            law_docs = [d for d in raw_law if d.metadata.get('session_id') != st.session_state['session_id']]
             
-            # --- TRI DE PRIORITÉ (OBJECTIF 2) ---
-            prioritaires = [d for d in law_docs if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
-            autres = [d for d in law_docs if d not in prioritaires]
-            final_docs = prioritaires + autres
+            # 2. Séparation forcée
+            barèmes_docs = [d for d in raw_law if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
+            doctrine_docs = [d for d in raw_law if d not in barèmes_docs]
+            user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
             
-            # Construction du contexte
+            # 3. Construction du contexte avec étiquettes d'autorité
             context = []
-            if user_docs:
-                context.append("=== DOC UTILISATEUR ===\n" + "\n".join([d.page_content for d in user_docs]))
-            context.append("=== RÉFÉRENCES LÉGALES ===\n" + "\n".join([f"[SOURCE : {nettoyer_nom_source(d.metadata.get('source',''))}]\n{d.page_content}" for d in final_docs]))
+            if barèmes_docs:
+                context.append("### SOURCES DE RÉFÉRENCE (CHIFFRES OFFICIELS) ###")
+                context.extend([f"[SOURCE : {nettoyer_nom_source(d.metadata.get('source',''))}]\n{d.page_content}" for d in barèmes_docs])
+            
+            if doctrine_docs:
+                context.append("\n### DOCTRINE ADMINISTRATIVE (RÈGLES ET EXEMPLES) ###")
+                context.extend([f"[SOURCE : {nettoyer_nom_source(d.metadata.get('source',''))}]\n{d.page_content}" for d in doctrine_docs])
 
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026. Réponds avec précision.
+            Tu es l'Expert Social Pro 2026.
             
-            RÈGLES DE RÉFÉRENCE (OBJECTIF 3) :
-            1. Pour les données de 2025, utilise prioritairement [🏛️ BOSS - BARÈMES OFFICIELS 2025]. 
-            2. Pour les données de 2026, utilise prioritairement [📑 Barèmes Sociaux 2026 (Anticipation Officielle)].
-            3. Ne dis jamais que l'info est manquante si elle est présente dans les références légales ci-jointes.
+            CONSIGNE D'OR :
+            Si la question porte sur un chiffre (PASS, SMIC, Plafond), utilise EXCLUSIVEMENT la section 'SOURCES DE RÉFÉRENCE'.
+            N'utilise la section 'DOCTRINE' que pour expliquer les règles ou donner du contexte.
             
-            CONSIGNE : Cite la source entre crochets pour chaque montant.
+            Cite la source entre crochets.
             CONTEXTE : {context}
             QUESTION : {question}
             """)
@@ -186,13 +191,4 @@ if query := st.chat_input("Posez votre question juridique ou sociale..."):
             full_response = (prompt | llm | StrOutputParser()).invoke({"context": "\n".join(context), "question": query})
 
         st.markdown(full_response)
-        with st.expander("📚 Sources réellement utilisées"):
-            used = set()
-            if user_docs: st.write("**📄 Votre document**")
-            for d in final_docs:
-                nom = nettoyer_nom_source(d.metadata.get('source', ''))
-                if nom in full_response and nom not in used:
-                    st.write(f"**🔹 {nom}**")
-                    used.add(nom)
-
     st.session_state.messages.append({"role": "assistant", "content": full_response})
