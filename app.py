@@ -21,7 +21,7 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- 3. DESIGN ET NETTOYAGE INTERFACE ---
+# --- 3. DESIGN ET NETTOYAGE INTERFACE (Masque le bandeau blanc et menu) ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, 'rb') as f:
@@ -36,7 +36,9 @@ def apply_pro_design():
         header {visibility: hidden !important; height: 0px;}
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
-        .stApp { margin-top: -80px; }
+        /* Remonte le contenu pour supprimer l'espace du header */
+        .block-container { padding-top: 0rem !important; }
+        .stApp { margin-top: -60px; } 
         
         .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
@@ -56,7 +58,7 @@ def apply_pro_design():
             </style>
         """, unsafe_allow_html=True)
 
-# --- 4. SÉCURITÉ ---
+# --- 4. SÉCURITÉ (Arrêt immédiat si pas de mot de passe) ---
 def check_password():
     if st.session_state.get("password_correct"):
         return True
@@ -69,15 +71,18 @@ def check_password():
     with col_m:
         pwd = st.text_input("Code d'accès :", type="password")
         if st.button("Se connecter"):
-            valid_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
+            # On cherche dans l'environnement ou les secrets Streamlit
+            valid_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD", None)
             if pwd == valid_pwd:
                 st.session_state["password_correct"] = True
                 st.rerun()
             else:
                 st.error("Code incorrect.")
-    st.stop()
+    st.stop() # C'est ici que l'on bloque tout le reste de l'exécution
 
+# Lancement de la sécurité
 check_password()
+# Si on arrive ici, le mot de passe est bon
 apply_pro_design()
 
 # --- 5. INITIALISATION IA ---
@@ -108,6 +113,7 @@ def load_system():
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
+    # Utilisation stricte de gemini-2.0-flash-exp
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
     return vectorstore, llm
 
@@ -127,12 +133,16 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("user"): st.markdown(query)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        with st.status("🔍 Analyse des sources officielles...", expanded=True):
+        with st.status("🔍 Analyse des sources prioritaires...", expanded=True):
             
-            # RECHERCHE AVEC TRI DE PRIORITÉ (Le CSV et le Mémo passent devant)
+            # RECHERCHE AVEC TRI DE PRIORITÉ
             raw_docs = vectorstore.similarity_search(query, k=20)
+            
+            # On identifie les documents qui sont des barèmes ou le mémo
             docs_prioritaires = [d for d in raw_docs if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
             docs_doctrine = [d for d in raw_docs if d not in docs_prioritaires]
+            
+            # On force l'IA à lire les barèmes en PREMIER
             law_docs = docs_prioritaires + docs_doctrine
             
             context_parts = []
@@ -149,7 +159,7 @@ if query := st.chat_input("Posez votre question..."):
             1. Pour tout MONTANT ou CHIFFRE de 2025, utilise prioritairement [🏛️ BOSS - BARÈMES OFFICIELS 2025].
             2. Pour tout MONTANT ou CHIFFRE de 2026, utilise exclusivement [📑 Barèmes Sociaux 2026 (Anticipation Officielle)].
             
-            CONSIGNE : Cite la source entre crochets pour chaque chiffre.
+            CONSIGNE : Cite la source entre crochets pour chaque chiffre donné.
             CONTEXTE : {context}
             QUESTION : {question}
             """)
