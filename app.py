@@ -74,7 +74,6 @@ apply_pro_design()
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
-    # Mise en page aérée avec sauts de ligne pour une liste à puces propre
     "REF_": "✅ RÉFÉRENCES :\n- BOSS\n- Code du Travail\n- Code de la Sécurité Sociale\n- Organismes Sociaux",
     "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)",
     "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
@@ -104,11 +103,9 @@ def load_system():
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     
-    # Chroma reste en RAM pour éviter les erreurs de base de données (code 26) sur le Cloud.
     vectorstore = Chroma(embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
     
-    # RECONSTRUCTION SYSTÉMATIQUE EN MÉMOIRE
     if os.path.exists("data_clean"):
         files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
         texts_to_add = []
@@ -193,7 +190,11 @@ if query := st.chat_input("Posez votre question..."):
             MISSION :
             - Réponds en utilisant PRIORITAIREMENT les "FICHES D'EXPERTISE PRIORITAIRES".
             - Si un chiffre (ex: PASS) est dans une fiche PRIORITAIRE, ne cherche pas ailleurs.
-            - Cite ta source entre crochets.
+            
+            FORMATAGE OBLIGATOIRE :
+            - Ne mets JAMAIS la source sur la même ligne que ton texte.
+            - Saute TOUJOURS deux lignes avant d'écrire [SOURCE : ...].
+            - Utilise une liste à puces pour les piliers juridiques à l'intérieur de la source.
             
             CONTEXTE : {context}
             QUESTION : {question}
