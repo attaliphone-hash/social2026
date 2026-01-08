@@ -2,6 +2,8 @@ import sys
 import os
 import uuid
 import base64 
+import requests  # Requis pour le Watchdog
+from bs4 import BeautifulSoup  # Requis pour le Watchdog
 import streamlit as st
 import pypdf 
 
@@ -21,6 +23,23 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
+# --- FONCTION WATCHDOG BOSS ---
+def check_boss_updates():
+    """Vérifie la dernière actualité sur le portail du BOSS."""
+    url = "https://boss.gouv.fr/portail/accueil/actualites.html"
+    try:
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            # Recherche du titre de la première actualité
+            first_news = soup.find('h2', class_='boss-article-title') 
+            if first_news:
+                return first_news.get_text(strip=True)
+    except Exception:
+        return None
+    return None
+
 # --- 3. DESIGN PRO (Padding & Header) ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
@@ -38,7 +57,7 @@ def apply_pro_design():
         .block-container { padding-top: 3.5rem !important; }
         .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
-        .stExpander details summary p { color: 024c6f !important; font-weight: bold; }
+        .stExpander details summary p { color: #024c6f !important; font-weight: bold; }
         </style>
     """, unsafe_allow_html=True)
     
@@ -55,7 +74,7 @@ def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
     st.markdown("<br><br><br><br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: 024c6f;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         pwd = st.text_input("Code d'accès :", type="password")
@@ -142,12 +161,39 @@ def process_file(uploaded_file):
 
 # --- 7. INTERFACE ---
 col_t, col_b = st.columns([4, 1])
-with col_t: st.markdown("<h1 style='color: 024c6f; margin-top: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+with col_t: st.markdown("<h1 style='color: #024c6f; margin-top: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 with col_b:
     if st.button("Nouvelle session"):
         st.session_state.messages = []
         st.session_state['session_id'] = str(uuid.uuid4())
         st.rerun()
+
+# VEILLE BOSS : Détection et Analyse
+last_news = check_boss_updates()
+if last_news:
+    st.info(f"📢 **VEILLE BOSS :** {last_news}")
+    if st.button("🤖 Analyser et générer la fiche de mise à jour"):
+        with st.status("Analyse juridique de l'actualité...", expanded=True):
+            news_context = f"Titre de l'actualité BOSS : {last_news}. URL source : https://boss.gouv.fr/portail/accueil/actualites.html"
+            
+            prompt_veille = ChatPromptTemplate.from_template("""
+            Tu es un Agent de Veille Juridique expert en droit social.
+            CONTEXTE : Une nouvelle actualité vient d'être publiée sur le portail du BOSS : {news}
+            
+            MISSION :
+            1. Analyse si cette news impacte les barèmes 2026, les cotisations ou les procédures RH.
+            2. Rédige une fiche synthétique au format suivant pour l'intégration en base de données :
+               OBJET : [Titre précis de la news]
+               SOURCE : BOSS 2026
+               TEXTE : [Résumé structuré des impacts et points de vigilance]
+            
+            Si la news est purement technique ou sans impact réglementaire, indique-le.
+            """)
+            
+            analyste = (prompt_veille | llm | StrOutputParser()).invoke({"news": news_context})
+            st.markdown("### ✨ Proposition de mise à jour :")
+            st.code(analyste, language="text")
+            st.warning("Veuillez valider ces informations avant de les intégrer dans votre dossier 'data_clean'.")
 
 with st.expander("📎 Analyser un document externe", expanded=False):
     uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"])
