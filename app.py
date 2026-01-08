@@ -74,11 +74,12 @@ apply_pro_design()
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
+    # Mise en page aérée avec sauts de ligne pour une liste à puces propre
     "REF_": "✅ RÉFÉRENCES :\n- BOSS\n- Code du Travail\n- Code de la Sécurité Sociale\n- Organismes Sociaux",
     "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)",
-    "LEGAL_": "📕 TEXTES LÉGAUX ET RÉGLEMENTAIRES",
-    "DOC_JURISPRUDENCE": "⚖️ JURISPRUDENCE SOCIALE",
-    "barème officiel": "🏛️ ARCHIVES BARÈMES OFFICIELS",
+    "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
+    "DOC_JURISPRUDENCE": "⚖️ JURISPRUDENCE (PRÉCÉDENTS)",
+    "barème officiel": "🏛️ BOSS - ARCHIVES BARÈMES",
     "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026"
 }
 
@@ -103,8 +104,7 @@ def load_system():
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     
-    # --- CHANGEMENT MAJEUR ---
-    # Chroma reste en RAM pour éviter les erreurs de base de données sur le Cloud.
+    # Chroma reste en RAM pour éviter les erreurs de base de données (code 26) sur le Cloud.
     vectorstore = Chroma(embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
     
