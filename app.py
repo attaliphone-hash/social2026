@@ -74,15 +74,12 @@ apply_pro_design()
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
-    "barème officiel": "🏛️ BOSS - BARÈMES OFFICIELS 2025",
-    "MEMO_CHIFFRES": "📑 Barèmes Sociaux 2026 (Anticipation Officielle)",
-    "Frais": "🌐 BOSS - Doctrine : Frais Pros",
-    "Avantages": "🌐 BOSS - Doctrine : Avantages Nature",
-    "Indemnités": "🌐 BOSS - Doctrine : Indemnités",
-    "Assiette": "🌐 BOSS - Doctrine : Assiette",
-    "Allègements": "🌐 BOSS - Doctrine : Allègements",
-    "MEMO_JURISPRUDENCE": "⚖️ Jurisprudence de Référence (Socle)",
-    "Code_du_Travail": "📕 Code du Travail"
+    "REF_": "✅ FICHE CERTIFIÉE - RÉFÉRENCES 2026",
+    "DOC_BOSS_": "🌐 DOCTRINE OFFICIELLE BOSS",
+    "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
+    "DOC_JURISPRUDENCE": "⚖️ JURISPRUDENCE (PRÉCÉDENTS)",
+    "barème officiel": "🏛️ BOSS - ARCHIVES BARÈMES",
+    "MEMO_CHIFFRES": "📑 Barèmes Sociaux 2026 (Anticipation)"
 }
 
 def nettoyer_nom_source(raw_source):
@@ -91,6 +88,16 @@ def nettoyer_nom_source(raw_source):
     for cle, nom_pro in NOMS_PROS.items():
         if cle in nom_fichier: return nom_pro
     return nom_fichier.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
+
+# AJOUT : Fonction pour lire les fiches prioritaires data_clean
+def get_data_clean_context():
+    context_list = []
+    if os.path.exists("data_clean"):
+        for filename in os.listdir("data_clean"):
+            if filename.endswith(".txt"):
+                with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
+                    context_list.append(f"[{nettoyer_nom_source(filename)}] : {f.read()}")
+    return "\n".join(context_list)
 
 @st.cache_resource
 def load_system():
@@ -137,7 +144,7 @@ with st.expander("📎 Analyser un document externe", expanded=False):
             st.success("Document intégré !")
             st.rerun()
 
-# --- 8. CHAT ET HARD ROUTING ASSOUPLI ---
+# --- 8. CHAT ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=("avatar-logo.png" if message["role"] == "assistant" else None)):
@@ -149,24 +156,22 @@ if query := st.chat_input("Posez votre question..."):
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Recherche en cours...", expanded=True):
-            # Boost de recherche à k=40 pour ne rien rater
-            raw_law = vectorstore.similarity_search(query, k=40)
+            # 1. Récupération des fiches prioritaires (data_clean)
+            priorite_context = get_data_clean_context()
+            
+            # 2. Recherche vectorielle classique (pour le reste)
+            raw_law = vectorstore.similarity_search(query, k=20)
             user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
             
-            barèmes_docs = [d for d in raw_law if any(x in d.metadata.get('source', '') for x in ["barème", "MEMO"])]
-            doctrine_docs = [d for d in raw_law if d not in barèmes_docs]
-            
             context = []
+            if priorite_context:
+                context.append("### FICHES D'EXPERTISE PRIORITAIRES (2025-2026) ###\n" + priorite_context)
+            
             if user_docs:
                 context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
             
-            context.append("\n### RÉFÉRENCES OFFICIELLES ET BARÈMES ###")
-            for d in barèmes_docs:
-                nom = nettoyer_nom_source(d.metadata.get('source',''))
-                context.append(f"[SOURCE : {nom}]\n{d.page_content}")
-            
-            context.append("\n### DOCTRINE ADMINISTRATIVE ###")
-            for d in doctrine_docs:
+            context.append("\n### DOCTRINE ET ARCHIVES ###")
+            for d in raw_law:
                 nom = nettoyer_nom_source(d.metadata.get('source',''))
                 context.append(f"[SOURCE : {nom}]\n{d.page_content}")
 
@@ -174,9 +179,8 @@ if query := st.chat_input("Posez votre question..."):
             Tu es l'Expert Social Pro 2026. 
             
             MISSION :
-            - Pour les chiffres de 2025, utilise prioritairement [🏛️ BOSS - BARÈMES OFFICIELS 2025].
-            - Pour les chiffres de 2026, utilise [📑 Barèmes Sociaux 2026 (Anticipation Officielle)].
-            - Si l'information est présente dans le contexte, donne-la obligatoirement.
+            - Réponds en utilisant PRIORITAIREMENT les "FICHES D'EXPERTISE PRIORITAIRES".
+            - Si un chiffre (ex: PASS) est dans une fiche PRIORITAIRE, ne cherche pas ailleurs.
             - Cite ta source entre crochets.
             
             CONTEXTE : {context}
@@ -187,12 +191,4 @@ if query := st.chat_input("Posez votre question..."):
 
         st.markdown(full_response)
         
-        with st.expander("📚 Sources consultées"):
-            used = set()
-            for d in raw_law:
-                nom = nettoyer_nom_source(d.metadata.get('source', ''))
-                if nom in full_response and nom not in used:
-                    st.write(f"**🔹 {nom}**")
-                    used.add(nom)
-                    
     st.session_state.messages.append({"role": "assistant", "content": full_response})
