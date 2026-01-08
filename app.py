@@ -267,3 +267,39 @@ if query := st.chat_input("Posez votre question..."):
             full_response = (prompt | llm | StrOutputParser()).invoke({"context": "\n".join(context), "question": query})
         st.markdown(full_response)
     st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+# --- 9. PIED DE PAGE & INFORMATIONS LÉGALES (SANS SIDEBAR) ---
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.divider()
+
+# Création de 3 colonnes pour centrer le menu et le copyright
+foot_l, foot_m, foot_r = st.columns([1, 2, 1])
+
+with foot_m:
+    # Le bouton Popover qui simule le menu hamburger/infos
+    with st.popover("Mentions Légales & RGPD", use_container_width=True):
+        st.markdown("### Mentions Légales")
+        st.write("""
+        **Éditeur :** [Sylvain Attal]  
+        **Hébergement :** Google Cloud Platform (Région : europe-west1, Belgique)  
+        **Contact :** sylvain.attal@businessagent-ai.com
+        """)
+        
+        st.markdown("### Confidentialité & RGPD")
+        st.write("""
+        **Protection des données :** - Les documents téléchargés sont analysés en mémoire éphémère et ne sont jamais stockés sur nos serveurs.
+        - Les échanges sont protégés par chiffrement SSL.
+        
+        **Intelligence Artificielle :** - Nous utilisons l'API Google Gemini 2.0. 
+        - Conformément aux conditions en vigueur, vos données ne sont **pas utilisées** pour entraîner les modèles de Google.
+        """)
+        
+        st.caption("Dernière mise à jour : 08/01/2026")
+
+    # Copyright final
+    st.markdown("""
+        <div style='text-align: center; color: #888888; font-size: 11px; margin-top: 10px;'>
+            © 2026 businessagent-ai.com | Expert Social Pro <br>
+            <span style='font-style: italic;'>L'IA est un outil d'aide, la validation finale incombe à l'expert.</span>
+        </div>
+    """, unsafe_allow_html=True)
