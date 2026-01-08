@@ -268,38 +268,43 @@ if query := st.chat_input("Posez votre question..."):
         st.markdown(full_response)
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# --- 9. PIED DE PAGE & INFORMATIONS LÉGALES (SANS SIDEBAR) ---
+# --- 9. PIED DE PAGE & INFORMATIONS LÉGALES ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.divider()
 
-# Création de 3 colonnes pour centrer le menu et le copyright
 foot_l, foot_m, foot_r = st.columns([1, 2, 1])
 
 with foot_m:
-    # Le bouton Popover qui simule le menu hamburger/infos
-    with st.popover("Mentions Légales & RGPD", use_container_width=True):
-        st.markdown("### Mentions Légales")
+    with st.popover("⚖️ Mentions Légales & RGPD", use_container_width=True):
+        st.markdown("### 🏛️ Mentions Légales")
         st.write("""
-        **Éditeur :** [Sylvain Attal]  
+        **Éditeur & Responsable de traitement :** Sylvain Attal  
         **Hébergement :** Google Cloud Platform (Région : europe-west1, Belgique)  
         **Contact :** sylvain.attal@businessagent-ai.com
         """)
         
-        st.markdown("### Confidentialité & RGPD")
+        st.markdown("### 🛡️ Confidentialité & RGPD")
         st.write("""
-        **Protection des données :** - Les documents téléchargés sont analysés en mémoire éphémère et ne sont jamais stockés sur nos serveurs.
-        - Les échanges sont protégés par chiffrement SSL.
+        **Protection des données :** Les documents téléchargés sont analysés exclusivement en mémoire vive (RAM) et sont **définitivement supprimés** dès la fermeture de la session ou lors d'un clic sur 'Nouvelle session'. Aucun stockage persistant n'est effectué.
         
-        **Intelligence Artificielle :** - Nous utilisons l'API Google Gemini 2.0. 
-        - Conformément aux conditions en vigueur, vos données ne sont **pas utilisées** pour entraîner les modèles de Google.
+        **Vos Droits :** Conformément au RGPD et à la loi 'Informatique et Libertés', vous disposez d'un droit d'accès, de rectification et de suppression de vos données de session sur simple demande à l'adresse contact ci-dessus.
+        
+        **Intelligence Artificielle :** Utilisation de l'API Google Gemini. Vos données professionnelles ne sont **jamais utilisées** pour entraîner les modèles de Google (Contrat API Entreprise).
+        """)
+        
+        st.markdown("### ⚠️ Avertissement Légal")
+        st.caption("""
+        Expert Social Pro 2026 est un outil d'assistance automatisé. 
+        Conformément à la loi du 31 décembre 1971, les analyses générées ne constituent pas un conseil juridique personnalisé. 
+        L'utilisation de cet outil ne dispense pas de la validation par un professionnel du droit ou de l'expertise-comptable.
         """)
         
         st.caption("Dernière mise à jour : 08/01/2026")
 
-    # Copyright final
+    # Copyright mis à jour avec le bon domaine
     st.markdown("""
         <div style='text-align: center; color: #888888; font-size: 11px; margin-top: 10px;'>
-            © 2026 businessagent-ai.com | Expert Social Pro <br>
+            © 2026 socialexpertfrance.fr | Expert Social Pro <br>
             <span style='font-style: italic;'>L'IA est un outil d'aide, la validation finale incombe à l'expert.</span>
         </div>
     """, unsafe_allow_html=True)
