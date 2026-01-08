@@ -67,7 +67,7 @@ def apply_pro_design():
             </style>
         """, unsafe_allow_html=True)
 
-# --- 4. SÉCURITÉ (DOUBLE ACCÈS) ---
+# --- 4. SÉCURITÉ (DOUBLE ACCÈS CORRIGÉ) ---
 def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
@@ -77,19 +77,20 @@ def check_password():
     with col_m:
         pwd = st.text_input("Code d'accès :", type="password")
         if st.button("Se connecter"):
-            # On récupère les deux mots de passe
-            valid_pwd = str(os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD"))
-            admin_pwd = str(os.getenv("ADMIN_PASSWORD") or st.secrets.get("ADMIN_PASSWORD", "ADMIN2026"))
+            # Correction : Utilisation de os.getenv uniquement pour éviter l'erreur StreamlitSecretNotFoundError
+            valid_pwd = os.getenv("APP_PASSWORD", "DEFAUT_USER_123")
+            admin_pwd = os.getenv("ADMIN_PASSWORD", "ADMIN2026")
             
-            if pwd == admin_pwd:
+            if pwd == str(admin_pwd):
                 st.session_state["password_correct"] = True
                 st.session_state["is_admin"] = True
                 st.rerun()
-            elif pwd == valid_pwd:
+            elif pwd == str(valid_pwd):
                 st.session_state["password_correct"] = True
                 st.session_state["is_admin"] = False
                 st.rerun()
-            else: st.error("Code erroné.")
+            else: 
+                st.error("Code erroné.")
     st.stop()
 
 check_password()
