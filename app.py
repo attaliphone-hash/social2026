@@ -100,12 +100,13 @@ apply_pro_design()
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
+    "REF_2026_": "🏛️ BARÈMES ET RÉFÉRENTIELS OFFICIELS 2026",
+    "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026",
     "REF_": "✅ RÉFÉRENCES :\n- BOSS\n- Code du Travail\n- Code de la Sécurité Sociale\n- Organismes Sociaux",
     "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)",
     "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
     "DOC_JURISPRUDENCE": "⚖️ JURISPRUDENCE (PRÉCÉDENTS)",
-    "barème officiel": "🏛️ BOSS - ARCHIVES BARÈMES",
-    "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026"
+    "barème officiel": "🏛️ BOSS - ARCHIVES BARÈMES"
 }
 
 def nettoyer_nom_source(raw_source):
