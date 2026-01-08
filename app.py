@@ -89,7 +89,6 @@ def nettoyer_nom_source(raw_source):
         if cle in nom_fichier: return nom_pro
     return nom_fichier.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
 
-# Fonction pour lire les fiches data_clean en direct
 def get_data_clean_context():
     context_list = []
     if os.path.exists("data_clean"):
@@ -103,22 +102,29 @@ def get_data_clean_context():
 def load_system():
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
-    vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
+    
+    # --- CHANGEMENT MAJEUR ICI ---
+    # On retire persist_directory. Chroma reste en RAM. L'erreur 26 devient impossible.
+    vectorstore = Chroma(embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
     
-    # --- AUTO-RECONSTRUCTION SI VIDE ---
-    if len(vectorstore.get()['ids']) == 0:
-        if os.path.exists("data_clean"):
-            files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
-            for filename in files:
-                with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
-                    content = f.read()
-                    vectorstore.add_texts(texts=[content], metadatas=[{"source": filename, "session_id": "system_init"}])
+    # RECONSTRUCTION SYSTÉMATIQUE EN MÉMOIRE
+    if os.path.exists("data_clean"):
+        files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
+        texts_to_add = []
+        metadatas = []
+        for filename in files:
+            with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
+                content = f.read()
+                texts_to_add.append(content)
+                metadatas.append({"source": filename, "session_id": "system_init"})
+        
+        if texts_to_add:
+            vectorstore.add_texts(texts=texts_to_add, metadatas=metadatas)
     
     return vectorstore, llm
 
 vectorstore, llm = load_system()
-
 # --- 6. FONCTIONS ---
 def process_file(uploaded_file):
     try:
