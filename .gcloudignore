@@ -6,20 +6,20 @@ venv/
 .venv/
 __pycache__/
 
-# --- DONNÉES (CRUCIAL POUR SOCIALPRO) ---
-# On veut que chroma_db soit envoyé ! Donc on met un # devant :
-# chroma_db/
+# --- DONNÉES (MODIFICATION ICI) ---
+# On INTERDIT l'envoi de chroma_db pour que le Cloud le recrée à neuf
+chroma_db/
 
-# On ignore les PDF sources pour ne pas alourdir (les .txt suffisent)
+# On ignore les PDF et les scripts inutiles
 sources_pdf/
 *.pdf
-
-# On ignore les scripts de préparation
 convert_pdf.py
 build_db.py
+generate_knowledge.py
 
 # --- EXCEPTIONS ---
 !requirements.txt
 !*.png
 !*.jpg
 !*.webp
+!data_clean/
