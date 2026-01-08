@@ -165,12 +165,56 @@ def process_file(uploaded_file):
     except Exception: return None
 
 # --- 7. INTERFACE ---
+
+# Style spécifique pour les 4 colonnes de réassurance
+st.markdown("""
+    <style>
+    .assurance-text {
+        font-size: 10px !important;
+        color: #444444;
+        line-height: 1.3;
+        text-align: left;
+        padding: 5px;
+    }
+    .assurance-title {
+        font-weight: bold;
+        color: #024c6f;
+        display: block;
+        margin-bottom: 2px;
+        font-size: 10px !important;
+    }
+    hr {
+        margin: 10px 0 !important;
+        border: 0;
+        border-top: 1px solid #e0e0e0;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Affichage des 4 colonnes de wording
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    st.markdown('<p class="assurance-text"><span class="assurance-title">Données Certifiées 2026 :</span> Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature, seuils d\'exonération) pour une précision chirurgicale dès le premier jour de l\'année.</p>', unsafe_allow_html=True)
+with c2:
+    st.markdown('<p class="assurance-text"><span class="assurance-title">Maillage de Sources Multiples :</span> Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux.</p>', unsafe_allow_html=True)
+with c3:
+    st.markdown('<p class="assurance-text"><span class="assurance-title">Mise à Jour Agile des Connaissances :</span> Contrairement aux IA classiques figées dans le temps, notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente.</p>', unsafe_allow_html=True)
+with c4:
+    st.markdown('<p class="assurance-text"><span class="assurance-title">Transparence et Traçabilité :</span> Chaque réponse est systématiquement sourcée via une liste à puces détaillée, permettant aux experts de valider instantanément le fondement juridique de chaque conseil.</p>', unsafe_allow_html=True)
+
+st.markdown("<hr>", unsafe_allow_html=True)
+
+# Titre Principal et Bouton de Session
 col_t, col_b = st.columns([4, 1])
-with col_t: st.markdown("<h1 style='color: #024c6f; margin-top: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+with col_t: 
+    st.markdown("<h1 style='color: #024c6f; margin-top: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 with col_b:
     if st.button("Nouvelle session"):
         st.session_state.messages = []
         st.session_state['session_id'] = str(uuid.uuid4())
+        # Nettoyage de l'historique des documents chargés pour cette session
+        if 'history' in st.session_state:
+            st.session_state['history'] = []
         st.rerun()
 
 # --- ZONE ADMIN PRIVÉE ---
@@ -186,14 +230,13 @@ if st.session_state.get("is_admin", False):
                 st.code(analyste, language="text")
 
 with st.expander("📎 Analyser un document externe", expanded=False):
-    uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"])
+    uploaded_file = st.file_uploader("Fichier (PDF ou TXT)", type=["pdf", "txt"])
     if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
         if process_file(uploaded_file):
             if 'history' not in st.session_state: st.session_state['history'] = []
             st.session_state['history'].append(uploaded_file.name)
-            st.success("Document intégré !")
+            st.success(f"Document '{uploaded_file.name}' intégré avec succès !")
             st.rerun()
-
 # --- 8. CHAT ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
