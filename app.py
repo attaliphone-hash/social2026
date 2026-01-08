@@ -38,7 +38,7 @@ def apply_pro_design():
         .block-container { padding-top: 3.5rem !important; }
         .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
-        .stExpander details summary p { color: white !important; font-weight: bold; }
+        .stExpander details summary p { color: 024c6f !important; font-weight: bold; }
         </style>
     """, unsafe_allow_html=True)
     
@@ -55,7 +55,7 @@ def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
     st.markdown("<br><br><br><br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: white;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: 024c6f;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         pwd = st.text_input("Code d'accès :", type="password")
@@ -142,7 +142,7 @@ def process_file(uploaded_file):
 
 # --- 7. INTERFACE ---
 col_t, col_b = st.columns([4, 1])
-with col_t: st.markdown("<h1 style='color: white; margin-top: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+with col_t: st.markdown("<h1 style='color: 024c6f; margin-top: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
 with col_b:
     if st.button("Nouvelle session"):
         st.session_state.messages = []
