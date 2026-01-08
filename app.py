@@ -89,7 +89,7 @@ def nettoyer_nom_source(raw_source):
         if cle in nom_fichier: return nom_pro
     return nom_fichier.replace('.txt', '').replace('.pdf', '').replace('_', ' ')
 
-# AJOUT : Fonction pour lire les fiches prioritaires data_clean
+# Fonction pour lire les fiches data_clean en direct
 def get_data_clean_context():
     context_list = []
     if os.path.exists("data_clean"):
@@ -105,6 +105,16 @@ def load_system():
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
+    
+    # --- AUTO-RECONSTRUCTION SI VIDE ---
+    if len(vectorstore.get()['ids']) == 0:
+        if os.path.exists("data_clean"):
+            files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
+            for filename in files:
+                with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
+                    content = f.read()
+                    vectorstore.add_texts(texts=[content], metadatas=[{"source": filename, "session_id": "system_init"}])
+    
     return vectorstore, llm
 
 vectorstore, llm = load_system()
@@ -156,17 +166,13 @@ if query := st.chat_input("Posez votre question..."):
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Recherche en cours...", expanded=True):
-            # 1. Récupération des fiches prioritaires (data_clean)
             priorite_context = get_data_clean_context()
-            
-            # 2. Recherche vectorielle classique (pour le reste)
             raw_law = vectorstore.similarity_search(query, k=20)
             user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
             
             context = []
             if priorite_context:
                 context.append("### FICHES D'EXPERTISE PRIORITAIRES (2025-2026) ###\n" + priorite_context)
-            
             if user_docs:
                 context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
             
@@ -177,7 +183,6 @@ if query := st.chat_input("Posez votre question..."):
 
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026. 
-            
             MISSION :
             - Réponds en utilisant PRIORITAIREMENT les "FICHES D'EXPERTISE PRIORITAIRES".
             - Si un chiffre (ex: PASS) est dans une fiche PRIORITAIRE, ne cherche pas ailleurs.
