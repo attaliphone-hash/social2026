@@ -2,8 +2,8 @@ import sys
 import os
 import uuid
 import base64 
-import requests  # Requis pour le Watchdog
-from bs4 import BeautifulSoup  # Requis pour le Watchdog
+import requests 
+from bs4 import BeautifulSoup 
 import streamlit as st
 import pypdf 
 
@@ -25,14 +25,12 @@ st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
 # --- FONCTION WATCHDOG BOSS ---
 def check_boss_updates():
-    """Vérifie la dernière actualité sur le portail du BOSS."""
     url = "https://boss.gouv.fr/portail/accueil/actualites.html"
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         response = requests.get(url, headers=headers, timeout=5)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # Recherche du titre de la première actualité
             first_news = soup.find('h2', class_='boss-article-title') 
             if first_news:
                 return first_news.get_text(strip=True)
@@ -40,7 +38,7 @@ def check_boss_updates():
         return None
     return None
 
-# --- 3. DESIGN PRO (Padding & Header) ---
+# --- 3. DESIGN PRO ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, 'rb') as f:
@@ -69,7 +67,7 @@ def apply_pro_design():
             </style>
         """, unsafe_allow_html=True)
 
-# --- 4. SÉCURITÉ ---
+# --- 4. SÉCURITÉ (DOUBLE ACCÈS) ---
 def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
@@ -79,9 +77,17 @@ def check_password():
     with col_m:
         pwd = st.text_input("Code d'accès :", type="password")
         if st.button("Se connecter"):
-            valid_pwd = os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD")
-            if pwd == str(valid_pwd):
+            # On récupère les deux mots de passe
+            valid_pwd = str(os.getenv("APP_PASSWORD") or st.secrets.get("APP_PASSWORD"))
+            admin_pwd = str(os.getenv("ADMIN_PASSWORD") or st.secrets.get("ADMIN_PASSWORD", "ADMIN2026"))
+            
+            if pwd == admin_pwd:
                 st.session_state["password_correct"] = True
+                st.session_state["is_admin"] = True
+                st.rerun()
+            elif pwd == valid_pwd:
+                st.session_state["password_correct"] = True
+                st.session_state["is_admin"] = False
                 st.rerun()
             else: st.error("Code erroné.")
     st.stop()
@@ -121,7 +127,6 @@ def get_data_clean_context():
 def load_system():
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
-    
     vectorstore = Chroma(embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
     
@@ -134,10 +139,8 @@ def load_system():
                 content = f.read()
                 texts_to_add.append(content)
                 metadatas.append({"source": filename, "session_id": "system_init"})
-        
         if texts_to_add:
             vectorstore.add_texts(texts=texts_to_add, metadatas=metadatas)
-    
     return vectorstore, llm
 
 vectorstore, llm = load_system()
@@ -168,32 +171,17 @@ with col_b:
         st.session_state['session_id'] = str(uuid.uuid4())
         st.rerun()
 
-# VEILLE BOSS : Détection et Analyse
-last_news = check_boss_updates()
-if last_news:
-    st.info(f"📢 **VEILLE BOSS :** {last_news}")
-    if st.button("🤖 Analyser et générer la fiche de mise à jour"):
-        with st.status("Analyse juridique de l'actualité...", expanded=True):
-            news_context = f"Titre de l'actualité BOSS : {last_news}. URL source : https://boss.gouv.fr/portail/accueil/actualites.html"
-            
-            prompt_veille = ChatPromptTemplate.from_template("""
-            Tu es un Agent de Veille Juridique expert en droit social.
-            CONTEXTE : Une nouvelle actualité vient d'être publiée sur le portail du BOSS : {news}
-            
-            MISSION :
-            1. Analyse si cette news impacte les barèmes 2026, les cotisations ou les procédures RH.
-            2. Rédige une fiche synthétique au format suivant pour l'intégration en base de données :
-               OBJET : [Titre précis de la news]
-               SOURCE : BOSS 2026
-               TEXTE : [Résumé structuré des impacts et points de vigilance]
-            
-            Si la news est purement technique ou sans impact réglementaire, indique-le.
-            """)
-            
-            analyste = (prompt_veille | llm | StrOutputParser()).invoke({"news": news_context})
-            st.markdown("### ✨ Proposition de mise à jour :")
-            st.code(analyste, language="text")
-            st.warning("Veuillez valider ces informations avant de les intégrer dans votre dossier 'data_clean'.")
+# --- ZONE ADMIN PRIVÉE ---
+if st.session_state.get("is_admin", False):
+    last_news = check_boss_updates()
+    if last_news:
+        st.info(f"📢 **VEILLE BOSS (MODE ADMIN) :** {last_news}")
+        if st.button("🤖 Analyser et générer la fiche"):
+            with st.status("Analyse juridique...", expanded=True):
+                news_context = f"Titre de l'actualité BOSS : {last_news}."
+                prompt_veille = ChatPromptTemplate.from_template("Analyse cette news BOSS pour 2026 et crée une fiche OBJET/SOURCE/TEXTE : {news}")
+                analyste = (prompt_veille | llm | StrOutputParser()).invoke({"news": news_context})
+                st.code(analyste, language="text")
 
 with st.expander("📎 Analyser un document externe", expanded=False):
     uploaded_file = st.file_uploader("Fichier", type=["pdf", "txt"])
@@ -213,41 +201,24 @@ for message in st.session_state.messages:
 if query := st.chat_input("Posez votre question..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"): st.markdown(query)
-    
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Recherche en cours...", expanded=True):
             priorite_context = get_data_clean_context()
             raw_law = vectorstore.similarity_search(query, k=20)
             user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
-            
             context = []
-            if priorite_context:
-                context.append("### FICHES D'EXPERTISE PRIORITAIRES (2025-2026) ###\n" + priorite_context)
-            if user_docs:
-                context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
-            
+            if priorite_context: context.append("### FICHES D'EXPERTISE PRIORITAIRES (2025-2026) ###\n" + priorite_context)
+            if user_docs: context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
             context.append("\n### DOCTRINE ET ARCHIVES ###")
             for d in raw_law:
                 nom = nettoyer_nom_source(d.metadata.get('source',''))
                 context.append(f"[SOURCE : {nom}]\n{d.page_content}")
-
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026. 
-            MISSION :
-            - Réponds en utilisant PRIORITAIREMENT les "FICHES D'EXPERTISE PRIORITAIRES".
-            - Si un chiffre (ex: PASS) est dans une fiche PRIORITAIRE, ne cherche pas ailleurs.
-            
-            FORMATAGE OBLIGATOIRE :
-            - Ne mets JAMAIS la source sur la même ligne que ton texte.
-            - Saute TOUJOURS deux lignes avant d'écrire [SOURCE : ...].
-            - Utilise une liste à puces pour les piliers juridiques à l'intérieur de la source.
-            
+            MISSION : Réponds via les fiches prioritaires. Saute deux lignes avant d'écrire [SOURCE : ...].
             CONTEXTE : {context}
             QUESTION : {question}
             """)
-            
             full_response = (prompt | llm | StrOutputParser()).invoke({"context": "\n".join(context), "question": query})
-
         st.markdown(full_response)
-        
     st.session_state.messages.append({"role": "assistant", "content": full_response})
