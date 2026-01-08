@@ -74,7 +74,7 @@ apply_pro_design()
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
-    "REF_": "✅ FICHE CERTIFIÉE - RÉFÉRENCES 2026",
+    "REF_": "✅ RÉFÉRENCES : BOSS - Code du Travail - Code de la Sécurité Sociale - Organismes Sociaux",
     "DOC_BOSS_": "🌐 DOCTRINE OFFICIELLE BOSS",
     "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
     "DOC_JURISPRUDENCE": "⚖️ JURISPRUDENCE (PRÉCÉDENTS)",
@@ -103,8 +103,8 @@ def load_system():
     api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     
-    # --- CHANGEMENT MAJEUR ICI ---
-    # On retire persist_directory. Chroma reste en RAM. L'erreur 26 devient impossible.
+    # --- CHANGEMENT MAJEUR ---
+    # Chroma reste en RAM pour éviter les erreurs de base de données sur le Cloud.
     vectorstore = Chroma(embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
     
@@ -125,6 +125,7 @@ def load_system():
     return vectorstore, llm
 
 vectorstore, llm = load_system()
+
 # --- 6. FONCTIONS ---
 def process_file(uploaded_file):
     try:
