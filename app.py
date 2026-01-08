@@ -74,12 +74,12 @@ apply_pro_design()
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
-    "REF_": "✅ RÉFÉRENCES : BOSS - Code du Travail - Code de la Sécurité Sociale - Organismes Sociaux",
-    "DOC_BOSS_": "🌐 DOCTRINE OFFICIELLE BOSS",
-    "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
-    "DOC_JURISPRUDENCE": "⚖️ JURISPRUDENCE (PRÉCÉDENTS)",
-    "barème officiel": "🏛️ BOSS - ARCHIVES BARÈMES",
-    "MEMO_CHIFFRES": "📑 Barèmes Sociaux 2026 (Anticipation)"
+    "REF_": "✅ RÉFÉRENCES :\n- BOSS\n- Code du Travail\n- Code de la Sécurité Sociale\n- Organismes Sociaux",
+    "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)",
+    "LEGAL_": "📕 TEXTES LÉGAUX ET RÉGLEMENTAIRES",
+    "DOC_JURISPRUDENCE": "⚖️ JURISPRUDENCE SOCIALE",
+    "barème officiel": "🏛️ ARCHIVES BARÈMES OFFICIELS",
+    "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026"
 }
 
 def nettoyer_nom_source(raw_source):
