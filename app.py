@@ -79,7 +79,6 @@ def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
     
-    # Header Marketing
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
     args = [
@@ -220,12 +219,15 @@ if query := st.chat_input("Posez votre question..."):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
             prompt = ChatPromptTemplate.from_template("""
-                Tu es l'Expert Social Pro 2026. Réponds avec une rigueur absolue.
+                Tu es l'Expert Social Pro 2026. Ta mission est d'éliminer toute approximation.
                 
-                RÈGLES DE STRUCTURE :
-                1. Ta réponse doit commencer DIRECTEMENT par les faits, chiffres ou l'analyse, SANS préambule (pas de "D'après les documents..."), écrits en GRAS (format Markdown **texte**).
-                2. Ensuite, ajoute une section commençant par "⚖️ SOURCE :".
-                3. Enfin, ajoute une section commençant par "💡 PRÉCISION :" pour les conditions, seuils ou exceptions.
+                RÈGLES D'OR :
+                1. DÉTAIL DES CALCULS : Pour toute indemnité ou plafond, décompose systématiquement le calcul mathématique. Ne donne jamais un chiffre sans sa preuve arithmétique.
+                2. QUALIFICATION JURIDIQUE : Sois intraitable sur les termes techniques (ex: ne jamais confondre licenciement personnel et disciplinaire).
+                3. HIÉRARCHIE VISUELLE : 
+                   - Ta réponse commence DIRECTEMENT par les faits ou calculs, SANS préambule, écrits en GRAS (**texte**).
+                   - Ensuite, une section "⚖️ SOURCE :".
+                   - Enfin, une section "💡 PRÉCISION :" pour les conditions, seuils ou exceptions.
 
                 CONTEXTE : {context}
                 QUESTION : {question}
