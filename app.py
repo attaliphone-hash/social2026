@@ -44,7 +44,7 @@ def apply_pro_design():
         .stChatMessage p, .stChatMessage li { color: black !important; }
         .stExpander details summary p { color: #024c6f !important; font-weight: bold; }
         
-        /* Style des 4 colonnes du haut - RÉTABLISSEMENT DE LA VISIBILITÉ */
+        /* Style des 4 colonnes du haut */
         .assurance-text { 
             font-size: 14px !important; 
             color: #024c6f !important; 
@@ -55,6 +55,7 @@ def apply_pro_design():
             border-radius: 8px;
             padding: 8px;
             border: 1px solid rgba(2, 76, 111, 0.2);
+            line-height: 1.4;
         }
         .assurance-title { 
             font-weight: bold; 
@@ -107,7 +108,12 @@ def check_password():
         ("Traçabilité", "Chaque réponse est systématiquement sourcée.")
     ]
     for i, col in enumerate([c1, c2, c3, c4]):
-        col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args[i][0]} :</span> {args[i][1]}</p>', unsafe_allow_html=True)
+        col.markdown(f'''
+            <p class="assurance-text">
+                <span class="assurance-title">{args[i][0]}</span>
+                <span style="font-size: 11px; font-weight: normal; opacity: 0.9;">{args[i][1]}</span>
+            </p>
+        ''', unsafe_allow_html=True)
     
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro</h1>", unsafe_allow_html=True)
@@ -205,6 +211,7 @@ def build_expert_context(query):
     user_docs = vectorstore.similarity_search(query, k=3, filter={"session_id": st.session_state['session_id']})
     if user_docs: context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
     
+    # Limitation à k=8 pour éviter RESOURCE_EXHAUSTED
     raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
         nom = nettoyer_nom_source(d.metadata.get('source',''))
@@ -213,10 +220,20 @@ def build_expert_context(query):
 
 # --- 7. INTERFACE PRINCIPALE ---
 c1, c2, c3, c4 = st.columns(4)
-c1.markdown('<p class="assurance-text">Certifié 2026</p>', unsafe_allow_html=True)
-c2.markdown('<p class="assurance-text">Sources Multiples</p>', unsafe_allow_html=True)
-c3.markdown('<p class="assurance-text">Mise à jour Agile</p>', unsafe_allow_html=True)
-c4.markdown('<p class="assurance-text">Traçabilité</p>', unsafe_allow_html=True)
+args_labels = [
+    ("Données Certifiées 2026", "Nouveaux barèmes PASS et avantages en nature."),
+    ("Maillage de Sources", "Analyse BOSS, Code du Travail, CSS et Organismes."),
+    ("Mise à Jour Agile", "Base actualisée dès la publication de nouvelles circulaires."),
+    ("Traçabilité", "Chaque réponse est systématiquement sourcée.")
+]
+
+for i, col in enumerate([c1, c2, c3, c4]):
+    col.markdown(f'''
+        <p class="assurance-text">
+            <span class="assurance-title">{args_labels[i][0]}</span>
+            <span style="font-size: 11px; font-weight: normal; opacity: 0.9;">{args_labels[i][1]}</span>
+        </p>
+    ''', unsafe_allow_html=True)
 
 st.markdown("<hr>", unsafe_allow_html=True)
 col_t, col_b = st.columns([4, 1])
@@ -250,7 +267,7 @@ if query := st.chat_input("Posez votre question..."):
             prompt = ChatPromptTemplate.from_template("""
                 Tu es l'Expert Social Pro 2026. Ta mission est d'éliminer toute approximation.
                 
-                RÈGLES D'OR :
+                RÈGLES d'OR :
                 1. DÉTAIL DES CALCULS : Pour toute indemnité ou plafond, décompose systématiquement le calcul mathématique. Ne donne jamais un chiffre sans sa preuve arithmétique.
                 2. QUALIFICATION JURIDIQUE : Sois intraitable sur les termes techniques (ex: ne jamais confondre licenciement personnel et disciplinaire).
                 3. HIÉRARCHIE VISUELLE : 
