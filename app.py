@@ -102,10 +102,10 @@ def check_password():
     c1, c2, c3, c4, c5 = st.columns(5)
     args = [
         ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature) pour une précision chirurgicale."),
-        ("Maillage de Sources :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale."),
-        ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes."),
-        ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste à puces détaillée."),
-        ("Confidentialité Garantie :", " Vos données sont traitées en mémoire vive (RAM) et ne sont jamais stockées.")
+        ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
+        ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
+        ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
+        ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
     ]
     for i, col in enumerate([c1, c2, c3, c4, c5]):
         col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args[i][0]}</span><span class="assurance-desc">{args[i][1]}</span></p>', unsafe_allow_html=True)
