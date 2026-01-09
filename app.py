@@ -37,12 +37,32 @@ def apply_pro_design():
         header {visibility: hidden !important; height: 0px;}
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
-        .block-container { padding-top: 3.5rem !important; }
+        .block-container { padding-top: 2rem !important; }
+        
+        /* Style des bulles de chat */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
         .stExpander details summary p { color: #024c6f !important; font-weight: bold; }
-        .assurance-text { font-size: 10px !important; color: #444; line-height: 1.3; text-align: left; padding: 5px; }
-        .assurance-title { font-weight: bold; color: #024c6f; display: block; margin-bottom: 2px; font-size: 10px !important; }
+        
+        /* Style des 4 colonnes du haut - RÉTABLISSEMENT DE LA VISIBILITÉ */
+        .assurance-text { 
+            font-size: 14px !important; 
+            color: #024c6f !important; 
+            font-weight: 600;
+            text-align: center; 
+            display: block;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid rgba(2, 76, 111, 0.2);
+        }
+        .assurance-title { 
+            font-weight: bold; 
+            color: #024c6f; 
+            display: block; 
+            font-size: 14px !important; 
+            margin-bottom: 2px;
+        }
         </style>
     """, unsafe_allow_html=True)
     
@@ -185,7 +205,6 @@ def build_expert_context(query):
     user_docs = vectorstore.similarity_search(query, k=3, filter={"session_id": st.session_state['session_id']})
     if user_docs: context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
     
-    # Limitation à k=8 pour éviter l'erreur RESOURCE_EXHAUSTED (Limite de tokens)
     raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
         nom = nettoyer_nom_source(d.metadata.get('source',''))
@@ -194,10 +213,10 @@ def build_expert_context(query):
 
 # --- 7. INTERFACE PRINCIPALE ---
 c1, c2, c3, c4 = st.columns(4)
-c1.markdown('<p class="assurance-text"><span class="assurance-title">Certifié 2026</span></p>', unsafe_allow_html=True)
-c2.markdown('<p class="assurance-text"><span class="assurance-title">Sources Multiples</span></p>', unsafe_allow_html=True)
-c3.markdown('<p class="assurance-text"><span class="assurance-title">Mise à jour Agile</span></p>', unsafe_allow_html=True)
-c4.markdown('<p class="assurance-text"><span class="assurance-title">Traçabilité</span></p>', unsafe_allow_html=True)
+c1.markdown('<p class="assurance-text">Certifié 2026</p>', unsafe_allow_html=True)
+c2.markdown('<p class="assurance-text">Sources Multiples</p>', unsafe_allow_html=True)
+c3.markdown('<p class="assurance-text">Mise à jour Agile</p>', unsafe_allow_html=True)
+c4.markdown('<p class="assurance-text">Traçabilité</p>', unsafe_allow_html=True)
 
 st.markdown("<hr>", unsafe_allow_html=True)
 col_t, col_b = st.columns([4, 1])
