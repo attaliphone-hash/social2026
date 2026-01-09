@@ -167,7 +167,6 @@ def load_system():
                     texts.append(content)
                     metas.append({"source": f, "session_id": "system_init"})
         
-        # --- CORRECTION BATCHING POUR GROS VOLUMES ---
         if texts:
             batch_size = 1000
             for i in range(0, len(texts), batch_size):
@@ -246,4 +245,4 @@ if query := st.chat_input("Posez votre question..."):
     st.session_state.messages.append({"role": "assistant", "content": response})
 
 st.divider()
-st.markdown("<div style='text-align:center
+st.markdown("<div style='text-align:center; color:#888; font-size:11px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
