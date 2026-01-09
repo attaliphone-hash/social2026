@@ -99,7 +99,7 @@ def check_password():
     
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
-        tab_login, tab_subscribe = st.tabs(["Se connecter (LinkedIn)", "S'abonner"])
+        tab_login, tab_subscribe = st.tabs(["Se connecter", "S'abonner"])
         
         with tab_login:
             pwd = st.text_input("Code d'accès :", type="password")
