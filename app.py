@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup 
 import streamlit as st
 import pypdf 
+import stripe # Ajout pour le module SaaS
 
 # --- 1. PATCH SQLITE ---
 try:
@@ -67,30 +68,69 @@ def apply_pro_design():
             </style>
         """, unsafe_allow_html=True)
 
-# --- 4. SÉCURITÉ (DOUBLE ACCÈS CORRIGÉ) ---
+# --- 4. SÉCURITÉ & MODULE SAAS (MODIFIÉ) ---
+
+# Configuration Stripe
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+PRICE_ID_MONTHLY = "price_1SnaTDQZ5ivv0RayXfKqvJ6I"
+PRICE_ID_ANNUAL = "price_1SnaUOQZ5ivv0RayFnols3TI"
+
+def create_checkout_session(plan_type):
+    """Génère un lien de paiement Stripe sécurisé"""
+    price_id = PRICE_ID_MONTHLY if plan_type == "Mensuel" else PRICE_ID_ANNUAL
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{'price': price_id, 'quantity': 1}],
+            mode='subscription',
+            success_url="https://socialexpertfrance.fr?payment=success",
+            cancel_url="https://socialexpertfrance.fr?payment=cancel",
+        )
+        return checkout_session.url
+    except Exception as e:
+        st.error(f"Erreur lors de la création de la session : {e}")
+        return None
+
 def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
     st.markdown("<br><br><br><br>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔐 Accès Expert Réservé</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro</h1>", unsafe_allow_html=True)
+    
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
-        pwd = st.text_input("Code d'accès :", type="password")
-        if st.button("Se connecter"):
-            # Correction : Utilisation de os.getenv uniquement pour éviter l'erreur StreamlitSecretNotFoundError
-            valid_pwd = os.getenv("APP_PASSWORD", "DEFAUT_USER_123")
-            admin_pwd = os.getenv("ADMIN_PASSWORD", "ADMIN2026")
-            
-            if pwd == str(admin_pwd):
-                st.session_state["password_correct"] = True
-                st.session_state["is_admin"] = True
-                st.rerun()
-            elif pwd == str(valid_pwd):
-                st.session_state["password_correct"] = True
-                st.session_state["is_admin"] = False
-                st.rerun()
-            else: 
-                st.error("Code erroné.")
+        tab_login, tab_subscribe = st.tabs(["Se connecter (LinkedIn)", "S'abonner"])
+        
+        with tab_login:
+            pwd = st.text_input("Code d'accès :", type="password")
+            if st.button("Se connecter"):
+                valid_pwd = os.getenv("APP_PASSWORD", "DEFAUT_USER_123")
+                admin_pwd = os.getenv("ADMIN_PASSWORD", "ADMIN2026")
+                
+                if pwd == str(admin_pwd):
+                    st.session_state["password_correct"] = True
+                    st.session_state["is_admin"] = True
+                    st.rerun()
+                elif pwd == str(valid_pwd):
+                    st.session_state["password_correct"] = True
+                    st.session_state["is_admin"] = False
+                    st.rerun()
+                else: 
+                    st.error("Code erroné.")
+        
+        with tab_subscribe:
+            st.markdown("### Choisissez votre formule")
+            c_m, c_a = st.columns(2)
+            with c_m:
+                st.info("**Mensuel**\n\n50 € HT / mois\n\n*Sans engagement*")
+                if st.button("S'abonner (Mensuel)"):
+                    url = create_checkout_session("Mensuel")
+                    if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+            with c_a:
+                st.success("**Annuel**\n\n500 € HT / an\n\n*2 mois offerts*")
+                if st.button("S'abonner (Annuel)"):
+                    url = create_checkout_session("Annuel")
+                    if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
     st.stop()
 
 check_password()
