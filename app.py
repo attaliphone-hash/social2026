@@ -166,8 +166,14 @@ def load_system():
                 if content.strip():
                     texts.append(content)
                     metas.append({"source": f, "session_id": "system_init"})
+        
+        # --- CORRECTION BATCHING POUR GROS VOLUMES ---
         if texts:
-            vectorstore.add_texts(texts=texts, metadatas=metas)
+            batch_size = 1000
+            for i in range(0, len(texts), batch_size):
+                batch_texts = texts[i : i + batch_size]
+                batch_metas = metas[i : i + batch_size]
+                vectorstore.add_texts(texts=batch_texts, metadatas=batch_metas)
     return vectorstore, llm
 
 vectorstore, llm = load_system()
@@ -240,4 +246,4 @@ if query := st.chat_input("Posez votre question..."):
     st.session_state.messages.append({"role": "assistant", "content": response})
 
 st.divider()
-st.markdown("<div style='text-align:center; color:#888; font-size:11px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align:center
