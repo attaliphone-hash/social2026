@@ -162,9 +162,12 @@ def load_system():
         texts, metas = [], []
         for f in files:
             with open(f"data_clean/{f}", "r", encoding="utf-8") as file:
-                texts.append(file.read())
-                metas.append({"source": f, "session_id": "system_init"})
-        if texts: vectorstore.add_texts(texts=texts, metadatas=metas)
+                content = file.read()
+                if content.strip():
+                    texts.append(content)
+                    metas.append({"source": f, "session_id": "system_init"})
+        if texts:
+            vectorstore.add_texts(texts=texts, metadatas=metas)
     return vectorstore, llm
 
 vectorstore, llm = load_system()
