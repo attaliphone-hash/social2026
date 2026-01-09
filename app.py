@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup 
 import streamlit as st
 import pypdf 
-import stripe # Ajout pour le module SaaS
+import stripe 
 
 # --- 1. PATCH SQLITE ---
 try:
@@ -57,6 +57,8 @@ def apply_pro_design():
         .stChatMessage { background-color: rgba(255, 255, 255, 0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
         .stExpander details summary p { color: #024c6f !important; font-weight: bold; }
+        .assurance-text { font-size: 10px !important; color: #444444; line-height: 1.3; text-align: left; padding: 5px; }
+        .assurance-title { font-weight: bold; color: #024c6f; display: block; margin-bottom: 2px; font-size: 10px !important; }
         </style>
     """, unsafe_allow_html=True)
     
@@ -68,15 +70,13 @@ def apply_pro_design():
             </style>
         """, unsafe_allow_html=True)
 
-# --- 4. SÉCURITÉ & MODULE SAAS (MODIFIÉ) ---
+# --- 4. SÉCURITÉ & MODULE SAAS ---
 
-# Configuration Stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 PRICE_ID_MONTHLY = "price_1SnaTDQZ5ivv0RayXfKqvJ6I"
 PRICE_ID_ANNUAL = "price_1SnaUOQZ5ivv0RayFnols3TI"
 
 def create_checkout_session(plan_type):
-    """Génère un lien de paiement Stripe sécurisé"""
     price_id = PRICE_ID_MONTHLY if plan_type == "Mensuel" else PRICE_ID_ANNUAL
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -88,18 +88,31 @@ def create_checkout_session(plan_type):
         )
         return checkout_session.url
     except Exception as e:
-        st.error(f"Erreur lors de la création de la session : {e}")
+        st.error(f"Erreur Stripe : {e}")
         return None
 
 def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
-    st.markdown("<br><br><br><br>", unsafe_allow_html=True)
+    
+    # Arguments de réassurance affichés en haut de la page de login
+    st.markdown("<br>", unsafe_allow_html=True)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown('<p class="assurance-text"><span class="assurance-title">Données Certifiées 2026 :</span> Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature) pour une précision chirurgicale.</p>', unsafe_allow_html=True)
+    with c2:
+        st.markdown('<p class="assurance-text"><span class="assurance-title">Maillage de Sources :</span> Analyse simultanée du BOSS, Code du Travail, Code de la Sécurité Sociale et organismes sociaux.</p>', unsafe_allow_html=True)
+    with c3:
+        st.markdown('<p class="assurance-text"><span class="assurance-title">Mise à Jour Agile :</span> Base actualisée en temps réel dès la publication de nouvelles circulaires, garantissant une conformité permanente.</p>', unsafe_allow_html=True)
+    with c4:
+        st.markdown('<p class="assurance-text"><span class="assurance-title">Transparence :</span> Chaque réponse est systématiquement sourcée, permettant aux experts de valider le fondement juridique.</p>', unsafe_allow_html=True)
+    
+    st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro</h1>", unsafe_allow_html=True)
     
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
-        tab_login, tab_subscribe = st.tabs(["Se connecter", "S'abonner"])
+        tab_login, tab_subscribe = st.tabs(["Se connecter (LinkedIn)", "S'abonner"])
         
         with tab_login:
             pwd = st.text_input("Code d'accès :", type="password")
@@ -146,7 +159,7 @@ NOMS_PROS = {
     "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)",
     "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
     "DOC_JURISPRUDENCE": "⚖️ JURISPRUDENCE (PRÉCÉDENTS)",
-    "barème officiel": "🏛️ BOSS - ARCHIVES BARÈMES"
+    "barème officiel": "🏛️ BOSS - ARCHEMS"
 }
 
 def nettoyer_nom_source(raw_source):
@@ -167,7 +180,7 @@ def get_data_clean_context():
 
 @st.cache_resource
 def load_system():
-    api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
+    api_key = os.getenv("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     vectorstore = Chroma(embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
@@ -204,47 +217,21 @@ def process_file(uploaded_file):
         return vectorstore.add_texts(texts=chunks, metadatas=metadatas)
     except Exception: return None
 
-# --- 7. INTERFACE ---
+# --- 7. INTERFACE PRINCIPALE ---
 
-# Style spécifique pour les 4 colonnes de réassurance
-st.markdown("""
-    <style>
-    .assurance-text {
-        font-size: 10px !important;
-        color: #444444;
-        line-height: 1.3;
-        text-align: left;
-        padding: 5px;
-    }
-    .assurance-title {
-        font-weight: bold;
-        color: #024c6f;
-        display: block;
-        margin-bottom: 2px;
-        font-size: 10px !important;
-    }
-    hr {
-        margin: 10px 0 !important;
-        border: 0;
-        border-top: 1px solid #e0e0e0;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# Affichage des 4 colonnes de wording
+# Rappel des 4 colonnes une fois connecté
 c1, c2, c3, c4 = st.columns(4)
 with c1:
-    st.markdown('<p class="assurance-text"><span class="assurance-title">Données Certifiées 2026 :</span> Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature, seuils d\'exonération) pour une précision chirurgicale dès le premier jour de l\'année.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="assurance-text"><span class="assurance-title">Données Certifiées 2026 :</span> Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature).</p>', unsafe_allow_html=True)
 with c2:
-    st.markdown('<p class="assurance-text"><span class="assurance-title">Maillage de Sources Multiples :</span> Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="assurance-text"><span class="assurance-title">Maillage de Sources Multiples :</span> Analyse simultanée du BOSS, Code du Travail, CSS.</p>', unsafe_allow_html=True)
 with c3:
-    st.markdown('<p class="assurance-text"><span class="assurance-title">Mise à Jour Agile des Connaissances :</span> Contrairement aux IA classiques figées dans le temps, notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="assurance-text"><span class="assurance-title">Mise à Jour Agile :</span> Actualisation en temps réel dès la publication de nouvelles circulaires.</p>', unsafe_allow_html=True)
 with c4:
-    st.markdown('<p class="assurance-text"><span class="assurance-title">Transparence et Traçabilité :</span> Chaque réponse est systématiquement sourcée via une liste à puces détaillée, permettant aux experts de valider instantanément le fondement juridique de chaque conseil.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="assurance-text"><span class="assurance-title">Traçabilité :</span> Chaque réponse est systématiquement sourcée via une liste à puces.</p>', unsafe_allow_html=True)
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# Titre Principal et Bouton de Session
 col_t, col_b = st.columns([4, 1])
 with col_t: 
     st.markdown("<h1 style='color: #024c6f; margin-top: 0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
@@ -252,12 +239,9 @@ with col_b:
     if st.button("Nouvelle session"):
         st.session_state.messages = []
         st.session_state['session_id'] = str(uuid.uuid4())
-        # Nettoyage de l'historique des documents chargés pour cette session
-        if 'history' in st.session_state:
-            st.session_state['history'] = []
+        if 'history' in st.session_state: st.session_state['history'] = []
         st.rerun()
 
-# --- ZONE ADMIN PRIVÉE ---
 if st.session_state.get("is_admin", False):
     last_news = check_boss_updates()
     if last_news:
@@ -275,9 +259,9 @@ with st.expander("📎 Analyser un document externe", expanded=False):
         if process_file(uploaded_file):
             if 'history' not in st.session_state: st.session_state['history'] = []
             st.session_state['history'].append(uploaded_file.name)
-            st.success(f"Document '{uploaded_file.name}' intégré avec succès !")
+            st.success(f"Document '{uploaded_file.name}' intégré !")
             st.rerun()
-# --- 8. CHAT ---
+
 if "messages" not in st.session_state: st.session_state.messages = []
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar=("avatar-logo.png" if message["role"] == "assistant" else None)):
@@ -292,15 +276,13 @@ if query := st.chat_input("Posez votre question..."):
             raw_law = vectorstore.similarity_search(query, k=20)
             user_docs = vectorstore.similarity_search(query, k=10, filter={"session_id": st.session_state['session_id']})
             context = []
-            if priorite_context: context.append("### FICHES D'EXPERTISE PRIORITAIRES (2025-2026) ###\n" + priorite_context)
-            if user_docs: context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
-            context.append("\n### DOCTRINE ET ARCHIVES ###")
+            if priorite_context: context.append("### FICHES D'EXPERTISE PRIORITAIRES ###\n" + priorite_context)
+            if user_docs: context.append("### CAS CLIENT ###\n" + "\n".join([d.page_content for d in user_docs]))
             for d in raw_law:
                 nom = nettoyer_nom_source(d.metadata.get('source',''))
                 context.append(f"[SOURCE : {nom}]\n{d.page_content}")
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026. 
-            MISSION : Réponds via les fiches prioritaires. Saute deux lignes avant d'écrire [SOURCE : ...].
+            Tu es l'Expert Social Pro 2026. MISSION : Réponds via les fiches prioritaires. Saute deux lignes avant d'écrire [SOURCE : ...].
             CONTEXTE : {context}
             QUESTION : {question}
             """)
@@ -308,43 +290,14 @@ if query := st.chat_input("Posez votre question..."):
         st.markdown(full_response)
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# --- 9. PIED DE PAGE & INFORMATIONS LÉGALES ---
+# --- 9. PIED DE PAGE ---
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.divider()
-
 foot_l, foot_m, foot_r = st.columns([1, 2, 1])
-
 with foot_m:
     with st.popover("⚖️ Mentions Légales & RGPD", use_container_width=True):
         st.markdown("### 🏛️ Mentions Légales")
-        st.write("""
-        **Éditeur & Responsable de traitement :** Sylvain Attal  
-        **Hébergement :** Google Cloud Platform (Région : europe-west1, Belgique)  
-        **Contact :** sylvain.attal@businessagent-ai.com
-        """)
-        
-        st.markdown("### 🛡️ Confidentialité & RGPD")
-        st.write("""
-        **Protection des données :** Les documents téléchargés sont analysés exclusivement en mémoire vive (RAM) et sont **définitivement supprimés** dès la fermeture de la session ou lors d'un clic sur 'Nouvelle session'. Aucun stockage persistant n'est effectué.
-        
-        **Vos Droits :** Conformément au RGPD et à la loi 'Informatique et Libertés', vous disposez d'un droit d'accès, de rectification et de suppression de vos données de session sur simple demande à l'adresse contact ci-dessus.
-        
-        **Intelligence Artificielle :** Utilisation de l'API Google Gemini. Vos données professionnelles ne sont **jamais utilisées** pour entraîner les modèles de Google (Contrat API Entreprise).
-        """)
-        
-        st.markdown("### ⚠️ Avertissement Légal")
-        st.caption("""
-        Expert Social Pro 2026 est un outil d'assistance automatisé. 
-        Conformément à la loi du 31 décembre 1971, les analyses générées ne constituent pas un conseil juridique personnalisé. 
-        L'utilisation de cet outil ne dispense pas de la validation par un professionnel du droit ou de l'expertise-comptable.
-        """)
-        
-        st.caption("Dernière mise à jour : 08/01/2026")
-
-    # Copyright mis à jour avec le bon domaine
-    st.markdown("""
-        <div style='text-align: center; color: #888888; font-size: 11px; margin-top: 10px;'>
-            © 2026 socialexpertfrance.fr | Expert Social Pro <br>
-            <span style='font-style: italic;'>L'IA est un outil d'aide, la validation finale incombe à l'expert.</span>
-        </div>
-    """, unsafe_allow_html=True)
+        st.write("Éditeur : Sylvain Attal | Hébergement : Google Cloud (Europe)")
+        st.markdown("### 🛡️ Confidentialité")
+        st.write("Les documents sont analysés en mémoire vive et supprimés à la fermeture de session.")
+    st.markdown("<div style='text-align: center; color: #888888; font-size: 11px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
