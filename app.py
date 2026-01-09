@@ -229,8 +229,8 @@ if query := st.chat_input("Posez votre question..."):
                 2. QUALIFICATION JURIDIQUE : Sois intraitable sur les termes techniques (ex: ne jamais confondre licenciement personnel et disciplinaire).
                 3. HIÉRARCHIE VISUELLE : 
                    - Ta réponse commence DIRECTEMENT par les faits ou calculs, SANS préambule, écrits en GRAS (**texte**).
-                   - Ensuite, une section "⚖️ SOURCE :".
-                   - Enfin, une section "💡 PRÉCISION :" pour les conditions, seuils ou exceptions.
+                   - Ensuite, une section "💡 PRÉCISION :" pour les conditions, seuils ou exceptions.
+                   - Enfin, une section "⚖️ SOURCE :".
 
                 CONTEXTE : {context}
                 QUESTION : {question}
