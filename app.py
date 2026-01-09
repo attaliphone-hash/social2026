@@ -39,44 +39,43 @@ def apply_pro_design():
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; }
         
-        /* Style des bulles de chat */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
         
-        /* Style des 5 colonnes du haut - Fidèle à la capture épurée */
-        .assurance-text { 
-            font-size: 11px !important; 
-            color: #024c6f !important; 
-            text-align: left; 
-            display: block;
-            line-height: 1.3;
-            padding: 0px;
-            margin-bottom: 20px;
-        }
-        .assurance-title { 
-            font-weight: bold; 
-            color: #024c6f; 
-            display: inline; 
-            font-size: 11px !important; 
-        }
-        .assurance-desc {
-            font-weight: normal;
-            color: #444;
-            display: inline;
-            font-size: 11px !important;
-        }
+        .assurance-text { font-size: 11px !important; color: #024c6f !important; text-align: left; display: block; line-height: 1.3; margin-bottom: 20px; }
+        .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
+        .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
+
+        .legal-menu { text-align: center; padding: 20px; font-size: 12px; color: #666; }
         </style>
     """, unsafe_allow_html=True)
     
     bg_data = get_base64('background.webp')
     if bg_data:
-        st.markdown(f"""
-            <style>
-            .stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}
-            </style>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
 
-# --- 4. SÉCURITÉ & MODULE SAAS ---
+# --- 4. TEXTES LÉGAUX & RGPD ---
+def show_legal_info():
+    st.divider()
+    col_l, col_r = st.columns(2)
+    with col_l:
+        with st.expander("⚖️ Mentions Légales"):
+            st.write("""
+                **Éditeur du site** : socialexpertfrance.fr  
+                **Responsable de la publication** : Direction Expert Social Pro 2026  
+                **Hébergement** : Google Cloud Platform (Europe-West1)  
+                **Propriété Intellectuelle** : L'ensemble du contenu (textes, logos, algorithmes) est protégé par le droit d'auteur.
+            """)
+    with col_r:
+        with st.expander("🛡️ Politique de Confidentialité (RGPD)"):
+            st.write("""
+                **Traitement des données** : Vos questions sont traitées exclusivement en mémoire vive (RAM) de manière volatile.  
+                **Conservation** : Aucune donnée n'est stockée de façon permanente sur nos serveurs.  
+                **Entraînement IA** : Vos données ne sont JAMAIS utilisées pour entraîner des modèles d'IA tiers.  
+                **Droits** : Vous disposez d'un droit d'effacement de votre session via le bouton 'Nouvelle session'.
+            """)
+
+# --- 5. SÉCURITÉ & MODULE SAAS ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 PRICE_ID_MONTHLY = "price_1SnaTDQZ5ivv0RayXfKqvJ6I"
 PRICE_ID_ANNUAL = "price_1SnaUOQZ5ivv0RayFnols3TI"
@@ -103,11 +102,11 @@ def check_password():
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3, c4, c5 = st.columns(5)
     args = [
-        ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature, seuils d'exonération) pour une précision chirurgicale dès le premier jour."),
-        ("Maillage de Sources :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
-        ("Mise à Jour Agile :", " Contrairement aux IA figées, notre base est actualisée en temps réel dès la publication de nouvelles circulaires, garantissant une conformité permanente."),
-        ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste à puces détaillée, permettant de valider instantanément le fondement juridique."),
-        ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées ni utilisées pour entraîner des modèles tiers.")
+        ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature, seuils d'exonération) pour une précision chirurgicale."),
+        ("Maillage de Sources :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués officiels."),
+        ("Mise à Jour Agile :", " Contrairement aux IA figées, notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes."),
+        ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste à puces détaillée, permettant de valider le fondement juridique."),
+        ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées ni utilisées pour l'entraînement.")
     ]
     for i, col in enumerate([c1, c2, c3, c4, c5]):
         col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args[i][0]}</span><span class="assurance-desc">{args[i][1]}</span></p>', unsafe_allow_html=True)
@@ -121,32 +120,23 @@ def check_password():
         with tab_login:
             pwd = st.text_input("Code d'accès :", type="password")
             if st.button("Se connecter"):
-                if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026"):
-                    st.session_state.update({"password_correct": True, "is_admin": True})
-                    st.rerun()
-                elif pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
-                    st.session_state.update({"password_correct": True, "is_admin": False})
+                if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026") or pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
+                    st.session_state.update({"password_correct": True})
                     st.rerun()
                 else: st.error("Code erroné.")
         with tab_subscribe:
-            st.markdown("### Choisissez votre formule")
-            cm, ca = st.columns(2)
-            with cm:
-                st.info("**Mensuel**\n\n50 € HT / mois")
-                if st.button("S'abonner (Mensuel)"):
-                    url = create_checkout_session("Mensuel")
-                    if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
-            with ca:
-                st.success("**Annuel**\n\n500 € HT / an")
-                if st.button("S'abonner (Annuel)"):
-                    url = create_checkout_session("Annuel")
-                    if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+            st.markdown("### Formules")
+            if st.button("S'abonner (Mensuel)"):
+                url = create_checkout_session("Mensuel")
+                if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+    
+    show_legal_info()
     st.stop()
 
 check_password()
 apply_pro_design()
 
-# --- 5. SYSTÈME DE RECHERCHE EXPERT ---
+# --- 6. SYSTÈME DE RECHERCHE IA ---
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 NOMS_PROS = {
@@ -188,25 +178,18 @@ def load_system():
                 if content.strip():
                     texts.append(content)
                     metas.append({"source": f, "session_id": "system_init"})
-        
         if texts:
             batch_size = 1000
             for i in range(0, len(texts), batch_size):
-                batch_texts = texts[i : i + batch_size]
-                batch_metas = metas[i : i + batch_size]
-                vectorstore.add_texts(texts=batch_texts, metadatas=batch_metas)
+                vectorstore.add_texts(texts=texts[i:i+batch_size], metadatas=metas[i:i+batch_size])
     return vectorstore, llm
 
 vectorstore, llm = load_system()
 
-# --- 6. GESTION DES FLUX ---
 def build_expert_context(query):
     context = []
     priorite = get_data_clean_context()
     if priorite: context.append("### FICHES D'EXPERTISE PRIORITAIRES ###\n" + priorite)
-    
-    user_docs = vectorstore.similarity_search(query, k=3, filter={"session_id": st.session_state['session_id']})
-    if user_docs: context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
     
     raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
@@ -217,13 +200,12 @@ def build_expert_context(query):
 # --- 7. INTERFACE PRINCIPALE ---
 c1, c2, c3, c4, c5 = st.columns(5)
 args_labels = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature, seuils d'exonération) pour une précision chirurgicale dès le premier jour."),
-    ("Maillage de Sources :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
-    ("Mise à Jour Agile :", " Contrairement aux IA figées, notre base est actualisée en temps réel dès la publication de nouvelles circulaires, garantissant une conformité permanente."),
-    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste à puces détaillée, permettant de valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées ni utilisées pour entraîner des modèles tiers.")
+    ("Données Certifiées 2026 :", " Intégration prioritaire des barèmes PASS et avantages en nature."),
+    ("Maillage de Sources :", " Analyse croisée BOSS, Code du Travail, CSS et communiqués."),
+    ("Mise à Jour Agile :", " Actualisation en temps réel dès la publication de nouvelles circulaires."),
+    ("Traçabilité Totale :", " Chaque réponse est sourcée via une liste à puces détaillée."),
+    ("Confidentialité Garantie :", " Traitement RAM exclusif, sans stockage permanent ni entraînement.")
 ]
-
 for i, col in enumerate([c1, c2, c3, c4, c5]):
     col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args_labels[i][0]}</span><span class="assurance-desc">{args_labels[i][1]}</span></p>', unsafe_allow_html=True)
 
@@ -235,15 +217,6 @@ with col_b:
         st.session_state.messages = []
         st.session_state['session_id'] = str(uuid.uuid4())
         st.rerun()
-
-if st.session_state.get("is_admin"):
-    st.info("Mode Admin : Veille BOSS activée.")
-
-with st.expander("📎 Analyser un document externe"):
-    uploaded_file = st.file_uploader("Fichier PDF ou TXT", type=["pdf","txt"])
-    if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
-        st.session_state.setdefault('history', []).append(uploaded_file.name)
-        st.success("Document intégré !")
 
 if "messages" not in st.session_state: st.session_state.messages = []
 for msg in st.session_state.messages:
@@ -257,16 +230,8 @@ if query := st.chat_input("Posez votre question..."):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
             prompt = ChatPromptTemplate.from_template("""
-                Tu es l'Expert Social Pro 2026. Ta mission est d'éliminer toute approximation.
-                
-                RÈGLES d'OR :
-                1. DÉTAIL DES CALCULS : Pour toute indemnité ou plafond, décompose systématiquement le calcul mathématique. Ne donne jamais un chiffre sans sa preuve arithmétique.
-                2. QUALIFICATION JURIDIQUE : Sois intraitable sur les termes techniques (ex: ne jamais confondre licenciement personnel et disciplinaire).
-                3. HIÉRARCHIE VISUELLE : 
-                   - Ta réponse commence DIRECTEMENT par les faits ou calculs, SANS préambule, écrits en GRAS (**texte**).
-                   - Ensuite, une section "💡 PRÉCISION :" pour les conditions, seuils ou exceptions.
-                   - Enfin, une section "⚖️ SOURCE :".
-
+                Tu es l'Expert Social Pro 2026.
+                RÈGLES : 1. Détail des calculs systématique. 2. Sources précises. 3. Pas de préambule.
                 CONTEXTE : {context}
                 QUESTION : {question}
             """)
@@ -274,5 +239,5 @@ if query := st.chat_input("Posez votre question..."):
         st.markdown(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
 
-st.divider()
+show_legal_info()
 st.markdown("<div style='text-align:center; color:#888; font-size:11px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
