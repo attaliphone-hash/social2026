@@ -46,7 +46,7 @@ def apply_pro_design():
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
 
-        .legal-menu { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+        .legal-menu { text-align: center; padding: 20px; font-size: 10px; color: #666; }
         </style>
     """, unsafe_allow_html=True)
     
@@ -59,7 +59,7 @@ def show_legal_info():
     st.divider()
     col_l, col_r = st.columns(2)
     with col_l:
-        with st.expander("⚖️ Mentions Légales"):
+        with st.expander("Mentions Légales"):
             st.write("""
                 **Éditeur du site** : socialexpertfrance.fr  
                 **Responsable de la publication** : Direction Expert Social Pro 2026  
@@ -67,11 +67,11 @@ def show_legal_info():
                 **Propriété Intellectuelle** : L'ensemble du contenu (textes, logos, algorithmes) est protégé par le droit d'auteur.
             """)
     with col_r:
-        with st.expander("🛡️ Politique de Confidentialité (RGPD)"):
+        with st.expander("Politique de Confidentialité (RGPD)"):
             st.write("""
                 **Traitement des données** : Vos questions sont traitées exclusivement en mémoire vive (RAM) de manière volatile.  
                 **Conservation** : Aucune donnée n'est stockée de façon permanente sur nos serveurs.  
-                **Entraînement IA** : Vos données ne sont JAMAIS utilisées pour entraîner des modèles d'IA tiers.  
+                **Entraînement IA** : Vos données ne sont JAMAIS utilisées pour entraîner des modèles d'IA.  
                 **Droits** : Vous disposez d'un droit d'effacement de votre session via le bouton 'Nouvelle session'.
             """)
 
