@@ -37,32 +37,33 @@ def apply_pro_design():
         header {visibility: hidden !important; height: 0px;}
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
-        .block-container { padding-top: 2rem !important; }
+        .block-container { padding-top: 1rem !important; }
         
         /* Style des bulles de chat */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
-        .stExpander details summary p { color: #024c6f !important; font-weight: bold; }
         
-        /* Style des 4 colonnes du haut */
+        /* Style des 5 colonnes du haut - Fidèle à la capture épurée */
         .assurance-text { 
-            font-size: 14px !important; 
+            font-size: 11px !important; 
             color: #024c6f !important; 
-            font-weight: 600;
-            text-align: center; 
+            text-align: left; 
             display: block;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 8px;
-            padding: 8px;
-            border: 1px solid rgba(2, 76, 111, 0.2);
-            line-height: 1.4;
+            line-height: 1.3;
+            padding: 0px;
+            margin-bottom: 20px;
         }
         .assurance-title { 
             font-weight: bold; 
             color: #024c6f; 
-            display: block; 
-            font-size: 14px !important; 
-            margin-bottom: 2px;
+            display: inline; 
+            font-size: 11px !important; 
+        }
+        .assurance-desc {
+            font-weight: normal;
+            color: #444;
+            display: inline;
+            font-size: 11px !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -100,20 +101,16 @@ def check_password():
     apply_pro_design()
     
     st.markdown("<br>", unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     args = [
-        ("Données Certifiées 2026", "Nouveaux barèmes PASS et avantages en nature."),
-        ("Maillage de Sources", "Analyse BOSS, Code du Travail, CSS et Organismes."),
-        ("Mise à Jour Agile", "Base actualisée dès la publication de nouvelles circulaires."),
-        ("Traçabilité", "Chaque réponse est systématiquement sourcée.")
+        ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature, seuils d'exonération) pour une précision chirurgicale dès le premier jour."),
+        ("Maillage de Sources :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
+        ("Mise à Jour Agile :", " Contrairement aux IA figées, notre base est actualisée en temps réel dès la publication de nouvelles circulaires, garantissant une conformité permanente."),
+        ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste à puces détaillée, permettant de valider instantanément le fondement juridique."),
+        ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées ni utilisées pour entraîner des modèles tiers.")
     ]
-    for i, col in enumerate([c1, c2, c3, c4]):
-        col.markdown(f'''
-            <p class="assurance-text">
-                <span class="assurance-title">{args[i][0]}</span>
-                <span style="font-size: 11px; font-weight: normal; opacity: 0.9;">{args[i][1]}</span>
-            </p>
-        ''', unsafe_allow_html=True)
+    for i, col in enumerate([c1, c2, c3, c4, c5]):
+        col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args[i][0]}</span><span class="assurance-desc">{args[i][1]}</span></p>', unsafe_allow_html=True)
     
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro</h1>", unsafe_allow_html=True)
@@ -211,7 +208,6 @@ def build_expert_context(query):
     user_docs = vectorstore.similarity_search(query, k=3, filter={"session_id": st.session_state['session_id']})
     if user_docs: context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
     
-    # Limitation à k=8 pour éviter RESOURCE_EXHAUSTED
     raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
         nom = nettoyer_nom_source(d.metadata.get('source',''))
@@ -219,21 +215,17 @@ def build_expert_context(query):
     return "\n\n".join(context)
 
 # --- 7. INTERFACE PRINCIPALE ---
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3, c4, c5 = st.columns(5)
 args_labels = [
-    ("Données Certifiées 2026", "Nouveaux barèmes PASS et avantages en nature."),
-    ("Maillage de Sources", "Analyse BOSS, Code du Travail, CSS et Organismes."),
-    ("Mise à Jour Agile", "Base actualisée dès la publication de nouvelles circulaires."),
-    ("Traçabilité", "Chaque réponse est systématiquement sourcée.")
+    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature, seuils d'exonération) pour une précision chirurgicale dès le premier jour."),
+    ("Maillage de Sources :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
+    ("Mise à Jour Agile :", " Contrairement aux IA figées, notre base est actualisée en temps réel dès la publication de nouvelles circulaires, garantissant une conformité permanente."),
+    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste à puces détaillée, permettant de valider instantanément le fondement juridique."),
+    ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées ni utilisées pour entraîner des modèles tiers.")
 ]
 
-for i, col in enumerate([c1, c2, c3, c4]):
-    col.markdown(f'''
-        <p class="assurance-text">
-            <span class="assurance-title">{args_labels[i][0]}</span>
-            <span style="font-size: 11px; font-weight: normal; opacity: 0.9;">{args_labels[i][1]}</span>
-        </p>
-    ''', unsafe_allow_html=True)
+for i, col in enumerate([c1, c2, c3, c4, c5]):
+    col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args_labels[i][0]}</span><span class="assurance-desc">{args_labels[i][1]}</span></p>', unsafe_allow_html=True)
 
 st.markdown("<hr>", unsafe_allow_html=True)
 col_t, col_b = st.columns([4, 1])
