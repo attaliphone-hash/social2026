@@ -173,13 +173,10 @@ vectorstore, llm = load_system()
 # --- 6. GESTION DES FLUX ---
 def build_expert_context(query):
     context = []
-    # 1. Priorité aux fiches métier
     priorite = get_data_clean_context()
     if priorite: context.append("### FICHES D'EXPERTISE PRIORITAIRES ###\n" + priorite)
-    # 2. Cas client (session)
     user_docs = vectorstore.similarity_search(query, k=5, filter={"session_id": st.session_state['session_id']})
     if user_docs: context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
-    # 3. Doctrine globale
     raw_law = vectorstore.similarity_search(query, k=15)
     for d in raw_law:
         nom = nettoyer_nom_source(d.metadata.get('source',''))
@@ -202,19 +199,15 @@ with col_b:
         st.session_state['session_id'] = str(uuid.uuid4())
         st.rerun()
 
-# Zone Admin Veille
 if st.session_state.get("is_admin"):
     st.info("Mode Admin : Veille BOSS activée.")
 
-# Upload
 with st.expander("📎 Analyser un document externe"):
     uploaded_file = st.file_uploader("Fichier PDF ou TXT", type=["pdf","txt"])
     if uploaded_file and uploaded_file.name not in st.session_state.get('history', []):
-        # ... logique process_file simplifiée ...
         st.session_state.setdefault('history', []).append(uploaded_file.name)
         st.success("Document intégré !")
 
-# Chat
 if "messages" not in st.session_state: st.session_state.messages = []
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
@@ -227,12 +220,12 @@ if query := st.chat_input("Posez votre question..."):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
             prompt = ChatPromptTemplate.from_template("""
-                Tu es l'Expert Social Pro 2026. Réponds avec précision.
-                FORMAT OBLIGATOIRE :
-                - OBJET : <Titre>
-                - SOURCE : <Textes officiels cités>
-                - TEXTE : <Réponse avec chiffres 2026>
-                - CAS PARTICULIER : <Exceptions ou seuils>
+                Tu es l'Expert Social Pro 2026. Réponds avec une rigueur absolue.
+                
+                RÈGLES DE STRUCTURE :
+                1. Ta réponse doit commencer DIRECTEMENT par les faits, chiffres ou l'analyse, SANS préambule (pas de "D'après les documents..."), écrits en GRAS (format Markdown **texte**).
+                2. Ensuite, ajoute une section commençant par "⚖️ SOURCE :".
+                3. Enfin, ajoute une section commençant par "💡 PRÉCISION :" pour les conditions, seuils ou exceptions.
 
                 CONTEXTE : {context}
                 QUESTION : {question}
