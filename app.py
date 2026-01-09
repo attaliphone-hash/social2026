@@ -46,7 +46,15 @@ def apply_pro_design():
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
 
-        .legal-menu { text-align: center; padding: 20px; font-size: 10px; color: #666; }
+        /* CORRECTION TAILLE MENTIONS LÉGALES (Expanders) */
+        .stExpander details summary p {
+            font-size: 12px !important;
+            color: #666 !important;
+        }
+        .stExpander {
+            border: none !important;
+            background-color: transparent !important;
+        }
         </style>
     """, unsafe_allow_html=True)
     
@@ -56,24 +64,15 @@ def apply_pro_design():
 
 # --- 4. TEXTES LÉGAUX & RGPD ---
 def show_legal_info():
-    st.divider()
-    col_l, col_r = st.columns(2)
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    # On utilise des colonnes plus étroites pour centrer et réduire la taille visuelle
+    _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
     with col_l:
         with st.expander("Mentions Légales"):
-            st.write("""
-                **Éditeur du site** : socialexpertfrance.fr  
-                **Responsable de la publication** : Direction Expert Social Pro 2026  
-                **Hébergement** : Google Cloud Platform (Europe-West1)  
-                **Propriété Intellectuelle** : L'ensemble du contenu (textes, logos, algorithmes) est protégé par le droit d'auteur.
-            """)
+            st.markdown("<small>Éditeur : socialexpertfrance.fr<br>Hébergement : Google Cloud (Europe)</small>", unsafe_allow_html=True)
     with col_r:
         with st.expander("Politique de Confidentialité (RGPD)"):
-            st.write("""
-                **Traitement des données** : Vos questions sont traitées exclusivement en mémoire vive (RAM) de manière volatile.  
-                **Conservation** : Aucune donnée n'est stockée de façon permanente sur nos serveurs.  
-                **Entraînement IA** : Vos données ne sont JAMAIS utilisées pour entraîner des modèles d'IA.  
-                **Droits** : Vous disposez d'un droit d'effacement de votre session via le bouton 'Nouvelle session'.
-            """)
+            st.markdown("<small>Données traitées en RAM. Pas de stockage permanent.</small>", unsafe_allow_html=True)
 
 # --- 5. SÉCURITÉ & MODULE SAAS ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -102,11 +101,11 @@ def check_password():
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3, c4, c5 = st.columns(5)
     args = [
-        ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature, seuils d'exonération) pour une précision chirurgicale."),
-        ("Maillage de Sources :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués officiels."),
-        ("Mise à Jour Agile :", " Contrairement aux IA figées, notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes."),
-        ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste à puces détaillée, permettant de valider le fondement juridique."),
-        ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées ni utilisées pour l'entraînement.")
+        ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature) pour une précision chirurgicale."),
+        ("Maillage de Sources :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale."),
+        ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes."),
+        ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste à puces détaillée."),
+        ("Confidentialité Garantie :", " Vos données sont traitées en mémoire vive (RAM) et ne sont jamais stockées.")
     ]
     for i, col in enumerate([c1, c2, c3, c4, c5]):
         col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args[i][0]}</span><span class="assurance-desc">{args[i][1]}</span></p>', unsafe_allow_html=True)
@@ -190,7 +189,6 @@ def build_expert_context(query):
     context = []
     priorite = get_data_clean_context()
     if priorite: context.append("### FICHES D'EXPERTISE PRIORITAIRES ###\n" + priorite)
-    
     raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
         nom = nettoyer_nom_source(d.metadata.get('source',''))
@@ -200,11 +198,11 @@ def build_expert_context(query):
 # --- 7. INTERFACE PRINCIPALE ---
 c1, c2, c3, c4, c5 = st.columns(5)
 args_labels = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des barèmes PASS et avantages en nature."),
-    ("Maillage de Sources :", " Analyse croisée BOSS, Code du Travail, CSS et communiqués."),
-    ("Mise à Jour Agile :", " Actualisation en temps réel dès la publication de nouvelles circulaires."),
-    ("Traçabilité Totale :", " Chaque réponse est sourcée via une liste à puces détaillée."),
-    ("Confidentialité Garantie :", " Traitement RAM exclusif, sans stockage permanent ni entraînement.")
+    ("Données Certifiées 2026 :", " Barèmes PASS et avantages en nature."),
+    ("Maillage de Sources :", " Analyse BOSS, Code du Travail, CSS."),
+    ("Mise à Jour Agile :", " Actualisation en temps réel circulaires."),
+    ("Traçabilité Totale :", " Réponse sourcée via liste détaillée."),
+    ("Confidentialité Garantie :", " Traitement RAM sans stockage.")
 ]
 for i, col in enumerate([c1, c2, c3, c4, c5]):
     col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args_labels[i][0]}</span><span class="assurance-desc">{args_labels[i][1]}</span></p>', unsafe_allow_html=True)
@@ -229,12 +227,7 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
-            prompt = ChatPromptTemplate.from_template("""
-                Tu es l'Expert Social Pro 2026.
-                RÈGLES : 1. Détail des calculs systématique. 2. Sources précises. 3. Pas de préambule.
-                CONTEXTE : {context}
-                QUESTION : {question}
-            """)
+            prompt = ChatPromptTemplate.from_template("""Tu es l'Expert Social Pro 2026. CONTEXTE : {context} QUESTION : {question}""")
             response = (prompt | llm | StrOutputParser()).invoke({"context": context, "question": query})
         st.markdown(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
