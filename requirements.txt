@@ -9,3 +9,4 @@ pypdf
 pysqlite3-binary
 requests
 beautifulsoup4
+stripe
