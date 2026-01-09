@@ -27,8 +27,7 @@ st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 # --- 3. DESIGN PRO CENTRALISÉ ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
-        with open(bin_file, 'rb') as f:
-            return base64.b64encode(f.read()).decode()
+        return base64.b64encode(open(bin_file, "rb").read()).decode()
     return ""
 
 def apply_pro_design():
@@ -145,7 +144,7 @@ def get_data_clean_context():
     context_list = []
     if os.path.exists("data_clean"):
         for filename in os.listdir("data_clean"):
-            if filename.endswith(".txt"):
+            if filename.endswith(".txt") and not filename.startswith("LEGAL_"):
                 with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
                     context_list.append(f"[{nettoyer_nom_source(filename)}] : {f.read()}")
     return "\n".join(context_list)
@@ -182,9 +181,12 @@ def build_expert_context(query):
     context = []
     priorite = get_data_clean_context()
     if priorite: context.append("### FICHES D'EXPERTISE PRIORITAIRES ###\n" + priorite)
-    user_docs = vectorstore.similarity_search(query, k=5, filter={"session_id": st.session_state['session_id']})
+    
+    user_docs = vectorstore.similarity_search(query, k=3, filter={"session_id": st.session_state['session_id']})
     if user_docs: context.append("### CAS CLIENT (VOTRE DOCUMENT) ###\n" + "\n".join([d.page_content for d in user_docs]))
-    raw_law = vectorstore.similarity_search(query, k=15)
+    
+    # Limitation à k=8 pour éviter l'erreur RESOURCE_EXHAUSTED (Limite de tokens)
+    raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
         nom = nettoyer_nom_source(d.metadata.get('source',''))
         context.append(f"[SOURCE : {nom}]\n{d.page_content}")
