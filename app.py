@@ -161,3 +161,134 @@ def check_password():
     st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro</h1>", unsafe_allow_html=True)
     
     col_l, col_m, col_r = st.columns([1, 2, 1])
+    with col_m:
+        tab_login, tab_subscribe = st.tabs(["Se connecter", "S'abonner"])
+        with tab_login:
+            pwd = st.text_input("Code d'accès :", type="password")
+            if st.button("Se connecter"):
+                if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026") or pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
+                    st.session_state.update({"password_correct": True})
+                    st.rerun()
+                else: st.error("Code erroné.")
+        with tab_subscribe:
+            st.markdown("### Formules")
+            if st.button("S'abonner (Mensuel)"):
+                url = create_checkout_session("Mensuel")
+                if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+    
+    show_legal_info()
+    st.stop()
+
+check_password()
+apply_pro_design()
+
+# --- 6. SYSTÈME DE RECHERCHE IA ---
+if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
+
+NOMS_PROS = {
+    "REF_2026_": "🏛️ BARÈMES ET RÉFÉRENTIELS OFFICIELS 2026",
+    "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026",
+    "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)",
+    "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
+    "REF_": "✅ RÉFÉRENCES : BOSS, Code du Travail, CSS"
+}
+
+def nettoyer_nom_source(raw_source):
+    nom = os.path.basename(raw_source)
+    for cle, nom_pro in NOMS_PROS.items():
+        if cle in nom: return nom_pro
+    return nom.replace('.txt','').replace('.pdf','').replace('_',' ')
+
+def get_data_clean_context():
+    context_list = []
+    if os.path.exists("data_clean"):
+        for filename in os.listdir("data_clean"):
+            if filename.endswith(".txt") and not filename.startswith("LEGAL_"):
+                with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
+                    context_list.append(f"[{nettoyer_nom_source(filename)}] : {f.read()}")
+    return "\n".join(context_list)
+
+@st.cache_resource
+def load_system():
+    api_key = os.getenv("GOOGLE_API_KEY")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
+    vectorstore = Chroma(embedding_function=embeddings)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
+    
+    if os.path.exists("data_clean"):
+        files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
+        texts, metas = [], []
+        for f in files:
+            with open(f"data_clean/{f}", "r", encoding="utf-8") as file:
+                content = file.read()
+                if content.strip():
+                    texts.append(content)
+                    metas.append({"source": f, "session_id": "system_init"})
+        if texts:
+            batch_size = 1000
+            for i in range(0, len(texts), batch_size):
+                vectorstore.add_texts(texts=texts[i:i+batch_size], metadatas=metas[i:i+batch_size])
+    return vectorstore, llm
+
+vectorstore, llm = load_system()
+
+def build_expert_context(query):
+    context = []
+    priorite = get_data_clean_context()
+    if priorite: context.append("### FICHES D'EXPERTISE PRIORITAIRES ###\n" + priorite)
+    raw_law = vectorstore.similarity_search(query, k=8)
+    for d in raw_law:
+        nom = nettoyer_nom_source(d.metadata.get('source',''))
+        context.append(f"[SOURCE : {nom}]\n{d.page_content}")
+    return "\n\n".join(context)
+
+# --- 7. INTERFACE PRINCIPALE ---
+c1, c2, c3, c4, c5 = st.columns(5)
+args_labels = [
+    ("Données Certifiées 2026 :", " Barèmes PASS et avantages en nature."),
+    ("Maillage de Sources :", " Analyse BOSS, Code du Travail, CSS."),
+    ("Mise à Jour Agile :", " Actualisation en temps réel circulaires."),
+    ("Traçabilité Totale :", " Réponse sourcée via liste détaillée."),
+    ("Confidentialité Garantie :", " Traitement RAM sans stockage.")
+]
+for i, col in enumerate([c1, c2, c3, c4, c5]):
+    col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args_labels[i][0]}</span><span class="assurance-desc">{args_labels[i][1]}</span></p>', unsafe_allow_html=True)
+
+st.markdown("<hr>", unsafe_allow_html=True)
+col_t, col_b = st.columns([4, 1])
+with col_t: st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+with col_b:
+    if st.button("Nouvelle session"):
+        st.session_state.messages = []
+        st.session_state['session_id'] = str(uuid.uuid4())
+        st.rerun()
+
+if "messages" not in st.session_state: st.session_state.messages = []
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
+        st.markdown(msg["content"])
+
+if query := st.chat_input("Posez votre question..."):
+    st.session_state.messages.append({"role": "user", "content": query})
+    with st.chat_message("user"): st.markdown(query)
+    with st.chat_message("assistant", avatar="avatar-logo.png"):
+        with st.status("🔍 Analyse juridique en cours..."):
+            context = build_expert_context(query)
+            prompt = ChatPromptTemplate.from_template("""
+            Tu es l'Expert Social Pro 2026, spécialisé en droit social français.
+            Utilise impérativement le CONTEXTE suivant pour répondre à la QUESTION.
+            
+            CONSIGNES DE RÉPONSE :
+            1. Cite systématiquement tes sources à l'aide du tag [SOURCE : Nom du document] à la fin de chaque explication technique.
+            2. Termine OBLIGATOIREMENT ta réponse par une section intitulée "⚖️ SOURCES :" listant les documents consultés.
+            3. Si le contexte ne contient pas l'information, indique-le mais réponds sur la base de tes connaissances en précisant l'absence de source officielle dans la base.
+            
+            CONTEXTE : {context}
+            QUESTION : {question}
+            """)
+            response = (prompt | llm | StrOutputParser()).invoke({"context": context, "question": query})
+        st.markdown(response)
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
+show_legal_info()
+st.markdown("<div style='text-align:center; color:#888; font-size:11px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
