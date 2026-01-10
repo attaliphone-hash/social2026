@@ -51,21 +51,16 @@ def apply_pro_design():
 
         /* --- OPTIMISATION MOBILE RADICALE --- */
         @media (max-width: 768px) {
-            /* On supprime presque tout l'espace en haut */
             .block-container { padding-top: 0.2rem !important; }
-            
-            /* On réduit l'espace au-dessus des arguments (le premier <br>) */
             iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
             
             .assurance-text { 
-                margin-bottom: 2px !important; /* Espace quasi nul entre arguments */
+                margin-bottom: 2px !important; 
                 line-height: 1.1 !important; 
                 font-size: 10px !important;
             }
             .assurance-title { font-size: 10px !important; }
             .assurance-desc { font-size: 10px !important; }
-            
-            /* On resserre le titre de la page login */
             h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
 
@@ -78,56 +73,36 @@ def apply_pro_design():
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
 
+# --- TEXTES DES ARGUMENTS (VERSION LONGUE UNIFIÉE POUR LES 2 PAGES) ---
+ARGUMENTS_UNIFIES = [
+    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature) pour une précision chirurgicale."),
+    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
+    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
+    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
+    ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
+]
+
+def render_top_columns():
+    cols = st.columns(5)
+    for i, col in enumerate(cols):
+        title, desc = ARGUMENTS_UNIFIES[i]
+        col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
+
 # --- 4. TEXTES LÉGAUX & RGPD ---
 def show_legal_info():
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
-    
     with col_l:
         with st.expander("Mentions Légales"):
-            st.markdown("""
-                <div style='font-size: 11px; line-height: 1.4; color: #444;'>
-                <strong>ÉDITEUR DU SITE</strong><br>
-                Le site <strong>socialexpertfrance.fr</strong> est édité par la Direction Expert Social Pro.<br>
-                <strong>Responsable de la publication</strong> : [Sylvain Attal]<br>
-                <strong>Contact</strong> : sylvain.attal@businessagent-ai.com<br><br>
-                
-                <strong>HÉBERGEMENT</strong><br>
-                Serveurs Google Cloud Platform (GCP), Région : europe-west1 (Belgique).<br><br>
-                
-                <strong>PROPRIÉTÉ INTELLECTUELLE</strong><br>
-                L'architecture, les algorithmes et la base de connaissances 2026 sont la propriété exclusive de l'éditeur.<br><br>
-                
-                <strong>RESPONSABILITÉ</strong><br>
-                Aide à la décision basée sur les textes officiels 2026 (PASS, BOSS, Code du travail, Code de la Sécutité Sociale). Ne substitue pas l'analyse finale d'un professionnel qualifié.
-                </div>
-            """, unsafe_allow_html=True)
-    
+            st.markdown("""<div style='font-size: 11px; line-height: 1.4; color: #444;'><strong>ÉDITEUR DU SITE</strong><br>Le site <strong>socialexpertfrance.fr</strong> est édité par la Direction Expert Social Pro.<br><strong>Responsable de la publication</strong> : [Sylvain Attal]<br><strong>Contact</strong> : sylvain.attal@businessagent-ai.com<br><br><strong>HÉBERGEMENT</strong><br>Serveurs Google Cloud Platform (GCP), Région : europe-west1 (Belgique).<br><br><strong>PROPRIÉTÉ INTELLECTUELLE</strong><br>L'architecture, les algorithmes et la base de connaissances 2026 sont la propriété exclusive de l'éditeur.<br><br><strong>RESPONSABILITÉ</strong><br>Aide à la décision basée sur les textes officiels 2026 (PASS, BOSS, Code du travail, Code de la Sécurité Sociale). Ne substitue pas l'analyse finale d'un professionnel qualifié.</div>""", unsafe_allow_html=True)
     with col_r:
         with st.expander("Politique de Confidentialité (RGPD)"):
-            st.markdown("""
-                <div style='font-size: 11px; line-height: 1.4; color: #444;'>
-                <strong>1. TRAITEMENT VOLATIL (RAM)</strong><br>
-                Vos questions et documents sont traités exclusivement en mémoire vive (RAM) de manière éphémère. Aucun cookie n'est déposé.<br><br>
-                
-                <strong>2. NON-CONSERVATION</strong><br>
-                Aucune donnée n'est stockée de façon permanente. La fermeture du navigateur ou le bouton 'Nouvelle session' purge instantanément la mémoire.<br><br>
-                
-                <strong>3. NON-ENTRAÎNEMENT</strong><br>
-                Nous garantissons que vos données ne sont <strong>JAMAIS</strong> utilisées pour entraîner des modèles d'IA tiers ou propriétaires.<br><br>
-                
-                <strong>4. VOS DROITS</strong><br>
-                Conformément au RGPD, votre droit à l'oubli est exercé en temps réel par la réinitialisation technique de la session.
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown("""<div style='font-size: 11px; line-height: 1.4; color: #444;'><strong>1. TRAITEMENT VOLATIL (RAM)</strong><br>Vos questions et documents sont traités exclusivement en mémoire vive (RAM) de manière éphémère. Aucun cookie n'est déposé.<br><br><strong>2. NON-CONSERVATION</strong><br>Aucune donnée n'est stockée de façon permanente. La fermeture du navigateur ou le bouton 'Nouvelle session' purge instantanément la mémoire.<br><br><strong>3. NON-ENTRAÎNEMENT</strong><br>Nous garantissons que vos données ne sont <strong>JAMAIS</strong> utilisées pour entraîner des modèles d'IA tiers ou propriétaires.<br><br><strong>4. VOS DROITS</strong><br>Conformément au RGPD, votre droit à l'oubli est exercé en temps réel par la réinitialisation technique de la session.</div>""", unsafe_allow_html=True)
 
 # --- 5. SÉCURITÉ & MODULE SAAS ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-PRICE_ID_MONTHLY = "price_1SnaTDQZ5ivv0RayXfKqvJ6I"
-PRICE_ID_ANNUAL = "price_1SnaUOQZ5ivv0RayFnols3TI"
-
 def create_checkout_session(plan_type):
-    price_id = PRICE_ID_MONTHLY if plan_type == "Mensuel" else PRICE_ID_ANNUAL
+    price_id = "price_1SnaTDQZ5ivv0RayXfKqvJ6I" if plan_type == "Mensuel" else "price_1SnaUOQZ5ivv0RayFnols3TI"
     try:
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
@@ -144,22 +119,9 @@ def create_checkout_session(plan_type):
 def check_password():
     if st.session_state.get("password_correct"): return True
     apply_pro_design()
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    c1, c2, c3, c4, c5 = st.columns(5)
-    args = [
-        ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature) pour une précision chirurgicale."),
-        ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
-        ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
-        ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
-        ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
-    ]
-    for i, col in enumerate([c1, c2, c3, c4, c5]):
-        col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args[i][0]}</span><span class="assurance-desc">{args[i][1]}</span></p>', unsafe_allow_html=True)
-    
+    render_top_columns()
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro</h1>", unsafe_allow_html=True)
-    
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         tab_login, tab_subscribe = st.tabs(["Se connecter", "S'abonner"])
@@ -175,7 +137,6 @@ def check_password():
             if st.button("S'abonner (Mensuel)"):
                 url = create_checkout_session("Mensuel")
                 if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
-    
     show_legal_info()
     st.stop()
 
@@ -184,14 +145,7 @@ apply_pro_design()
 
 # --- 6. SYSTÈME DE RECHERCHE IA ---
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
-
-NOMS_PROS = {
-    "REF_2026_": "🏛️ BARÈMES ET RÉFÉRENTIELS OFFICIELS 2026",
-    "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026",
-    "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)",
-    "LEGAL_": "📕 SOCLE LÉGAL (CODES)",
-    "REF_": "✅ RÉFÉRENCES : BOSS, Code du Travail, CSS"
-}
+NOMS_PROS = {"REF_2026_": "🏛️ BARÈMES ET RÉFÉRENTIELS OFFICIELS 2026", "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026", "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)", "LEGAL_": "📕 SOCLE LÉGAL (CODES)", "REF_": "✅ RÉFÉRENCES : BOSS, Code du Travail, CSS"}
 
 def nettoyer_nom_source(raw_source):
     nom = os.path.basename(raw_source)
@@ -214,7 +168,6 @@ def load_system():
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     vectorstore = Chroma(embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
-    
     if os.path.exists("data_clean"):
         files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
         texts, metas = [], []
@@ -225,9 +178,8 @@ def load_system():
                     texts.append(content)
                     metas.append({"source": f, "session_id": "system_init"})
         if texts:
-            batch_size = 1000
-            for i in range(0, len(texts), batch_size):
-                vectorstore.add_texts(texts=texts[i:i+batch_size], metadatas=metas[i:i+batch_size])
+            for i in range(0, len(texts), 1000):
+                vectorstore.add_texts(texts=texts[i:i+1000], metadatas=metas[i:i+1000])
     return vectorstore, llm
 
 vectorstore, llm = load_system()
@@ -243,17 +195,7 @@ def build_expert_context(query):
     return "\n\n".join(context)
 
 # --- 7. INTERFACE PRINCIPALE ---
-c1, c2, c3, c4, c5 = st.columns(5)
-args_labels = [
-    ("Données Certifiées 2026 :", " Barèmes PASS et avantages en nature."),
-    ("Maillage de Sources :", " Analyse BOSS, Code du Travail, CSS."),
-    ("Mise à Jour Agile :", " Actualisation en temps réel circulaires."),
-    ("Traçabilité Totale :", " Réponse sourcée via liste détaillée."),
-    ("Confidentialité Garantie :", " Traitement RAM sans stockage.")
-]
-for i, col in enumerate([c1, c2, c3, c4, c5]):
-    col.markdown(f'<p class="assurance-text"><span class="assurance-title">{args_labels[i][0]}</span><span class="assurance-desc">{args_labels[i][1]}</span></p>', unsafe_allow_html=True)
-
+render_top_columns()
 st.markdown("<hr>", unsafe_allow_html=True)
 col_t, col_b = st.columns([4, 1])
 with col_t: st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
@@ -274,14 +216,14 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
-            # --- MODIFICATION DES CONSIGNES POUR CITATIONS RÉELLES ---
+            # --- MODIFICATION POUR CITATIONS RÉELLES ---
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026, spécialisé en droit social français.
             Utilise exclusivement le CONTEXTE fourni pour répondre à la QUESTION.
             
             CONSIGNES DE RÉPONSE :
             1. INTERDICTION FORMELLE de citer les numéros de "Partie" ou les noms de fichiers techniques (ex: ignore "Partie 1", "Partie 1726").
-            2. Identifie dans le texte du CONTEXTE la référence juridique réelle (ex: "Article L.1234-1", "Article R.XXXX", "BOSS", "PASS 2026").
+            2. Identifie dans le texte du CONTEXTE la référence juridique réelle (ex: "Article L.XXXX", "Article R.XXXX", "BOSS", "PASS 2026").
             3. Cite ces références réelles directement dans tes explications entre crochets : [Article L.XXXX].
             4. Termine obligatoirement ta réponse par une section intitulée "⚖️ RÉFÉRENCES JURIDIQUES UTILISÉES :" listant uniquement les articles de loi ou textes officiels trouvés.
             
