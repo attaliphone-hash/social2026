@@ -24,16 +24,23 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- 3. FONCTION DE VEILLE BOSS (LE BANDEAU BLEU) ---
+# --- 3. FONCTION DE VEILLE BOSS ORIGINALE RÉTABLIE ---
 def check_boss_updates():
     try:
         url = "https://boss.gouv.fr/portail/accueil.html"
-        # Augmentation du timeout à 10s pour éviter le message "indisponible"
-        response = requests.get(url, timeout=10) 
+        # Utilisation du User-Agent original pour éviter les blocages serveurs
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+        response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
-            return "Recherche de mise à jour BOSS : OK - Base 2026 à jour (Aucune modification détectée ce jour)"
-        return "Serveur BOSS injoignable."
-    except:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            # Recherche de la mention de mise à jour dans les paragraphes
+            actualites = soup.find_all('p')
+            for p in actualites:
+                if "mise à jour" in p.text.lower():
+                    return f"Recherche de mise à jour BOSS : OK - {p.text.strip()}"
+            return "Recherche de mise à jour BOSS : OK - Base 2026 à jour (Aucune modification majeure détectée)"
+        return "Serveur BOSS injoignable pour vérification automatique."
+    except Exception as e:
         return "Veille automatique BOSS temporairement indisponible."
 
 # --- 4. DESIGN PRO CENTRALISÉ ---
@@ -86,7 +93,7 @@ def render_top_columns():
 # --- 5. SÉCURITÉ ---
 def check_password():
     if st.session_state.get("password_correct"):
-        # RETOUR DU BANDEAU BLEU ICI
+        # Affichage du bandeau bleu original pour l'admin
         if st.session_state.get("user_role") == "admin":
             st.info(check_boss_updates())
         return True
@@ -102,7 +109,6 @@ def check_password():
             pwd = st.text_input("Code d'accès :", type="password")
             if st.button("Se connecter"):
                 if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026"):
-                    # ON RE-IDENTIFIE BIEN L'ADMIN ICI
                     st.session_state.update({"password_correct": True, "user_role": "admin"})
                     st.rerun()
                 elif pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
