@@ -15,7 +15,6 @@ try:
 except ImportError:
     pass
 
-# CORRECTION IMPORT : On utilise le bon nom de module
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
@@ -176,9 +175,7 @@ def load_system():
             with open(f"data_clean/{f}", "r", encoding="utf-8") as file:
                 content = file.read()
                 if content.strip():
-                    # --- MODIFICATION CRITIQUE v3.2 ---
-                    # On nettoie le nom de la source ICI, avant de l'ajouter à la base vectorielle.
-                    # L'IA ne verra jamais le ".txt" car il n'existera pas dans les métadonnées.
+                    # --- NETTOYAGE CRITIQUE : Suppression extension .txt ---
                     clean_source = f.replace('.txt', '').replace('_', ' ')
                     texts.append(content)
                     metas.append({"source": clean_source})
@@ -193,7 +190,6 @@ def build_expert_context(query):
     context = [get_data_clean_context()]
     raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
-        # Ici, 'src' sera déjà propre (ex: "DOC BOSS FRAIS TELETRAVAIL")
         src = d.metadata.get('source', 'Source Inconnue')
         context.append(f"[SOURCE : {src}]\n{d.page_content}")
     return "\n\n".join(context)
@@ -219,21 +215,28 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
-            # PROMPT AJUSTÉ POUR LA DOCTRINE
+            # --- PROMPT V3.5 : TERMINOLOGIE D'AUTORITÉ ---
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026. Réponds avec une rigueur absolue.
+            Tu es l'Expert Social Pro 2026. Réponds avec rigueur.
             
-            CONSIGNES DE SOURCING :
-            1. PRIORITÉ ABSOLUE : Cite l'Article et le Code (ex: [Article L.123-1 du Code du travail]) entre crochets.
-            2. CAS DOCTRINE (BOSS, Circulaires) : Si aucun numéro d'article n'existe, CITE LE NOM DE LA SOURCE FOURNIE (ex: [DOC BOSS FRAIS TELETRAVAIL]).
-            3. INTERDICTION : N'invente jamais de citations et n'utilise pas de noms de fichiers (.txt).
-            4. RAPPEL FINAL : Termine par une ligne --- suivie de la liste des références utilisées (Articles ou Noms de fiches) en italique.
+            CONSIGNES D'AFFICHAGE DES SOURCES (ESTHÉTIQUE CRITIQUE) :
+            1. REND LES SOURCES TOUTES PETITES : Utilise la balise HTML <sub> pour réduire la taille.
+            2. METS-LES EN ITALIQUE : Ajoute des astérisques * à l'intérieur de la balise.
+            3. RÈGLE DE NOMMAGE "OFFICIELLE" :
+               - Si la source provient d'un fichier "REF_...", AFFICHE : <sub>*[Barème Officiel : Thème]*</sub>.
+                 (Exemple : <sub>*[Barème Officiel : Avantages Nature]*</sub>).
+               - Si c'est un Article de Loi : <sub>*[Art. L.XXX-X Code du travail]*</sub>.
+               - Si c'est le BOSS : <sub>*[BOSS - Frais pro]*</sub>.
+            
+            RAPPEL FINAL :
+            Termine par "---" puis :
+            "*Références complètes : [Liste détaillée des sources]*" en petit (<sub>).
             
             CONTEXTE : {context}
             QUESTION : {question}
             """)
             response = (prompt | llm | StrOutputParser()).invoke({"context": context, "question": query})
-        st.markdown(response)
+        st.markdown(response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": response})
 
 show_legal_info()
