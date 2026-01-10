@@ -215,22 +215,24 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
-            # --- PROMPT V3.5 : TERMINOLOGIE D'AUTORITÉ ---
+            # --- PROMPT V3.6 : FINITION DU FOOTER ---
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026. Réponds avec rigueur.
             
-            CONSIGNES D'AFFICHAGE DES SOURCES (ESTHÉTIQUE CRITIQUE) :
-            1. REND LES SOURCES TOUTES PETITES : Utilise la balise HTML <sub> pour réduire la taille.
-            2. METS-LES EN ITALIQUE : Ajoute des astérisques * à l'intérieur de la balise.
-            3. RÈGLE DE NOMMAGE "OFFICIELLE" :
-               - Si la source provient d'un fichier "REF_...", AFFICHE : <sub>*[Barème Officiel : Thème]*</sub>.
-                 (Exemple : <sub>*[Barème Officiel : Avantages Nature]*</sub>).
-               - Si c'est un Article de Loi : <sub>*[Art. L.XXX-X Code du travail]*</sub>.
-               - Si c'est le BOSS : <sub>*[BOSS - Frais pro]*</sub>.
+            RÈGLE D'OR : UTILISE EXCLUSIVEMENT LES APPELLATIONS CI-DESSOUS POUR TES SOURCES (DANS LE TEXTE ET EN BAS DE PAGE).
             
-            RAPPEL FINAL :
-            Termine par "---" puis :
-            "*Références complètes : [Liste détaillée des sources]*" en petit (<sub>).
+            TABLE DE CORRESPONDANCE DES NOMS :
+            1. Si le fichier commence par "REF_" -> Affiche : "Barème Officiel [Thème]" (ex: Barème Officiel Avantages Nature).
+            2. Si le fichier commence par "DOC_BOSS" -> Affiche : "BOSS [Thème]" (ex: BOSS Frais Pro).
+            3. Si c'est un Article de Loi -> Affiche : "Art. L.[Numéro] [Code]" (ex: Art. L.123-1 Code du travail).
+            
+            CONSIGNES VISUELLES :
+            - DANS LE TEXTE : Mets la source en petit et italique : <sub>*[Nom]*</sub>.
+            - BAS DE PAGE : Liste les sources avec les MÊMES appellations propres, séparées par des virgules.
+            
+            RAPPEL FINAL OBLIGATOIRE :
+            Termine par "---" puis saut de ligne.
+            Écris : "<sub>*Sources utilisées : [Ta liste propre]*</sub>"
             
             CONTEXTE : {context}
             QUESTION : {question}
