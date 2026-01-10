@@ -48,6 +48,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
+    # AJOUT CSS SPÉCIFIQUE POUR CORRIGER LE DÉCALAGE ET LA COULEUR DES SOURCES
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -55,8 +56,20 @@ def apply_pro_design():
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1.5rem !important; }
+        
+        /* Design des bulles de chat */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
-        .stChatMessage p, .stChatMessage li { color: black !important; }
+        .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
+        
+        /* CORRECTION CRITIQUE DES CITATIONS (sub) */
+        sub {
+            font-size: 0.75em !important; /* Taille réduite */
+            color: #666 !important;       /* Gris discret au lieu de noir */
+            vertical-align: baseline !important; /* Évite le décalage de ligne */
+            position: relative;
+            top: -0.3em; /* Léger décalage vers le haut style "exposant" */
+        }
+        
         .assurance-text { font-size: 11px !important; color: #024c6f !important; text-align: left; display: block; line-height: 1.3; margin-bottom: 20px; }
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
@@ -215,24 +228,28 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
-            # --- PROMPT V3.6 : FINITION DU FOOTER ---
+            # --- PROMPT V3.7 : LOGIQUE CORRIGÉE & STYLE FORCÉ ---
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026. Réponds avec rigueur.
             
-            RÈGLE D'OR : UTILISE EXCLUSIVEMENT LES APPELLATIONS CI-DESSOUS POUR TES SOURCES (DANS LE TEXTE ET EN BAS DE PAGE).
+            CONSIGNES D'AFFICHAGE DES SOURCES (CRITIQUE) :
+            1. TOUJOURS utiliser la balise HTML <sub> pour réduire la taille.
+            2. FORMAT : <sub>*[Source]*</sub>
             
-            TABLE DE CORRESPONDANCE DES NOMS :
-            1. Si le fichier commence par "REF_" -> Affiche : "Barème Officiel [Thème]" (ex: Barème Officiel Avantages Nature).
-            2. Si le fichier commence par "DOC_BOSS" -> Affiche : "BOSS [Thème]" (ex: BOSS Frais Pro).
-            3. Si c'est un Article de Loi -> Affiche : "Art. L.[Numéro] [Code]" (ex: Art. L.123-1 Code du travail).
+            TABLE DE CORRESPONDANCE DES NOMS (ATTENTION AUX NOMS NETTOYÉS) :
+            Le système t'envoie des noms de fichiers SANS underscores et SANS extensions. Adapte-toi :
             
-            CONSIGNES VISUELLES :
-            - DANS LE TEXTE : Mets la source en petit et italique : <sub>*[Nom]*</sub>.
-            - BAS DE PAGE : Liste les sources avec les MÊMES appellations propres, séparées par des virgules.
+            - Si la source contient "REF" (ex: REF 2026 SMIC) -> Affiche : <sub>*[Barème Officiel]*</sub> (Ou "Barème Officiel : Thème" si pertinent).
+            - Si la source contient "BOSS" (ex: DOC BOSS FRAIS) -> Affiche : <sub>*[BOSS]*</sub> (Ou "BOSS : Thème").
+            - Si Article de Loi -> Affiche : <sub>*[Art. L.XXX-X Code du travail]*</sub>.
+            
+            Exemple de rendu attendu dans le texte :
+            "Le plafond est de 3925€ <sub>*[Barème Officiel]*</sub>."
+            (La source doit être petite, grise et discrète).
             
             RAPPEL FINAL OBLIGATOIRE :
             Termine par "---" puis saut de ligne.
-            Écris : "<sub>*Sources utilisées : [Ta liste propre]*</sub>"
+            Écris : "<sub>*Sources utilisées : [Liste des noms propres (Barème Officiel, BOSS...)]*</sub>"
             
             CONTEXTE : {context}
             QUESTION : {question}
