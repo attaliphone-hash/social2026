@@ -37,24 +37,40 @@ def apply_pro_design():
         header {visibility: hidden !important; height: 0px;}
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
-        .block-container { padding-top: 1rem !important; }
+        
+        /* ESPACE HAUT DE PAGE */
+        .block-container { padding-top: 1.5rem !important; }
         
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
         
+        /* Style standard (Ordinateur) */
         .assurance-text { font-size: 11px !important; color: #024c6f !important; text-align: left; display: block; line-height: 1.3; margin-bottom: 20px; }
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
 
-        /* CORRECTION TAILLE MENTIONS LÉGALES (Expanders) */
-        .stExpander details summary p {
-            font-size: 12px !important;
-            color: #666 !important;
+        /* --- OPTIMISATION MOBILE RADICALE --- */
+        @media (max-width: 768px) {
+            /* On supprime presque tout l'espace en haut */
+            .block-container { padding-top: 0.2rem !important; }
+            
+            /* On réduit l'espace au-dessus des arguments (le premier <br>) */
+            iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
+            
+            .assurance-text { 
+                margin-bottom: 2px !important; /* Espace quasi nul entre arguments */
+                line-height: 1.1 !important; 
+                font-size: 10px !important;
+            }
+            .assurance-title { font-size: 10px !important; }
+            .assurance-desc { font-size: 10px !important; }
+            
+            /* On resserre le titre de la page login */
+            h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
-        .stExpander {
-            border: none !important;
-            background-color: transparent !important;
-        }
+
+        .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
+        .stExpander { border: none !important; background-color: transparent !important; }
         </style>
     """, unsafe_allow_html=True)
     
@@ -65,14 +81,45 @@ def apply_pro_design():
 # --- 4. TEXTES LÉGAUX & RGPD ---
 def show_legal_info():
     st.markdown("<br><br>", unsafe_allow_html=True)
-    # On utilise des colonnes plus étroites pour centrer et réduire la taille visuelle
     _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
+    
     with col_l:
         with st.expander("Mentions Légales"):
-            st.markdown("<small>Éditeur : socialexpertfrance.fr<br>Hébergement : Google Cloud (Europe)</small>", unsafe_allow_html=True)
+            st.markdown("""
+                <div style='font-size: 11px; line-height: 1.4; color: #444;'>
+                <strong>ÉDITEUR DU SITE</strong><br>
+                Le site <strong>socialexpertfrance.fr</strong> est édité par la Direction Expert Social Pro.<br>
+                <strong>Responsable de la publication</strong> : [Votre Nom/Société]<br>
+                <strong>Contact</strong> : contact@socialexpertfrance.fr<br><br>
+                
+                <strong>HÉBERGEMENT</strong><br>
+                Serveurs Google Cloud Platform (GCP), Région : europe-west1 (Belgique).<br><br>
+                
+                <strong>PROPRIÉTÉ INTELLECTUELLE</strong><br>
+                L'architecture, les algorithmes et la base de connaissances 2026 sont la propriété exclusive de l'éditeur.<br><br>
+                
+                <strong>RESPONSABILITÉ</strong><br>
+                Aide à la décision basée sur les barèmes officiels 2026 (PASS, BOSS). Ne substitue pas l'analyse finale d'un professionnel qualifié.
+                </div>
+            """, unsafe_allow_html=True)
+            
     with col_r:
         with st.expander("Politique de Confidentialité (RGPD)"):
-            st.markdown("<small>Données traitées en RAM. Pas de stockage permanent.</small>", unsafe_allow_html=True)
+            st.markdown("""
+                <div style='font-size: 11px; line-height: 1.4; color: #444;'>
+                <strong>1. TRAITEMENT VOLATIL (RAM)</strong><br>
+                Vos questions et documents sont traités exclusivement en mémoire vive (RAM) de manière éphémère.<br><br>
+                
+                <strong>2. NON-CONSERVATION</strong><br>
+                Aucune donnée n'est stockée de façon permanente. La fermeture du navigateur ou le bouton 'Nouvelle session' purge instantanément la mémoire.<br><br>
+                
+                <strong>3. NON-ENTRAÎNEMENT</strong><br>
+                Nous garantissons que vos données ne sont <strong>JAMAIS</strong> utilisées pour entraîner des modèles d'IA tiers ou propriétaires.<br><br>
+                
+                <strong>4. VOS DROITS</strong><br>
+                Conformément au RGPD, votre droit à l'oubli est exercé en temps réel par la réinitialisation technique de la session.
+                </div>
+            """, unsafe_allow_html=True)
 
 # --- 5. SÉCURITÉ & MODULE SAAS ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
