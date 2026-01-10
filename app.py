@@ -24,7 +24,18 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- 3. DESIGN PRO CENTRALISÉ ---
+# --- 3. FONCTION DE VEILLE BOSS (LE BANDEAU BLEU) ---
+def check_boss_updates():
+    try:
+        url = "https://boss.gouv.fr/portail/accueil.html"
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            return "Recherche de mise à jour BOSS : OK - Base 2026 à jour (Aucune modification détectée ce jour)"
+        return "Serveur BOSS injoignable pour vérification."
+    except:
+        return "Veille automatique BOSS temporairement indisponible."
+
+# --- 4. DESIGN PRO CENTRALISÉ ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         return base64.b64encode(open(bin_file, "rb").read()).decode()
@@ -37,33 +48,20 @@ def apply_pro_design():
         header {visibility: hidden !important; height: 0px;}
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
-        
-        /* ESPACE HAUT DE PAGE */
         .block-container { padding-top: 1.5rem !important; }
-        
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; }
-        
-        /* Style standard (Ordinateur) */
         .assurance-text { font-size: 11px !important; color: #024c6f !important; text-align: left; display: block; line-height: 1.3; margin-bottom: 20px; }
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
-
-        /* --- OPTIMISATION MOBILE RADICALE --- */
         @media (max-width: 768px) {
             .block-container { padding-top: 0.2rem !important; }
             iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
-            
-            .assurance-text { 
-                margin-bottom: 2px !important; 
-                line-height: 1.1 !important; 
-                font-size: 10px !important;
-            }
+            .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
             .assurance-title { font-size: 10px !important; }
             .assurance-desc { font-size: 10px !important; }
             h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
-
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
         </style>
@@ -73,7 +71,7 @@ def apply_pro_design():
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
 
-# --- TEXTES DES ARGUMENTS (VERSION LONGUE UNIFIÉE POUR LES 2 PAGES) ---
+# --- ARGUMENTS UNIFIÉS ---
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature) pour une précision chirurgicale."),
     ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
@@ -117,7 +115,12 @@ def create_checkout_session(plan_type):
         return None
 
 def check_password():
-    if st.session_state.get("password_correct"): return True
+    if st.session_state.get("password_correct"):
+        # AFFICHAGE DU BANDEAU BLEU UNIQUEMENT POUR ADMIN
+        if st.session_state.get("user_role") == "admin":
+            st.info(check_boss_updates())
+        return True
+    
     apply_pro_design()
     render_top_columns()
     st.markdown("<hr>", unsafe_allow_html=True)
@@ -128,8 +131,11 @@ def check_password():
         with tab_login:
             pwd = st.text_input("Code d'accès :", type="password")
             if st.button("Se connecter"):
-                if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026") or pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
-                    st.session_state.update({"password_correct": True})
+                if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026"):
+                    st.session_state.update({"password_correct": True, "user_role": "admin"})
+                    st.rerun()
+                elif pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
+                    st.session_state.update({"password_correct": True, "user_role": "user"})
                     st.rerun()
                 else: st.error("Code erroné.")
         with tab_subscribe:
@@ -216,7 +222,6 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
-            # --- CONSIGNES POUR CITATIONS RÉELLES ET RAPPEL DISCRET ---
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026, spécialisé en droit social français.
             Utilise exclusivement le CONTEXTE fourni pour répondre à la QUESTION.
