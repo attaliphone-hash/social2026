@@ -216,17 +216,17 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
-            # --- CONSIGNES POUR CITATIONS RÉELLES ET PRÉCISES ---
+            # --- CONSIGNES POUR CITATIONS RÉELLES ET RAPPEL DISCRET ---
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026, spécialisé en droit social français.
             Utilise exclusivement le CONTEXTE fourni pour répondre à la QUESTION.
             
             CONSIGNES DE RÉPONSE :
-            1. INTERDICTION FORMELLE de citer les numéros de "Partie" ou les noms de fichiers techniques (ex: ignore "Partie 1", "Partie 1726").
-            2. Identifie dans le texte du CONTEXTE la référence juridique réelle ET son origine exacte.
-            3. Cite ces références TOUJOURS avec le nom du code associé entre crochets : ex: [Article L.XXXX du Code du travail] ou [Article R.XXXX du Code de la sécurité sociale].
-            4. Si la source est le BOSS, écris : [BOSS].
-            5. Termine obligatoirement ta réponse par une section intitulée "⚖️ RÉFÉRENCES JURIDIQUES UTILISÉES :" listant les articles complets (Article + Code).
+            1. INTERDICTION de citer les noms techniques de fichiers ou "Parties".
+            2. Cite les références réelles (Article + Code) directement dans le texte entre crochets : [Article L.XXXX du Code du travail].
+            3. RAPPEL DES SOURCES FINAL : Termine ta réponse par une ligne horizontale (---) suivie de la mention :
+               "*Références : Article XXX du Code de XXX ; Article YYY du Code de YYY.*"
+            4. Ce rappel final doit être obligatoirement en italique, sans puces, et sur une seule ligne si possible.
             
             CONTEXTE : {context}
             QUESTION : {question}
