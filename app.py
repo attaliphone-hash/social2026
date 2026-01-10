@@ -28,10 +28,11 @@ st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 def check_boss_updates():
     try:
         url = "https://boss.gouv.fr/portail/accueil.html"
-        response = requests.get(url, timeout=5)
+        # Augmentation du timeout à 10s pour éviter le message "indisponible"
+        response = requests.get(url, timeout=10) 
         if response.status_code == 200:
             return "Recherche de mise à jour BOSS : OK - Base 2026 à jour (Aucune modification détectée ce jour)"
-        return "Serveur BOSS injoignable pour vérification."
+        return "Serveur BOSS injoignable."
     except:
         return "Veille automatique BOSS temporairement indisponible."
 
@@ -58,12 +59,9 @@ def apply_pro_design():
             .block-container { padding-top: 0.2rem !important; }
             iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
             .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
-            .assurance-title { font-size: 10px !important; }
-            .assurance-desc { font-size: 10px !important; }
             h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
-        .stExpander { border: none !important; background-color: transparent !important; }
         </style>
     """, unsafe_allow_html=True)
     
@@ -71,7 +69,6 @@ def apply_pro_design():
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
 
-# --- ARGUMENTS UNIFIÉS ---
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature) pour une précision chirurgicale."),
     ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
@@ -86,37 +83,10 @@ def render_top_columns():
         title, desc = ARGUMENTS_UNIFIES[i]
         col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
 
-# --- 4. TEXTES LÉGAUX & RGPD ---
-def show_legal_info():
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
-    with col_l:
-        with st.expander("Mentions Légales"):
-            st.markdown("""<div style='font-size: 11px; line-height: 1.4; color: #444;'><strong>ÉDITEUR DU SITE</strong><br>Le site <strong>socialexpertfrance.fr</strong> est édité par la Direction Expert Social Pro.<br><strong>Responsable de la publication</strong> : [Sylvain Attal]<br><strong>Contact</strong> : sylvain.attal@businessagent-ai.com<br><br><strong>HÉBERGEMENT</strong><br>Serveurs Google Cloud Platform (GCP), Région : europe-west1 (Belgique).<br><br><strong>PROPRIÉTÉ INTELLECTUELLE</strong><br>L'architecture, les algorithmes et la base de connaissances 2026 sont la propriété exclusive de l'éditeur.<br><br><strong>RESPONSABILITÉ</strong><br>Aide à la décision basée sur les textes officiels 2026 (PASS, BOSS, Code du travail, Code de la Sécurité Sociale). Ne substitue pas l'analyse finale d'un professionnel qualifié.</div>""", unsafe_allow_html=True)
-    with col_r:
-        with st.expander("Politique de Confidentialité (RGPD)"):
-            st.markdown("""<div style='font-size: 11px; line-height: 1.4; color: #444;'><strong>1. TRAITEMENT VOLATIL (RAM)</strong><br>Vos questions et documents sont traités exclusivement en mémoire vive (RAM) de manière éphémère. Aucun cookie n'est déposé.<br><br><strong>2. NON-CONSERVATION</strong><br>Aucune donnée n'est stockée de façon permanente. La fermeture du navigateur ou le bouton 'Nouvelle session' purge instantanément la mémoire.<br><br><strong>3. NON-ENTRAÎNEMENT</strong><br>Nous garantissons que vos données ne sont <strong>JAMAIS</strong> utilisées pour entraîner des modèles d'IA tiers ou propriétaires.<br><br><strong>4. VOS DROITS</strong><br>Conformément au RGPD, votre droit à l'oubli est exercé en temps réel par la réinitialisation technique de la session.</div>""", unsafe_allow_html=True)
-
-# --- 5. SÉCURITÉ & MODULE SAAS ---
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-def create_checkout_session(plan_type):
-    price_id = "price_1SnaTDQZ5ivv0RayXfKqvJ6I" if plan_type == "Mensuel" else "price_1SnaUOQZ5ivv0RayFnols3TI"
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{'price': price_id, 'quantity': 1}],
-            mode='subscription',
-            success_url="https://socialexpertfrance.fr?payment=success",
-            cancel_url="https://socialexpertfrance.fr?payment=cancel",
-        )
-        return checkout_session.url
-    except Exception as e:
-        st.error(f"Erreur Stripe : {e}")
-        return None
-
+# --- 5. SÉCURITÉ ---
 def check_password():
     if st.session_state.get("password_correct"):
-        # AFFICHAGE DU BANDEAU BLEU UNIQUEMENT POUR ADMIN
+        # RETOUR DU BANDEAU BLEU ICI
         if st.session_state.get("user_role") == "admin":
             st.info(check_boss_updates())
         return True
@@ -132,41 +102,20 @@ def check_password():
             pwd = st.text_input("Code d'accès :", type="password")
             if st.button("Se connecter"):
                 if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026"):
+                    # ON RE-IDENTIFIE BIEN L'ADMIN ICI
                     st.session_state.update({"password_correct": True, "user_role": "admin"})
                     st.rerun()
                 elif pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
                     st.session_state.update({"password_correct": True, "user_role": "user"})
                     st.rerun()
                 else: st.error("Code erroné.")
-        with tab_subscribe:
-            st.markdown("### Formules")
-            if st.button("S'abonner (Mensuel)"):
-                url = create_checkout_session("Mensuel")
-                if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
-    show_legal_info()
     st.stop()
 
 check_password()
 apply_pro_design()
 
-# --- 6. SYSTÈME DE RECHERCHE IA ---
+# --- 6. SYSTÈME IA ---
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
-NOMS_PROS = {"REF_2026_": "🏛️ BARÈMES ET RÉFÉRENTIELS OFFICIELS 2026", "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026", "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)", "LEGAL_": "📕 SOCLE LÉGAL (CODES)", "REF_": "✅ RÉFÉRENCES : BOSS, Code du Travail, CSS"}
-
-def nettoyer_nom_source(raw_source):
-    nom = os.path.basename(raw_source)
-    for cle, nom_pro in NOMS_PROS.items():
-        if cle in nom: return nom_pro
-    return nom.replace('.txt','').replace('.pdf','').replace('_',' ')
-
-def get_data_clean_context():
-    context_list = []
-    if os.path.exists("data_clean"):
-        for filename in os.listdir("data_clean"):
-            if filename.endswith(".txt") and not filename.startswith("LEGAL_"):
-                with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
-                    context_list.append(f"[{nettoyer_nom_source(filename)}] : {f.read()}")
-    return "\n".join(context_list)
 
 @st.cache_resource
 def load_system():
@@ -183,24 +132,12 @@ def load_system():
                 if content.strip():
                     texts.append(content)
                     metas.append({"source": f, "session_id": "system_init"})
-        if texts:
-            for i in range(0, len(texts), 1000):
-                vectorstore.add_texts(texts=texts[i:i+1000], metadatas=metas[i:i+1000])
+        if texts: vectorstore.add_texts(texts=texts, metadatas=metas)
     return vectorstore, llm
 
 vectorstore, llm = load_system()
 
-def build_expert_context(query):
-    context = []
-    priorite = get_data_clean_context()
-    if priorite: context.append("### FICHES D'EXPERTISE PRIORITAIRES ###\n" + priorite)
-    raw_law = vectorstore.similarity_search(query, k=8)
-    for d in raw_law:
-        nom = nettoyer_nom_source(d.metadata.get('source',''))
-        context.append(f"[SOURCE : {nom}]\n{d.page_content}")
-    return "\n\n".join(context)
-
-# --- 7. INTERFACE PRINCIPALE ---
+# --- 7. INTERFACE ---
 render_top_columns()
 st.markdown("<hr>", unsafe_allow_html=True)
 col_t, col_b = st.columns([4, 1])
@@ -208,7 +145,6 @@ with col_t: st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro
 with col_b:
     if st.button("Nouvelle session"):
         st.session_state.messages = []
-        st.session_state['session_id'] = str(uuid.uuid4())
         st.rerun()
 
 if "messages" not in st.session_state: st.session_state.messages = []
@@ -220,25 +156,17 @@ if query := st.chat_input("Posez votre question..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"): st.markdown(query)
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        with st.status("🔍 Analyse juridique en cours..."):
-            context = build_expert_context(query)
+        with st.status("🔍 Analyse juridique..."):
+            docs = vectorstore.similarity_search(query, k=8)
+            context = "\n\n".join([d.page_content for d in docs])
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026, spécialisé en droit social français.
-            Utilise exclusivement le CONTEXTE fourni pour répondre à la QUESTION.
-            
-            CONSIGNES DE RÉPONSE :
-            1. INTERDICTION de citer les noms techniques de fichiers ou "Parties".
-            2. Cite les références réelles (Article + Code) directement dans le texte entre crochets : [Article L.XXXX du Code du travail].
-            3. RAPPEL DES SOURCES FINAL : Termine ta réponse par une ligne horizontale (---) suivie de la mention :
-               "*Références : Article XXX du Code de XXX ; Article YYY du Code de YYY.*"
-            4. Ce rappel final doit être obligatoirement en italique, sans puces, et sur une seule ligne si possible.
-            
+            Tu es l'Expert Social Pro 2026.
+            Cite les références réelles entre crochets : [Article L.XXXX du Code du travail].
+            ---
+            Termine par : "*Références : Article XXX du Code de XXX.*" en italique.
             CONTEXTE : {context}
             QUESTION : {question}
             """)
             response = (prompt | llm | StrOutputParser()).invoke({"context": context, "question": query})
         st.markdown(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
-
-show_legal_info()
-st.markdown("<div style='text-align:center; color:#888; font-size:11px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
