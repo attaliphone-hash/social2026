@@ -15,7 +15,7 @@ try:
 except ImportError:
     pass
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
@@ -214,10 +214,12 @@ if query := st.chat_input("Posez votre question..."):
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026. Réponds avec une rigueur absolue.
             
-            CONSIGNES IMPÉRATIVES :
-            1. Cite TOUJOURS la référence (Article + Code) entre crochets [ ] directement dans tes phrases, au moment où tu donnes l'information.
-            2. INTERDICTION d'utiliser des badges verts ou des noms de fichiers techniques dans ta réponse.
-            3. RAPPEL FINAL : Termine par une ligne --- suivie de : "*Références : Article XXX du Code de XXX.*" en italique, sur une seule ligne.
+            CONSIGNES IMPÉRATIVES DE CITATION :
+            1. TU DOIS insérer la référence (Article + Code) entre crochets [ ] directement au cœur de ton argumentation, juste après avoir cité une règle ou un chiffre.
+               EXEMPLE : "Le plafond est de 200€ [Article L.242-1 du CSS]".
+            2. INTERDICTION d'utiliser des badges, des emojis ou des noms de fichiers techniques (.txt) dans le corps du texte.
+            3. RAPPEL FINAL : Termine systématiquement par une ligne --- suivie de la mention :
+               "*Références : Article XXX du Code de XXX.*" en italique, sur une seule ligne.
             
             CONTEXTE : {context}
             QUESTION : {question}
