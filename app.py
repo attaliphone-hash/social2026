@@ -15,7 +15,7 @@ try:
 except ImportError:
     pass
 
-from langchain_text_splitters import RecursiveCharacterCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
@@ -140,7 +140,7 @@ def check_password():
                 else: st.error("Code erroné.")
         with tab_subscribe:
             if st.button("S'abonner (Mensuel)"):
-                url = create_checkout_session("Mensuel")
+                url = url = create_checkout_session("Mensuel")
                 if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
     show_legal_info()
     st.stop()
