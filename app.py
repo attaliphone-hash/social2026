@@ -15,6 +15,7 @@ try:
 except ImportError:
     pass
 
+# CORRECTION IMPORT : On utilise le bon nom de module
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
@@ -140,7 +141,7 @@ def check_password():
                 else: st.error("Code erroné.")
         with tab_subscribe:
             if st.button("S'abonner (Mensuel)"):
-                url = url = create_checkout_session("Mensuel")
+                url = create_checkout_session("Mensuel")
                 if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
     show_legal_info()
     st.stop()
@@ -148,7 +149,7 @@ def check_password():
 check_password()
 apply_pro_design()
 
-# --- 7. SYSTÈME DE RECHERCHE IA (Citations pures) ---
+# --- 7. SYSTÈME DE RECHERCHE IA (NETTOYAGE À LA RACINE) ---
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
 
 def get_data_clean_context():
@@ -157,7 +158,9 @@ def get_data_clean_context():
         for filename in os.listdir("data_clean"):
             if filename.endswith(".txt") and not filename.startswith("LEGAL_"):
                 with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
-                    context_list.append(f"[{filename}] : {f.read()}")
+                    # Nettoyage pour le contexte prioritaire
+                    clean_name = filename.replace('.txt', '').replace('_', ' ')
+                    context_list.append(f"[{clean_name}] : {f.read()}")
     return "\n".join(context_list)
 
 @st.cache_resource
@@ -173,8 +176,12 @@ def load_system():
             with open(f"data_clean/{f}", "r", encoding="utf-8") as file:
                 content = file.read()
                 if content.strip():
+                    # --- MODIFICATION CRITIQUE v3.2 ---
+                    # On nettoie le nom de la source ICI, avant de l'ajouter à la base vectorielle.
+                    # L'IA ne verra jamais le ".txt" car il n'existera pas dans les métadonnées.
+                    clean_source = f.replace('.txt', '').replace('_', ' ')
                     texts.append(content)
-                    metas.append({"source": f})
+                    metas.append({"source": clean_source})
         if texts:
             for i in range(0, len(texts), 1000):
                 vectorstore.add_texts(texts=texts[i:i+1000], metadatas=metas[i:i+1000])
@@ -186,11 +193,12 @@ def build_expert_context(query):
     context = [get_data_clean_context()]
     raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
-        src = d.metadata.get('source', 'Inconnue')
+        # Ici, 'src' sera déjà propre (ex: "DOC BOSS FRAIS TELETRAVAIL")
+        src = d.metadata.get('source', 'Source Inconnue')
         context.append(f"[SOURCE : {src}]\n{d.page_content}")
     return "\n\n".join(context)
 
-# --- 8. INTERFACE & PROMPT CHIRURGICAL ---
+# --- 8. INTERFACE & PROMPT ---
 render_top_columns()
 st.markdown("<hr>", unsafe_allow_html=True)
 col_t, col_b = st.columns([4, 1])
@@ -211,15 +219,15 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
+            # PROMPT AJUSTÉ POUR LA DOCTRINE
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026. Réponds avec une rigueur absolue.
             
-            CONSIGNES IMPÉRATIVES DE CITATION :
-            1. TU DOIS insérer la référence (Article + Code) entre crochets [ ] directement au cœur de ton argumentation, juste après avoir cité une règle ou un chiffre.
-               EXEMPLE : "Le plafond est de 200€ [Article L.242-1 du CSS]".
-            2. INTERDICTION d'utiliser des badges, des emojis ou des noms de fichiers techniques (.txt) dans le corps du texte.
-            3. RAPPEL FINAL : Termine systématiquement par une ligne --- suivie de la mention :
-               "*Références : Article XXX du Code de XXX.*" en italique, sur une seule ligne.
+            CONSIGNES DE SOURCING :
+            1. PRIORITÉ ABSOLUE : Cite l'Article et le Code (ex: [Article L.123-1 du Code du travail]) entre crochets.
+            2. CAS DOCTRINE (BOSS, Circulaires) : Si aucun numéro d'article n'existe, CITE LE NOM DE LA SOURCE FOURNIE (ex: [DOC BOSS FRAIS TELETRAVAIL]).
+            3. INTERDICTION : N'invente jamais de citations et n'utilise pas de noms de fichiers (.txt).
+            4. RAPPEL FINAL : Termine par une ligne --- suivie de la liste des références utilisées (Articles ou Noms de fiches) en italique.
             
             CONTEXTE : {context}
             QUESTION : {question}
