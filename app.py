@@ -274,14 +274,16 @@ if query := st.chat_input("Posez votre question..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         with st.status("🔍 Analyse juridique en cours..."):
             context = build_expert_context(query)
+            # --- MODIFICATION DES CONSIGNES POUR CITATIONS RÉELLES ---
             prompt = ChatPromptTemplate.from_template("""
             Tu es l'Expert Social Pro 2026, spécialisé en droit social français.
-            Utilise impérativement le CONTEXTE suivant pour répondre à la QUESTION.
+            Utilise exclusivement le CONTEXTE fourni pour répondre à la QUESTION.
             
             CONSIGNES DE RÉPONSE :
-            1. Cite systématiquement tes sources à l'aide du tag [SOURCE : Nom du document] à la fin de chaque explication technique.
-            2. Termine OBLIGATOIREMENT ta réponse par une section intitulée "⚖️ SOURCES :" listant les documents consultés.
-            3. Si le contexte ne contient pas l'information, indique-le mais réponds sur la base de tes connaissances en précisant l'absence de source officielle dans la base.
+            1. INTERDICTION FORMELLE de citer les numéros de "Partie" ou les noms de fichiers techniques (ex: ignore "Partie 1", "Partie 1726").
+            2. Identifie dans le texte du CONTEXTE la référence juridique réelle (ex: "Article L.1234-1", "Article R.XXXX", "BOSS", "PASS 2026").
+            3. Cite ces références réelles directement dans tes explications entre crochets : [Article L.XXXX].
+            4. Termine obligatoirement ta réponse par une section intitulée "⚖️ RÉFÉRENCES JURIDIQUES UTILISÉES :" listant uniquement les articles de loi ou textes officiels trouvés.
             
             CONTEXTE : {context}
             QUESTION : {question}
