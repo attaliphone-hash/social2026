@@ -89,8 +89,8 @@ def show_legal_info():
                 <div style='font-size: 11px; line-height: 1.4; color: #444;'>
                 <strong>ÉDITEUR DU SITE</strong><br>
                 Le site <strong>socialexpertfrance.fr</strong> est édité par la Direction Expert Social Pro.<br>
-                <strong>Responsable de la publication</strong> : [Votre Nom/Société]<br>
-                <strong>Contact</strong> : contact@socialexpertfrance.fr<br><br>
+                <strong>Responsable de la publication</strong> : [Sylvain Attal]<br>
+                <strong>Contact</strong> : sylvain.attal@businessagent-ai.com<br><br>
                 
                 <strong>HÉBERGEMENT</strong><br>
                 Serveurs Google Cloud Platform (GCP), Région : europe-west1 (Belgique).<br><br>
@@ -99,16 +99,16 @@ def show_legal_info():
                 L'architecture, les algorithmes et la base de connaissances 2026 sont la propriété exclusive de l'éditeur.<br><br>
                 
                 <strong>RESPONSABILITÉ</strong><br>
-                Aide à la décision basée sur les barèmes officiels 2026 (PASS, BOSS). Ne substitue pas l'analyse finale d'un professionnel qualifié.
+                Aide à la décision basée sur les textes officiels 2026 (PASS, BOSS, Code du travail, Code de la Sécutité Sociale). Ne substitue pas l'analyse finale d'un professionnel qualifié.
                 </div>
             """, unsafe_allow_html=True)
-            
+    
     with col_r:
         with st.expander("Politique de Confidentialité (RGPD)"):
             st.markdown("""
                 <div style='font-size: 11px; line-height: 1.4; color: #444;'>
                 <strong>1. TRAITEMENT VOLATIL (RAM)</strong><br>
-                Vos questions et documents sont traités exclusivement en mémoire vive (RAM) de manière éphémère.<br><br>
+                Vos questions et documents sont traités exclusivement en mémoire vive (RAM) de manière éphémère. Aucun cokie n'est déposé.<br><br>
                 
                 <strong>2. NON-CONSERVATION</strong><br>
                 Aucune donnée n'est stockée de façon permanente. La fermeture du navigateur ou le bouton 'Nouvelle session' purge instantanément la mémoire.<br><br>
