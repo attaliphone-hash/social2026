@@ -75,11 +75,11 @@ def apply_pro_design():
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
 
 ARGUMENTS_UNIFIES = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature)."),
-    ("Sources officielles :", " Analyse croisée BOSS, Code du Travail, Code de la Sécurité Sociale."),
-    ("Mise à Jour Agile :", " Base actualisée en temps réel selon les nouvelles circulaires."),
-    ("Traçabilité Totale :", " Chaque réponse est sourcée pour valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM).")
+    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
+    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
+    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
+    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
+    ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
 ]
 
 def render_top_columns():
