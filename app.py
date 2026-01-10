@@ -108,7 +108,7 @@ def show_legal_info():
             st.markdown("""
                 <div style='font-size: 11px; line-height: 1.4; color: #444;'>
                 <strong>1. TRAITEMENT VOLATIL (RAM)</strong><br>
-                Vos questions et documents sont traités exclusivement en mémoire vive (RAM) de manière éphémère. Aucun cokie n'est déposé.<br><br>
+                Vos questions et documents sont traités exclusivement en mémoire vive (RAM) de manière éphémère. Aucun cookie n'est déposé.<br><br>
                 
                 <strong>2. NON-CONSERVATION</strong><br>
                 Aucune donnée n'est stockée de façon permanente. La fermeture du navigateur ou le bouton 'Nouvelle session' purge instantanément la mémoire.<br><br>
