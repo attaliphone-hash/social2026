@@ -24,23 +24,21 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 2. CONFIGURATION PAGE ---
 st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
 
-# --- 3. FONCTION DE VEILLE BOSS ORIGINALE RÉTABLIE ---
+# --- 3. FONCTION DE VEILLE BOSS (LE BANDEAU BLEU ORIGINAL) ---
 def check_boss_updates():
     try:
         url = "https://boss.gouv.fr/portail/accueil.html"
-        # Utilisation du User-Agent original pour éviter les blocages serveurs
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
-            # Recherche de la mention de mise à jour dans les paragraphes
             actualites = soup.find_all('p')
             for p in actualites:
                 if "mise à jour" in p.text.lower():
                     return f"Recherche de mise à jour BOSS : OK - {p.text.strip()}"
-            return "Recherche de mise à jour BOSS : OK - Base 2026 à jour (Aucune modification majeure détectée)"
-        return "Serveur BOSS injoignable pour vérification automatique."
-    except Exception as e:
+            return "Recherche de mise à jour BOSS : OK - Base 2026 à jour (Aucune modification détectée)"
+        return "Serveur BOSS injoignable."
+    except:
         return "Veille automatique BOSS temporairement indisponible."
 
 # --- 4. DESIGN PRO CENTRALISÉ ---
@@ -66,22 +64,20 @@ def apply_pro_design():
             .block-container { padding-top: 0.2rem !important; }
             iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
             .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
-            h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         </style>
     """, unsafe_allow_html=True)
-    
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
 
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux barèmes (PASS, avantages en nature) pour une précision chirurgicale."),
-    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
-    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
-    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
+    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale."),
+    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes."),
+    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider le fondement juridique."),
+    ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées.")
 ]
 
 def render_top_columns():
@@ -93,11 +89,9 @@ def render_top_columns():
 # --- 5. SÉCURITÉ ---
 def check_password():
     if st.session_state.get("password_correct"):
-        # Affichage du bandeau bleu original pour l'admin
         if st.session_state.get("user_role") == "admin":
             st.info(check_boss_updates())
         return True
-    
     apply_pro_design()
     render_top_columns()
     st.markdown("<hr>", unsafe_allow_html=True)
@@ -120,8 +114,24 @@ def check_password():
 check_password()
 apply_pro_design()
 
-# --- 6. SYSTÈME IA ---
+# --- 6. SYSTÈME DE RECHERCHE IA ET NETTOYAGE SOURCES ---
 if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
+NOMS_PROS = {"REF_2026_": "🏛️ BARÈMES ET RÉFÉRENTIELS OFFICIELS 2026", "MEMO_CHIFFRES": "📑 RÉFÉRENTIEL CHIFFRÉS 2026", "DOC_BOSS_": "🌐 BULLETIN OFFICIEL SÉCURITÉ SOCIALE (BOSS)", "LEGAL_": "📕 SOCLE LÉGAL (CODES)", "REF_": "✅ RÉFÉRENCES : BOSS, Code du Travail, CSS"}
+
+def nettoyer_nom_source(raw_source):
+    nom = os.path.basename(raw_source)
+    for cle, nom_pro in NOMS_PROS.items():
+        if cle in nom: return nom_pro
+    return nom.replace('.txt','').replace('.pdf','').replace('_',' ')
+
+def get_data_clean_context():
+    context_list = []
+    if os.path.exists("data_clean"):
+        for filename in os.listdir("data_clean"):
+            if filename.endswith(".txt") and not filename.startswith("LEGAL_"):
+                with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
+                    context_list.append(f"[{nettoyer_nom_source(filename)}] : {f.read()}")
+    return "\n".join(context_list)
 
 @st.cache_resource
 def load_system():
@@ -131,19 +141,26 @@ def load_system():
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
     if os.path.exists("data_clean"):
         files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
-        texts, metas = [], []
         for f in files:
             with open(f"data_clean/{f}", "r", encoding="utf-8") as file:
                 content = file.read()
                 if content.strip():
-                    texts.append(content)
-                    metas.append({"source": f, "session_id": "system_init"})
-        if texts: vectorstore.add_texts(texts=texts, metadatas=metas)
+                    vectorstore.add_texts(texts=[content], metadatas=[{"source": f, "session_id": "system_init"}])
     return vectorstore, llm
 
 vectorstore, llm = load_system()
 
-# --- 7. INTERFACE ---
+def build_expert_context(query):
+    context = []
+    priorite = get_data_clean_context()
+    if priorite: context.append("### FICHES D'EXPERTISE PRIORITAIRES ###\n" + priorite)
+    raw_law = vectorstore.similarity_search(query, k=8)
+    for d in raw_law:
+        nom = nettoyer_nom_source(d.metadata.get('source',''))
+        context.append(f"[SOURCE : {nom}]\n{d.page_content}")
+    return "\n\n".join(context)
+
+# --- 7. INTERFACE PRINCIPALE ---
 render_top_columns()
 st.markdown("<hr>", unsafe_allow_html=True)
 col_t, col_b = st.columns([4, 1])
@@ -162,17 +179,24 @@ if query := st.chat_input("Posez votre question..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"): st.markdown(query)
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        with st.status("🔍 Analyse juridique..."):
-            docs = vectorstore.similarity_search(query, k=8)
-            context = "\n\n".join([d.page_content for d in docs])
+        with st.status("🔍 Analyse juridique en cours..."):
+            context = build_expert_context(query)
             prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026.
-            Cite les références réelles entre crochets : [Article L.XXXX du Code du travail].
-            ---
-            Termine par : "*Références : Article XXX du Code de XXX.*" en italique.
+            Tu es l'Expert Social Pro 2026, spécialisé en droit social français.
+            Utilise exclusivement le CONTEXTE fourni pour répondre à la QUESTION.
+            
+            CONSIGNES DE RÉPONSE :
+            1. INTERDICTION de citer les noms techniques de fichiers ou "Parties".
+            2. Cite les références réelles (Article + Code) directement dans le texte entre crochets : [Article L.XXXX du Code du travail].
+            3. RAPPEL DES SOURCES FINAL : Termine ta réponse par une ligne horizontale (---) suivie de la mention :
+               "*Références : Article XXX du Code de XXX ; Article YYY du Code de YYY.*"
+            4. Ce rappel final doit être obligatoirement en italique, sans puces, et sur une seule ligne si possible.
+            
             CONTEXTE : {context}
             QUESTION : {question}
             """)
             response = (prompt | llm | StrOutputParser()).invoke({"context": context, "question": query})
         st.markdown(response)
     st.session_state.messages.append({"role": "assistant", "content": response})
+
+st.markdown("<div style='text-align:center; color:#888; font-size:11px; margin-top:50px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
