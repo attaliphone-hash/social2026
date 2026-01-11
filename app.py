@@ -147,7 +147,7 @@ def show_legal_info():
     <strong>CONFIDENTIALITÉ TOTALE :</strong><br>
     1. <strong>Aucun Stockage :</strong> Traitement volatil en RAM. Données détruites après la réponse. Aucun cookie n'est déposé<br>
     2. <strong>Pas d'Entraînement IA :</strong> Vos données ne servent jamais à entraîner les modèles.<br>
-    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serveurs.<br><br>
+    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serverurs.<br><br>
     <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
 </div>
 """, unsafe_allow_html=True)
@@ -266,16 +266,14 @@ engine = load_engine()
 vectorstore, llm = load_ia_system()
 
 def build_context(query):
-    """Construction contexte IA avec priorité aux documents et nettoyage des noms de fichiers"""
+    """Construction contexte IA avec priorité aux documents et nettoyage chirurgical des noms"""
     raw_docs = vectorstore.similarity_search(query, k=20)
     context_text = ""
     for d in raw_docs:
-        # Nettoyage chirurgical du nom de la source
+        # Nettoyage pour que l'IA ne voit que des noms propres
         raw_src = d.metadata.get('source', 'Source Inconnue')
-        # On enlève le chemin DATA_CLEAN/ et les extensions
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
         
-        # Formatage selon l'accord : BOSS : Nom Propre
         if "REF" in clean_name: pretty_src = "Barème Officiel"
         elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
         else: pretty_src = f"BOSS : {clean_name}"
@@ -284,25 +282,22 @@ def build_context(query):
     return context_text
 
 def get_gemini_response(query, context):
-    """Prompt Hybride : Intelligence V4 + Formatage Visuel V3 + Footer Sources Standardisé"""
+    """Prompt Hybride : Force l'IA à ignorer les chemins techniques et à utiliser le format convenu"""
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
     MISSION :
     Réponds aux questions en t'appuyant EXCLUSIVEMENT sur les DOCUMENTS fournis.
     
-    CONSIGNES D'AFFICHAGE STRICTES (CRITIQUE) :
+    CONSIGNES D'AFFICHAGE STRICTES (ACCORD CLIENT) :
     1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises.
-       Format : <sub>*[Nom Source - Art. X]*</sub>
-       Exemple : <sub>*[BOSS : Épargne salariale]*</sub>
+       Format impératif : <sub>*[BOSS : Nom du document]*</sub>
+       INTERDICTION FORMELLE : Ne jamais mentionner "DATA_CLEAN/" ou des extensions comme ".pdf".
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
-       À la toute fin de ta réponse, saute deux lignes, ajoute une ligne de séparation "---" puis saute une ligne.
-       Ensuite, écris "**Sources utilisées :**" en gras, suivi d'une liste à puces simple listant les documents consultés.
-       NE FAIS PAS de paragraphes ou de commentaires dans ce footer.
-    
-    INTELLIGENCE JURIDIQUE :
-    - Ne te contente pas du nom du document. Cherche la règle exacte dans le texte.
+       À la toute fin de ta réponse, ajoute une ligne de séparation "---".
+       Puis écris "**Sources utilisées :**" en gras.
+       Liste chaque source ainsi : "* BOSS : [Nom du document]"
     
     CONTEXTE :
     {context}
