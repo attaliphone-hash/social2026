@@ -242,20 +242,24 @@ def build_context(query):
     return context_text
 
 def get_gemini_response(query, context):
-    """Prompt Hybride : Intelligence V4 + Formatage Visuel V3"""
+    """Prompt Hybride : Intelligence V4 + Formatage Visuel V3 + Footer Sources"""
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
     MISSION :
     Réponds aux questions en t'appuyant EXCLUSIVEMENT sur les DOCUMENTS fournis.
     
-    CONSIGNES D'AFFICHAGE (CRITIQUE POUR LE DESIGN) :
-    1. Utilise la balise HTML <sub> pour les sources.
-    2. Format : <sub>*[Source précise (ex: Art. L.1234-9)]*</sub>
+    CONSIGNES D'AFFICHAGE STRICTES (CRITIQUE) :
+    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub>. Tu DOIS inclure le NOM de la source et l'ARTICLE.
+       Format imposé : <sub>*[Nom Source - Art. X]*</sub>
+       Exemple : <sub>*[Code du Travail - Art. L.1234-9]*</sub> ou <sub>*[BOSS - Rupture contrat]*</sub>
+    
+    2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
+       À la toute fin de ta réponse, saute deux lignes, ajoute une ligne de séparation "---" et liste les sources utilisées.
+       Format : <sub>*Sources utilisées : Code du Travail (Art. L.XXX), BOSS (Fiche Y)...*</sub>
     
     INTELLIGENCE JURIDIQUE :
     - Ne te contente pas du nom du fichier. Cherche l'article de loi ou la référence précise DANS le texte.
-    - Si tu trouves "Article L.1225-17" dans le texte, affiche : <sub>*[Art. L.1225-17]*</sub>.
     
     CONTEXTE :
     {context}
