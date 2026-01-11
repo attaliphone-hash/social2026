@@ -130,8 +130,8 @@ def show_legal_info():
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
-    Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
-    Contact : support@socialexpertfrance.fr<br><br>
+    Le site <em>socialexpertfrance.fr</em> est édité par Sylvain Attal EI.<br>
+    Contact : sylvain.attal@businessagent-ai.com<br><br>
     <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
     L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
     Toute reproduction est interdite sans autorisation.<br><br>
@@ -268,7 +268,8 @@ vectorstore, llm = load_ia_system()
 def build_context(query):
     """Construction contexte IA avec priorité aux documents"""
     # Recherche dans le CLOUD Pinecone
-    raw_docs = vectorstore.similarity_search(query, k=5)
+    # --- MODIFICATION CRITIQUE : K=20 pour éviter la vision en tunnel ---
+    raw_docs = vectorstore.similarity_search(query, k=20)
     context_text = ""
     for d in raw_docs:
         src = d.metadata.get('source', 'Source Inconnue')
