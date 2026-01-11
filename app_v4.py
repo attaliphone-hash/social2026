@@ -201,10 +201,22 @@ def check_password():
                 else:
                     st.error("Code erroné.")
         
+        # --- CORRECTION : AJOUT DU BOUTON ANNUEL AVEC AFFICHAGE EN COLONNES ---
         with tab_subscribe:
-            if st.button("S'abonner (Mensuel)"):
-                url = create_checkout_session("Mensuel")
-                if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            col_sub1, col_sub2 = st.columns(2)
+            
+            with col_sub1:
+                st.info("📅 **Mensuel**\n\nFlexibilité totale.")
+                if st.button("S'abonner (Mensuel)", use_container_width=True):
+                    url = create_checkout_session("Mensuel")
+                    if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+            
+            with col_sub2:
+                st.success("🗓 **Annuel**\n\n2 mois offerts !")
+                if st.button("S'abonner (Annuel)", use_container_width=True):
+                    url = create_checkout_session("Annuel")
+                    if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
     
     show_legal_info()
     st.stop()
