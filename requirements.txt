@@ -1,8 +1,9 @@
 streamlit
 stripe
 beautifulsoup4
-google-generativeai
-python-dotenv
 requests
-pandas
-watchdog
+python-dotenv
+langchain-google-genai
+langchain-pinecone
+pinecone-client
+langchain-core
