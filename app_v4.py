@@ -250,13 +250,15 @@ def get_gemini_response(query, context):
     Réponds aux questions en t'appuyant EXCLUSIVEMENT sur les DOCUMENTS fournis.
     
     CONSIGNES D'AFFICHAGE STRICTES (CRITIQUE) :
-    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub>. Tu DOIS inclure le NOM de la source et l'ARTICLE.
-       Format imposé : <sub>*[Nom Source - Art. X]*</sub>
-       Exemple : <sub>*[Code du Travail - Art. L.1234-9]*</sub> ou <sub>*[BOSS - Rupture contrat]*</sub>
+    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises.
+       Format : <sub>*[Nom Source - Art. X]*</sub>
+       Exemple : <sub>*[Code du Travail - Art. L.1234-9]*</sub>
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
-       À la toute fin de ta réponse, saute deux lignes, ajoute une ligne de séparation "---" et liste les sources utilisées.
-       Format : <sub>*Sources utilisées : Code du Travail (Art. L.XXX), BOSS (Fiche Y)...*</sub>
+       À la toute fin de ta réponse, saute deux lignes, ajoute une ligne de séparation "---" puis saute encore une ligne.
+       Ensuite, liste les sources en utilisant simplement de l'italique (Markdown).
+       NE METS PAS DE BALISES HTML DANS LE FOOTER POUR ÉVITER LES BUGS D'AFFICHAGE.
+       Format attendu pour le footer : *Sources utilisées : Code du Travail (Art. L.XXX), BOSS (Fiche Y)...*
     
     INTELLIGENCE JURIDIQUE :
     - Ne te contente pas du nom du fichier. Cherche l'article de loi ou la référence précise DANS le texte.
