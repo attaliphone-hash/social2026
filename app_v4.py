@@ -54,7 +54,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    # CSS EXACT (V3/V4)
+    # CSS EXACT (V3 + CORRECTIF MOBILE RÉINTÉGRÉ)
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -67,7 +67,7 @@ def apply_pro_design():
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
         
-        /* CITATIONS (sub) */
+        /* CITATIONS (sub) - Style Expert Social */
         sub {
             font-size: 0.75em !important;
             color: #666 !important;
@@ -82,10 +82,17 @@ def apply_pro_design():
         
         h1 { font-family: 'Helvetica Neue', sans-serif; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
         
+        /* --- OPTIMISATION MOBILE (RÉINTÉGRÉE) --- */
         @media (max-width: 768px) {
             .block-container { padding-top: 0.2rem !important; }
+            /* Cache les sauts de ligne inutiles sur mobile pour gagner de la place */
+            iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
+            /* Ajustement fin des textes d'assurance */
             .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
+            /* Réduction de la taille du Titre H1 sur mobile */
+            h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
+        
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
         </style>
@@ -124,7 +131,7 @@ def show_legal_info():
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
     Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
-    Contact : sylvain.attal@businessagent-ai.com<br><br>
+    Contact : support@socialexpertfrance.fr<br><br>
     <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
     L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
     Toute reproduction est interdite sans autorisation.<br><br>
@@ -148,7 +155,7 @@ def show_legal_info():
 # --- SECURITE & STRIPE ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 def create_checkout_session(plan_type):
-    # IDs Stripe récupérés de votre code original
+    # IDs Stripe
     price_id = "price_1SnaTDQZ5ivv0RayXfKqvJ6I" if plan_type == "Mensuel" else "price_1SnaUOQZ5ivv0RayFnols3TI"
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -168,9 +175,8 @@ def check_password():
     
     # 1. SI DÉJÀ CONNECTÉ
     if st.session_state.get("password_correct"):
-        # -- NOUVEAU : Si c'est l'admin, on affiche la veille BOSS --
+        # -- SI ADMIN : VEILLE BOSS --
         if st.session_state.get("is_admin"):
-             # On utilise un petit container pour que ce soit discret
              with st.expander("🔒 Espace Admin - Veille BOSS", expanded=True):
                  st.info(check_boss_updates())
         return True
@@ -201,7 +207,7 @@ def check_password():
                 else:
                     st.error("Code erroné.")
         
-        # --- CORRECTION : AJOUT DU BOUTON ANNUEL AVEC AFFICHAGE EN COLONNES ---
+        # --- BOUTONS ABONNEMENT EN DEUX COLONNES ---
         with tab_subscribe:
             st.markdown("<br>", unsafe_allow_html=True)
             col_sub1, col_sub2 = st.columns(2)
