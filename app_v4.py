@@ -256,9 +256,8 @@ def get_gemini_response(query, context):
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
        À la toute fin de ta réponse, saute deux lignes, ajoute une ligne de séparation "---" puis saute encore une ligne.
-       Ensuite, liste les sources en utilisant simplement de l'italique (Markdown).
-       NE METS PAS DE BALISES HTML DANS LE FOOTER POUR ÉVITER LES BUGS D'AFFICHAGE.
-       Format attendu pour le footer : *Sources utilisées : Code du Travail (Art. L.XXX), BOSS (Fiche Y)...*
+       Ensuite, liste les sources EN TEXTE BRUT (SANS MARQUEURS MARKDOWN, SANS GRAS, SANS ITALIQUE).
+       Format attendu pour le footer : Sources utilisées : Code du Travail (Art. L.XXX), BOSS (Fiche Y)...
     
     INTELLIGENCE JURIDIQUE :
     - Ne te contente pas du nom du fichier. Cherche l'article de loi ou la référence précise DANS le texte.
