@@ -124,7 +124,7 @@ def show_legal_info():
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
     Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
-    Contact : support@socialexpertfrance.fr<br><br>
+    Contact : sylvain.attal@businessagent-ai.com<br><br>
     <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
     L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
     Toute reproduction est interdite sans autorisation.<br><br>
