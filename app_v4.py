@@ -8,16 +8,15 @@ import requests
 import stripe
 from bs4 import BeautifulSoup
 
-# --- CORRECTION : CHARGEMENT DU FICHIER .ENV ---
+# --- CHARGEMENT DES VARIABLES D'ENVIRONNEMENT ---
 from dotenv import load_dotenv
 load_dotenv()
 
-# --- IMPORT DU MOTEUR V4 ---
+# --- IMPORT DU MOTEUR DE RÈGLES (CHIFFRES) ---
 from rules.engine import SocialRuleEngine
 
-# --- IMPORTS IA (NOUVEAU : PINECONE) ---
+# --- IMPORTS IA (PINECONE CLOUD) ---
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-# On remplace Chroma par Pinecone
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -26,17 +25,36 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro V4", layout="wide")
 
 # ==============================================================================
-# PARTIE 1 : LA CARROSSERIE (RECUPERATION STRICTE DE TON CODE EN LIGNE)
+# PARTIE 0 : MODULE DE VEILLE BOSS (RÉINTÉGRATION)
+# ==============================================================================
+def check_boss_updates():
+    """Scrape le site du BOSS pour vérifier les mises à jour récentes"""
+    try:
+        url = "https://boss.gouv.fr/portail/accueil.html"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
+        response = requests.get(url, headers=headers, timeout=5) # Timeout court pour ne pas ralentir
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            actualites = soup.find_all('p')
+            for p in actualites:
+                if "mise à jour" in p.text.lower():
+                    return f"📢 ALERTE BOSS : {p.text.strip()}"
+            return "✅ Veille BOSS : Aucune mise à jour détectée ce jour (Base 2026 à jour)."
+        return "⚠️ Serveur BOSS injoignable pour vérification."
+    except:
+        return "⚠️ Module de veille BOSS temporairement indisponible."
+
+# ==============================================================================
+# PARTIE 1 : DESIGN & UTILITAIRES
 # ==============================================================================
 
-# --- FONCTIONS UTILITAIRES VISUELLES ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         return base64.b64encode(open(bin_file, "rb").read()).decode()
     return ""
 
 def apply_pro_design():
-    # TON CSS EXACT (V3)
+    # CSS EXACT (V3/V4)
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -49,7 +67,7 @@ def apply_pro_design():
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
         
-        /* CITATIONS (sub) - Style Expert Social */
+        /* CITATIONS (sub) */
         sub {
             font-size: 0.75em !important;
             color: #666 !important;
@@ -78,10 +96,9 @@ def apply_pro_design():
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
     else:
-        # Fallback si l'image n'est pas trouvée localement (Texture papier)
         st.markdown("""<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""", unsafe_allow_html=True)
 
-# --- TEXTES DE RÉASSURANCE (TES TEXTES) ---
+# --- TEXTES DE RÉASSURANCE ---
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
     ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
@@ -103,7 +120,6 @@ def show_legal_info():
     
     with col_l:
         with st.expander("Mentions Légales"):
-            # HTML propre collé à gauche pour éviter les erreurs d'indentation Markdown
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
@@ -132,7 +148,7 @@ def show_legal_info():
 # --- SECURITE & STRIPE ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 def create_checkout_session(plan_type):
-    # Tes IDs Stripe originaux
+    # IDs Stripe récupérés de votre code original
     price_id = "price_1SnaTDQZ5ivv0RayXfKqvJ6I" if plan_type == "Mensuel" else "price_1SnaUOQZ5ivv0RayFnols3TI"
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -152,14 +168,19 @@ def check_password():
     
     # 1. SI DÉJÀ CONNECTÉ
     if st.session_state.get("password_correct"):
+        # -- NOUVEAU : Si c'est l'admin, on affiche la veille BOSS --
+        if st.session_state.get("is_admin"):
+             # On utilise un petit container pour que ce soit discret
+             with st.expander("🔒 Espace Admin - Veille BOSS", expanded=True):
+                 st.info(check_boss_updates())
         return True
     
     # 2. SI NON CONNECTÉ (Ecran de Login)
     apply_pro_design()
-    render_top_columns() # AFFICHE LES COLONNES SUR LA PAGE DE LOGIN
+    render_top_columns()
     
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro V4 (Alpha)</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro V4</h1>", unsafe_allow_html=True)
     
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
@@ -167,12 +188,15 @@ def check_password():
         with tab_login:
             pwd = st.text_input("Code d'accès :", type="password")
             if st.button("Se connecter"):
-                # Gestion propre des variables pour éviter les erreurs .env
+                # Récupération des mots de passe (avec valeurs par défaut identiques à app.py)
                 admin_pwd = os.getenv("ADMIN_PASSWORD", "ADMIN2026")
                 user_pwd = os.getenv("APP_PASSWORD", "DEFAUT_USER_123")
                 
-                if pwd == admin_pwd or pwd == user_pwd:
-                    st.session_state.update({"password_correct": True})
+                if pwd == admin_pwd:
+                    st.session_state.update({"password_correct": True, "is_admin": True})
+                    st.rerun()
+                elif pwd == user_pwd:
+                    st.session_state.update({"password_correct": True, "is_admin": False})
                     st.rerun()
                 else:
                     st.error("Code erroné.")
@@ -189,9 +213,8 @@ def check_password():
 # PARTIE 2 : LE MOTEUR V4 (INTELLIGENCE HYBRIDE & CLOUD)
 # ==============================================================================
 
-# Vérification Connexion
+# Vérification Connexion (Inclut maintenant la logique Admin/User)
 check_password()
-# Rappel du design et des colonnes une fois connecté pour l'interface principale
 apply_pro_design()
 render_top_columns()
 
@@ -204,13 +227,12 @@ def load_engine():
 def load_ia_system():
     """Charge le Cerveau Créatif (Gemini + Pinecone CLOUD)"""
     api_key = os.getenv("GOOGLE_API_KEY")
-    pinecone_key = os.getenv("PINECONE_API_KEY") # Clé Pinecone nécessaire
+    pinecone_key = os.getenv("PINECONE_API_KEY")
     
-    # 1. Modèle d'Embedding (Le même qu'à l'ingestion)
+    # 1. Modèle d'Embedding
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     
     # 2. Connexion à PINECONE (Cloud)
-    # Plus besoin de charger les fichiers locaux ! On se connecte juste au Cloud.
     vectorstore = PineconeVectorStore.from_existing_index(
         index_name="expert-social",
         embedding=embeddings
@@ -274,7 +296,6 @@ def get_gemini_response(query, context):
 # PARTIE 3 : L'INTERFACE UTILISATEUR (HEADER + CHAT)
 # ==============================================================================
 
-# Entête (Colonnes)
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # Titre Principal
@@ -306,12 +327,11 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
         
         # --- ETAPE 1 : ROUTEUR D'INTENTION (ARCHITECTURAL) ---
         # On détermine si la requête est une "Conversation/Question" (-> IA) ou une "Recherche de Donnée" (-> Moteur)
-        # Critères de détection d'une phrase complexe ou d'une question :
         markers = ["?", "comment", "pourquoi", "est-ce", "quand", "quel", "quelle", "un salarié", "mon salarié", "l'employeur", "peut-on"]
         is_conversational = (
             "?" in query  # Ponctuation explicite
             or any(m in query.lower() for m in markers)  # Marqueurs de questions ou de mise en situation
-            or len(query.split()) > 7  # Sécurité : une phrase de +7 mots est rarement une simple recherche de variable
+            or len(query.split()) > 7  # Sécurité
         )
 
         verdict = {"found": False}
@@ -321,13 +341,12 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             verdict = engine.get_formatted_answer(keywords=query)
         
         if verdict["found"]:
-            # Réponse Certifiée par Règle (Pour les chiffres/taux simples uniquement)
+            # Réponse Certifiée par Règle
             full_response = f"{verdict['text']}\n\n--- \n<sub>*Source certifiée : {verdict['source']}*</sub>"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
             
         else:
-            # --- ETAPE 2 : IA GENERATIVE (GEMINI) ---
-            # Tout ce qui est analyse, question complexe, situation salarié -> GEMINI
+            # --- ETAPE 2 : IA GENERATIVE (GEMINI + PINECONE) ---
             with st.spinner("🔍 Analyse juridique et recherche des articles..."):
                 context = build_context(query)
                 gemini_response = get_gemini_response(query, context)
