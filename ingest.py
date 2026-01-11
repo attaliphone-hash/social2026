@@ -1,31 +1,26 @@
 import os
-import shutil
+from dotenv import load_dotenv  # Pour lire votre fichier .env
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_chroma import Chroma
+from langchain_pinecone import PineconeVectorStore
+
+# --- CHARGEMENT DES CLÉS ---
+load_dotenv() 
 
 # --- CONFIGURATION ---
-DATA_PATH = "data"
-DB_PATH = "chroma_db"
+DATA_PATH = "DATA_CLEAN"  # Votre dossier actuel
+INDEX_NAME = "expert-social" 
 
-# --- SÉCURITÉ CLÉ API ---
-# On ne met RIEN ici. On utilisera la commande 'export' dans le terminal.
-
-def create_vector_db():
-    if os.path.exists(DB_PATH):
-        shutil.rmtree(DB_PATH)
-        print(f"🗑️ Ancienne base '{DB_PATH}' supprimée.")
-
-    documents = []
-    
+def run_ingestion():
+    # 1. Vérification du dossier
     if not os.path.exists(DATA_PATH):
-        os.makedirs(DATA_PATH)
-        print(f"⚠️ Dossier '{DATA_PATH}' créé.")
+        print(f"❌ Erreur : Le dossier '{DATA_PATH}' est introuvable.")
         return
-
-    print("--- Chargement des documents ---")
-    files_found = False
+    
+    documents = []
+    print(f"--- 📂 Chargement depuis {DATA_PATH} ---")
+    
     for filename in os.listdir(DATA_PATH):
         file_path = os.path.join(DATA_PATH, filename)
         try:
@@ -33,40 +28,39 @@ def create_vector_db():
                 print(f"📄 Lecture PDF : {filename}")
                 loader = PyPDFLoader(file_path)
                 documents.extend(loader.load())
-                files_found = True
             elif filename.endswith(".txt"):
                 print(f"📝 Lecture TXT : {filename}")
                 loader = TextLoader(file_path, encoding="utf-8") 
                 documents.extend(loader.load())
-                files_found = True
             elif filename.endswith(".csv"):
-                print(f"📊 Lecture CSV (Barèmes) : {filename}")
-                # Configuré pour le fichier BOSS (délimiteur ; et encodage latin-1)
+                print(f"📊 Lecture CSV : {filename}")
                 loader = CSVLoader(file_path, csv_args={'delimiter': ';'}, encoding="latin-1")
                 documents.extend(loader.load())
-                files_found = True
-                
         except Exception as e:
             print(f"❌ Erreur sur {filename}: {e}")
 
-    if not files_found:
-        print("⚠️ Aucun fichier valide trouvé dans /data.")
+    if not documents:
+        print("⚠️ Aucun document trouvé.")
         return
 
-    print(f"--- Découpage de {len(documents)} éléments bruts ---")
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    # 2. Découpage (Chunks)
+    print(f"--- ✂️ Découpage de {len(documents)} éléments ---")
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
     chunks = text_splitter.split_documents(documents)
-    print(f"✂️ Résultat : {len(chunks)} morceaux de texte prêts.")
 
-    print("--- Génération de la base (Vecteurs) ---")
-    # L'IA ira chercher la clé dans l'environnement du terminal
+    # 3. Envoi vers Pinecone Cloud
+    print("--- 🚀 Envoi vers PINECONE (Cloud) ---")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-    vectorstore = Chroma.from_documents(
-        documents=chunks, 
-        embedding=embeddings, 
-        persist_directory=DB_PATH
-    )
-    print("✅ SUCCÈS : Base de connaissances générée (PDF + TXT + CSV) !")
+    
+    try:
+        PineconeVectorStore.from_documents(
+            chunks, 
+            embeddings, 
+            index_name=INDEX_NAME
+        )
+        print(f"☀️ SUCCÈS : L'index '{INDEX_NAME}' est à jour !")
+    except Exception as e:
+        print(f"❌ Erreur : {e}")
 
 if __name__ == "__main__":
-    create_vector_db()
+    run_ingestion()
