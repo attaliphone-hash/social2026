@@ -12,12 +12,13 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 load_dotenv()
 
-# --- IMPORT DU MOTEUR V4 (La seule nouveauté logique) ---
+# --- IMPORT DU MOTEUR V4 ---
 from rules.engine import SocialRuleEngine
 
-# --- IMPORTS IA ---
+# --- IMPORTS IA (NOUVEAU : PINECONE) ---
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_chroma import Chroma
+# On remplace Chroma par Pinecone
+from langchain_pinecone import PineconeVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
@@ -185,7 +186,7 @@ def check_password():
     st.stop()
 
 # ==============================================================================
-# PARTIE 2 : LE MOTEUR V4 (INTELLIGENCE HYBRIDE)
+# PARTIE 2 : LE MOTEUR V4 (INTELLIGENCE HYBRIDE & CLOUD)
 # ==============================================================================
 
 # Vérification Connexion
@@ -201,26 +202,23 @@ def load_engine():
 
 @st.cache_resource
 def load_ia_system():
-    """Charge le Cerveau Créatif (Gemini + Chroma)"""
+    """Charge le Cerveau Créatif (Gemini + Pinecone CLOUD)"""
     api_key = os.getenv("GOOGLE_API_KEY")
+    pinecone_key = os.getenv("PINECONE_API_KEY") # Clé Pinecone nécessaire
+    
+    # 1. Modèle d'Embedding (Le même qu'à l'ingestion)
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
-    vectorstore = Chroma(embedding_function=embeddings)
+    
+    # 2. Connexion à PINECONE (Cloud)
+    # Plus besoin de charger les fichiers locaux ! On se connecte juste au Cloud.
+    vectorstore = PineconeVectorStore.from_existing_index(
+        index_name="expert-social",
+        embedding=embeddings
+    )
+    
+    # 3. LLM (Gemini 2.0)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
     
-    # Indexation Volatile (Comme V3 mais structure V4)
-    if os.path.exists("data_clean"):
-        files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
-        texts, metas = [], []
-        for f in files:
-            with open(f"data_clean/{f}", "r", encoding="utf-8") as file:
-                content = file.read()
-                if content.strip():
-                    clean_source = f.replace('.txt', '').replace('_', ' ')
-                    texts.append(content)
-                    metas.append({"source": clean_source})
-        if texts:
-            for i in range(0, len(texts), 1000):
-                vectorstore.add_texts(texts=texts[i:i+1000], metadatas=metas[i:i+1000])
     return vectorstore, llm
 
 # Init Moteurs
@@ -229,6 +227,7 @@ vectorstore, llm = load_ia_system()
 
 def build_context(query):
     """Construction contexte IA avec priorité aux documents"""
+    # Recherche dans le CLOUD Pinecone
     raw_docs = vectorstore.similarity_search(query, k=5)
     context_text = ""
     for d in raw_docs:
@@ -276,8 +275,6 @@ def get_gemini_response(query, context):
 # ==============================================================================
 
 # Entête (Colonnes)
-# Note : render_top_columns est déjà appelé plus haut ligne 224, 
-# mais on garde le hr et le titre ici pour la structure
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # Titre Principal
