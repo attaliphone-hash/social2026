@@ -96,14 +96,13 @@ def render_top_columns():
         col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
 
 # --- MODULES LEGAUX ---
-# --- 5. LÉGAL & RGPD (VERSION CORRIGÉE POUR AFFICHAGE HTML) ---
 def show_legal_info():
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
     
     with col_l:
         with st.expander("Mentions Légales"):
-            # Attention : Le texte HTML doit être collé à gauche dans le bloc """
+            # HTML propre collé à gauche pour éviter les erreurs d'indentation Markdown
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
@@ -128,6 +127,7 @@ def show_legal_info():
     <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
 </div>
 """, unsafe_allow_html=True)
+
 # --- SECURITE & STRIPE ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 def create_checkout_session(plan_type):
@@ -147,29 +147,40 @@ def create_checkout_session(plan_type):
         return None
 
 def check_password():
+    """Gère l'authentification et l'affichage de la page de login"""
+    
+    # 1. SI DÉJÀ CONNECTÉ
     if st.session_state.get("password_correct"):
         return True
     
-    # Interface de connexion (Design V3)
+    # 2. SI NON CONNECTÉ (Ecran de Login)
     apply_pro_design()
-    render_top_columns()
+    render_top_columns() # AFFICHE LES COLONNES SUR LA PAGE DE LOGIN
+    
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro V4 (Alpha)</h1>", unsafe_allow_html=True)
+    
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         tab_login, tab_subscribe = st.tabs(["Se connecter", "S'abonner"])
         with tab_login:
             pwd = st.text_input("Code d'accès :", type="password")
             if st.button("Se connecter"):
-                # Mots de passe
-                if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026") or pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
+                # Gestion propre des variables pour éviter les erreurs .env
+                admin_pwd = os.getenv("ADMIN_PASSWORD", "ADMIN2026")
+                user_pwd = os.getenv("APP_PASSWORD", "DEFAUT_USER_123")
+                
+                if pwd == admin_pwd or pwd == user_pwd:
                     st.session_state.update({"password_correct": True})
                     st.rerun()
-                else: st.error("Code erroné.")
+                else:
+                    st.error("Code erroné.")
+        
         with tab_subscribe:
             if st.button("S'abonner (Mensuel)"):
                 url = create_checkout_session("Mensuel")
                 if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+    
     show_legal_info()
     st.stop()
 
@@ -179,7 +190,9 @@ def check_password():
 
 # Vérification Connexion
 check_password()
+# Rappel du design et des colonnes une fois connecté pour l'interface principale
 apply_pro_design()
+render_top_columns()
 
 @st.cache_resource
 def load_engine():
@@ -258,7 +271,8 @@ def get_gemini_response(query, context):
 # ==============================================================================
 
 # Entête (Colonnes)
-render_top_columns()
+# Note : render_top_columns est déjà appelé plus haut ligne 224, 
+# mais on garde le hr et le titre ici pour la structure
 st.markdown("<hr>", unsafe_allow_html=True)
 
 # Titre Principal
