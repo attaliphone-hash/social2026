@@ -266,18 +266,20 @@ engine = load_engine()
 vectorstore, llm = load_ia_system()
 
 def build_context(query):
-    """Construction contexte IA avec priorité aux documents"""
-    # Recherche dans le CLOUD Pinecone
-    # --- MODIFICATION CRITIQUE : K=20 pour éviter la vision en tunnel ---
+    """Construction contexte IA avec priorité aux documents et nettoyage des noms de fichiers"""
     raw_docs = vectorstore.similarity_search(query, k=20)
     context_text = ""
     for d in raw_docs:
-        src = d.metadata.get('source', 'Source Inconnue')
-        # Logique V3 adaptée : affichage propre pour l'IA
-        if "REF" in src: pretty_src = "Barème Officiel"
-        elif "BOSS" in src: pretty_src = "BOSS"
-        elif "LEGAL" in src: pretty_src = "Code du Travail"
-        else: pretty_src = src
+        # Nettoyage chirurgical du nom de la source
+        raw_src = d.metadata.get('source', 'Source Inconnue')
+        # On enlève le chemin DATA_CLEAN/ et les extensions
+        clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
+        
+        # Formatage selon l'accord : BOSS : Nom Propre
+        if "REF" in clean_name: pretty_src = "Barème Officiel"
+        elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
+        else: pretty_src = f"BOSS : {clean_name}"
+        
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
     return context_text
 
@@ -292,7 +294,7 @@ def get_gemini_response(query, context):
     CONSIGNES D'AFFICHAGE STRICTES (CRITIQUE) :
     1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises.
        Format : <sub>*[Nom Source - Art. X]*</sub>
-       Exemple : <sub>*[Code du Travail - Art. L.1234-9]*</sub>
+       Exemple : <sub>*[BOSS : Épargne salariale]*</sub>
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
        À la toute fin de ta réponse, saute deux lignes, ajoute une ligne de séparation "---" puis saute une ligne.
@@ -300,7 +302,7 @@ def get_gemini_response(query, context):
        NE FAIS PAS de paragraphes ou de commentaires dans ce footer.
     
     INTELLIGENCE JURIDIQUE :
-    - Ne te contente pas du nom du fichier. Cherche l'article de loi ou la référence précise DANS le texte.
+    - Ne te contente pas du nom du document. Cherche la règle exacte dans le texte.
     
     CONTEXTE :
     {context}
@@ -344,26 +346,21 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
         message_placeholder = st.empty()
         full_response = ""
         
-        # --- ETAPE 1 : ROUTEUR D'INTENTION (ARCHITECTURAL) ---
-        # On détermine si la requête est une "Conversation/Question" (-> IA) ou une "Recherche de Donnée" (-> Moteur)
+        # --- ETAPE 1 : ROUTEUR D'INTENTION ---
         markers = ["?", "comment", "pourquoi", "est-ce", "quand", "quel", "quelle", "un salarié", "mon salarié", "l'employeur", "peut-on"]
         is_conversational = (
-            "?" in query  # Ponctuation explicite
-            or any(m in query.lower() for m in markers)  # Marqueurs de questions ou de mise en situation
-            or len(query.split()) > 7  # Sécurité
+            "?" in query 
+            or any(m in query.lower() for m in markers) 
+            or len(query.split()) > 7 
         )
 
         verdict = {"found": False}
-        
-        # On n'active le Moteur de Règles QUE si ce n'est PAS une conversation/analyse
         if not is_conversational:
             verdict = engine.get_formatted_answer(keywords=query)
         
         if verdict["found"]:
-            # Réponse Certifiée par Règle avec Footer Standardisé
             full_response = f"{verdict['text']}\n\n---\n**Sources utilisées :**\n* {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
-            
         else:
             # --- ETAPE 2 : IA GENERATIVE (GEMINI + PINECONE) ---
             with st.spinner("🔍 Analyse juridique et recherche des articles..."):
