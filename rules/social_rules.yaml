@@ -1,0 +1,114 @@
+# --- RÈGLES MÉTIER PAIE & SOCIAL 2026 (BASE MIGRÉE) ---
+
+# -------------------------------------------------------------------------
+# 1. AVANTAGES EN NATURE & FRAIS PRO
+# -------------------------------------------------------------------------
+- id: AVN_REPAS_2026
+  nom: "Avantage en Nature Nourriture 2026"
+  description: "Valeur forfaitaire à réintégrer pour les repas fournis."
+  type: constante
+  tags: ["paie", "avantage_nature", "repas", "nourriture"]
+  valeurs:
+    un_repas: 5.50
+    deux_repas: 11.00
+  source_officielle: "Barème URSSAF 2026"
+  message_template: "Pour 2026, l'avantage en nature nourriture est fixé à {valeurs.un_repas} € par repas (soit {valeurs.deux_repas} € par jour)."
+
+- id: FRAIS_REPAS_2025_2026
+  nom: "Limites Exonération Frais de Repas"
+  description: "Plafonds d'exonération pour les indemnités de repas."
+  type: constante
+  tags: ["frais_pro", "repas", "panier", "restaurant"]
+  valeurs:
+    restaurant_deplacement: 21.00
+    hors_locaux: 10.10
+    panier_locaux: 7.50
+  source_officielle: "Barème ACOSS Frais Pro"
+  message_template: "Les limites d'exonération sont : {valeurs.restaurant_deplacement} € pour un repas au restaurant en déplacement, {valeurs.hors_locaux} € pour un repas hors locaux, et {valeurs.panier_locaux} € pour le panier sur le lieu de travail."
+
+- id: AVN_VEHICULE_ELEC_2026
+  nom: "Avantage Nature Véhicule Électrique"
+  description: "Abattement spécifique pour les véhicules électriques."
+  type: constante
+  tags: ["avantage_nature", "vehicule", "electrique"]
+  valeurs:
+    abattement_taux: "50%"
+    plafond_abattement: 1964.90
+  source_officielle: "Barème URSSAF 2026"
+  message_template: "L'abattement de {valeurs.abattement_taux} sur l'avantage en nature est reconduit en 2026 pour les véhicules électriques, plafonné à {valeurs.plafond_abattement} € par an."
+
+# -------------------------------------------------------------------------
+# 2. CHIFFRES CLÉS & PLAFONDS
+# -------------------------------------------------------------------------
+- id: PASS_2025_2026
+  nom: "Plafond de la Sécurité Sociale (PASS)"
+  description: "Valeur de référence pour le calcul des cotisations."
+  type: constante
+  tags: ["paie", "plafond", "pass", "cotisations"]
+  valeurs:
+    annuel: 47100
+    mensuel: 3925
+    horaire: 29
+  source_officielle: "Arrêté fixant le Plafond de la Sécurité Sociale"
+  message_template: "Le Plafond Mensuel de la Sécurité Sociale (PMSS) est de {valeurs.mensuel} € (soit {valeurs.annuel} € annuel)."
+
+- id: SMIC_REF_FILLON_2026
+  nom: "SMIC Annuel Référence 2026"
+  description: "Valeur du SMIC à utiliser pour les calculs d'allègements."
+  type: constante
+  tags: ["smic", "reference", "fillon"]
+  valeurs:
+    annuel: 21876.40
+  source_officielle: "Paramètres Réduction Générale 2026"
+  message_template: "Le SMIC annuel de référence pour 2026 est fixé à {valeurs.annuel} €."
+
+# -------------------------------------------------------------------------
+# 3. EXONÉRATIONS & RÉDUCTIONS (La partie critique)
+# -------------------------------------------------------------------------
+- id: FILLON_T_2026
+  nom: "Paramètre T - Réduction Générale 2026"
+  description: "Coefficient T pour le calcul de la réduction Fillon."
+  type: constante
+  tags: ["fillon", "reduction_generale", "allegements", "t"]
+  valeurs:
+    t_moins_50_salaries: 0.3206
+    t_plus_50_salaries: 0.3246
+  source_officielle: "Décret Paramètres Fillon 2026"
+  message_template: "Pour 2026, le paramètre T est de {valeurs.t_moins_50_salaries} pour les entreprises de moins de 50 salariés, et {valeurs.t_plus_50_salaries} pour les autres."
+
+- id: PPV_PLAFONDS
+  nom: "Plafonds Prime Partage de la Valeur (PPV)"
+  description: "Limites d'exonération fiscale et sociale de la PPV."
+  type: constante
+  tags: ["ppv", "prime", "partage_valeur", "macron"]
+  valeurs:
+    cas_general: 3000
+    cas_derogatoire: 6000
+  source_officielle: "Loi Partage de la Valeur"
+  message_template: "Le plafond d'exonération de la PPV est de {valeurs.cas_general} € par an (porté à {valeurs.cas_derogatoire} € en cas d'accord d'intéressement ou de participation)."
+
+# -------------------------------------------------------------------------
+# 4. CONTRATS SPÉCIFIQUES (Apprentis / Stagiaires)
+# -------------------------------------------------------------------------
+- id: GRATIFICATION_STAGE
+  nom: "Gratification Minimale Stagiaire"
+  description: "Seuil de franchise et montant minimum légal."
+  type: constante
+  tags: ["stage", "stagiaire", "gratification"]
+  valeurs:
+    taux_horaire: 4.35
+    pourcentage_plafond: "15%"
+  source_officielle: "Barème Stagiaires 2025/2026"
+  message_template: "La franchise de cotisations (et gratification minimale) est fixée à {valeurs.taux_horaire} € par heure de stage."
+
+- id: REMU_APPRENTI_2026
+  nom: "Rémunération Apprentissage 2026"
+  description: "Barème pourcentages SMIC apprentis."
+  type: constante
+  tags: ["apprentissage", "alternance", "remuneration", "salaire"]
+  valeurs:
+    annee1_18_20ans: "43% du SMIC"
+    annee2_18_20ans: "51% du SMIC"
+    aide_embauche: 6000
+  source_officielle: "Ministère du Travail - Objectif Apprentissage 2026"
+  message_template: "Pour un apprenti de 18-20 ans, la rémunération est de {valeurs.annee1_18_20ans} en 1ère année. L'aide à l'embauche est maintenue à {valeurs.aide_embauche} €."

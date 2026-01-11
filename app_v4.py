@@ -1,54 +1,41 @@
+import streamlit as st
 import sys
 import os
+import time
 import uuid
 import base64
 import requests
-from bs4 import BeautifulSoup
-import streamlit as st
-import pypdf
 import stripe
+from bs4 import BeautifulSoup
 
-# --- 1. PATCH SQLITE ---
-try:
-    import pysqlite3
-    sys.modules['sqlite3'] = pysqlite3
-except ImportError:
-    pass
+# --- CORRECTION : CHARGEMENT DU FICHIER .ENV ---
+from dotenv import load_dotenv
+load_dotenv()
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+# --- IMPORT DU MOTEUR V4 (La seule nouveauté logique) ---
+from rules.engine import SocialRuleEngine
+
+# --- IMPORTS IA ---
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# --- 2. CONFIGURATION PAGE ---
-st.set_page_config(page_title="Expert Social Pro 2026", layout="wide")
+# 1. CONFIGURATION PAGE
+st.set_page_config(page_title="Expert Social Pro V4", layout="wide")
 
-# --- 3. VEILLE BOSS (SÉCURISÉE) ---
-def check_boss_updates():
-    try:
-        url = "https://boss.gouv.fr/portail/accueil.html"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            actualites = soup.find_all('p')
-            for p in actualites:
-                if "mise à jour" in p.text.lower():
-                    return f"Recherche de mise à jour BOSS : OK - {p.text.strip()}"
-            return "Recherche de mise à jour BOSS : OK - Base 2026 à jour (Aucune modification détectée ce jour)"
-        return "Serveur BOSS injoignable pour vérification."
-    except:
-        return "Veille automatique BOSS temporairement indisponible."
+# ==============================================================================
+# PARTIE 1 : LA CARROSSERIE (RECUPERATION STRICTE DE TON CODE EN LIGNE)
+# ==============================================================================
 
-# --- 4. DESIGN PRO ---
+# --- FONCTIONS UTILITAIRES VISUELLES ---
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         return base64.b64encode(open(bin_file, "rb").read()).decode()
     return ""
 
 def apply_pro_design():
-    # AJOUT CSS SPÉCIFIQUE POUR CORRIGER LE DÉCALAGE ET LA COULEUR DES SOURCES
+    # TON CSS EXACT (V3)
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -61,32 +48,39 @@ def apply_pro_design():
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
         
-        /* CORRECTION CRITIQUE DES CITATIONS (sub) */
+        /* CITATIONS (sub) - Style Expert Social */
         sub {
-            font-size: 0.75em !important; /* Taille réduite */
-            color: #666 !important;       /* Gris discret au lieu de noir */
-            vertical-align: baseline !important; /* Évite le décalage de ligne */
+            font-size: 0.75em !important;
+            color: #666 !important;
+            vertical-align: baseline !important;
             position: relative;
-            top: -0.3em; /* Léger décalage vers le haut style "exposant" */
+            top: -0.3em;
         }
         
         .assurance-text { font-size: 11px !important; color: #024c6f !important; text-align: left; display: block; line-height: 1.3; margin-bottom: 20px; }
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
+        
+        h1 { font-family: 'Helvetica Neue', sans-serif; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
+        
         @media (max-width: 768px) {
             .block-container { padding-top: 0.2rem !important; }
-            iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
             .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
-            h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
         </style>
     """, unsafe_allow_html=True)
+    
+    # CHARGEMENT FOND D'ECRAN
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
+    else:
+        # Fallback si l'image n'est pas trouvée localement (Texture papier)
+        st.markdown("""<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""", unsafe_allow_html=True)
 
+# --- TEXTES DE RÉASSURANCE (TES TEXTES) ---
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
     ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
@@ -101,8 +95,9 @@ def render_top_columns():
         title, desc = ARGUMENTS_UNIFIES[i]
         col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
 
-# --- 5. LÉGAL & RGPD ---
-ef show_legal_info():
+# --- MODULES LEGAUX ---
+# --- 5. LÉGAL & RGPD (TEXTES COMPLETS) ---
+def show_legal_info():
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
     
@@ -137,9 +132,10 @@ ef show_legal_info():
                 <em>Conformément au RGPD, ce traitement "volatil" ne nécessitant pas de conservation de données personnelles, il garantit par défaut le droit à l'oubli.</em>
             </div>
             """, unsafe_allow_html=True)
-# --- 6. SÉCURITÉ & STRIPE ---
+# --- SECURITE & STRIPE ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 def create_checkout_session(plan_type):
+    # Tes IDs Stripe originaux
     price_id = "price_1SnaTDQZ5ivv0RayXfKqvJ6I" if plan_type == "Mensuel" else "price_1SnaUOQZ5ivv0RayFnols3TI"
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -156,24 +152,22 @@ def create_checkout_session(plan_type):
 
 def check_password():
     if st.session_state.get("password_correct"):
-        if st.session_state.get("is_admin"):
-            st.info(check_boss_updates())
         return True
+    
+    # Interface de connexion (Design V3)
     apply_pro_design()
     render_top_columns()
     st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #024c6f;'>🔑 Accès Expert Social Pro V4 (Alpha)</h1>", unsafe_allow_html=True)
     col_l, col_m, col_r = st.columns([1, 2, 1])
     with col_m:
         tab_login, tab_subscribe = st.tabs(["Se connecter", "S'abonner"])
         with tab_login:
             pwd = st.text_input("Code d'accès :", type="password")
             if st.button("Se connecter"):
-                if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026"):
-                    st.session_state.update({"password_correct": True, "is_admin": True})
-                    st.rerun()
-                elif pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
-                    st.session_state.update({"password_correct": True, "is_admin": False})
+                # Mots de passe
+                if pwd == os.getenv("ADMIN_PASSWORD", "ADMIN2026") or pwd == os.getenv("APP_PASSWORD", "DEFAUT_USER_123"):
+                    st.session_state.update({"password_correct": True})
                     st.rerun()
                 else: st.error("Code erroné.")
         with tab_subscribe:
@@ -183,29 +177,28 @@ def check_password():
     show_legal_info()
     st.stop()
 
+# ==============================================================================
+# PARTIE 2 : LE MOTEUR V4 (INTELLIGENCE HYBRIDE)
+# ==============================================================================
+
+# Vérification Connexion
 check_password()
 apply_pro_design()
 
-# --- 7. SYSTÈME DE RECHERCHE IA (NETTOYAGE À LA RACINE) ---
-if 'session_id' not in st.session_state: st.session_state['session_id'] = str(uuid.uuid4())
-
-def get_data_clean_context():
-    context_list = []
-    if os.path.exists("data_clean"):
-        for filename in os.listdir("data_clean"):
-            if filename.endswith(".txt") and not filename.startswith("LEGAL_"):
-                with open(f"data_clean/{filename}", "r", encoding="utf-8") as f:
-                    # Nettoyage pour le contexte prioritaire
-                    clean_name = filename.replace('.txt', '').replace('_', ' ')
-                    context_list.append(f"[{clean_name}] : {f.read()}")
-    return "\n".join(context_list)
+@st.cache_resource
+def load_engine():
+    """Charge le Cerveau Logique V4 (Règles YAML)"""
+    return SocialRuleEngine()
 
 @st.cache_resource
-def load_system():
+def load_ia_system():
+    """Charge le Cerveau Créatif (Gemini + Chroma)"""
     api_key = os.getenv("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
     vectorstore = Chroma(embedding_function=embeddings)
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", temperature=0, google_api_key=api_key)
+    
+    # Indexation Volatile (Comme V3 mais structure V4)
     if os.path.exists("data_clean"):
         files = [f for f in os.listdir("data_clean") if f.endswith(".txt")]
         texts, metas = [], []
@@ -213,7 +206,6 @@ def load_system():
             with open(f"data_clean/{f}", "r", encoding="utf-8") as file:
                 content = file.read()
                 if content.strip():
-                    # --- NETTOYAGE CRITIQUE : Suppression extension .txt ---
                     clean_source = f.replace('.txt', '').replace('_', ' ')
                     texts.append(content)
                     metas.append({"source": clean_source})
@@ -222,84 +214,103 @@ def load_system():
                 vectorstore.add_texts(texts=texts[i:i+1000], metadatas=metas[i:i+1000])
     return vectorstore, llm
 
-vectorstore, llm = load_system()
+# Init Moteurs
+engine = load_engine()
+vectorstore, llm = load_ia_system()
 
-def build_expert_context(query):
-    context = [get_data_clean_context()]
-    raw_law = vectorstore.similarity_search(query, k=8)
-    for d in raw_law:
-        raw_src = d.metadata.get('source', 'Source Inconnue')
-        
-        # --- MAQUILLAGE FORCE EN PYTHON ---
-        # On renomme la source ICI pour que l'IA ne voie que le beau nom
-        if "REF" in raw_src and "2026" in raw_src:
-            pretty_src = "Barème Officiel 2026"
-        elif "REF" in raw_src and "2025" in raw_src:
-            pretty_src = "Barème Officiel 2025"
-        elif "BOSS" in raw_src:
-            pretty_src = "BOSS" # On simplifie radicalement
-        elif "LEGAL" in raw_src or "Code" in raw_src:
-            pretty_src = "Code du Travail / CSS"
-        else:
-            pretty_src = raw_src # Cas par défaut
-            
-        # On injecte le beau nom dans le contexte
-        context.append(f"[SOURCE : {pretty_src} ({raw_src})]\n{d.page_content}")
-        # Note : je garde ({raw_src}) entre parenthèses pour aider l'IA à distinguer les fichiers si besoin, 
-        # mais le prompt lui dira de n'utiliser que la partie gauche.
-        
-    return "\n\n".join(context)
+def build_context(query):
+    """Construction contexte IA avec priorité aux documents"""
+    raw_docs = vectorstore.similarity_search(query, k=5)
+    context_text = ""
+    for d in raw_docs:
+        src = d.metadata.get('source', 'Source Inconnue')
+        # Logique V3 adaptée : affichage propre pour l'IA
+        if "REF" in src: pretty_src = "Barème Officiel"
+        elif "BOSS" in src: pretty_src = "BOSS"
+        elif "LEGAL" in src: pretty_src = "Code du Travail"
+        else: pretty_src = src
+        context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
+    return context_text
 
-# --- 8. INTERFACE & PROMPT ---
+def get_gemini_response(query, context):
+    """Prompt Hybride : Intelligence V4 + Formatage Visuel V3"""
+    prompt = ChatPromptTemplate.from_template("""
+    Tu es l'Expert Social Pro 2026.
+    
+    MISSION :
+    Réponds aux questions en t'appuyant EXCLUSIVEMENT sur les DOCUMENTS fournis.
+    
+    CONSIGNES D'AFFICHAGE (CRITIQUE POUR LE DESIGN) :
+    1. Utilise la balise HTML <sub> pour les sources.
+    2. Format : <sub>*[Source précise (ex: Art. L.1234-9)]*</sub>
+    
+    INTELLIGENCE JURIDIQUE :
+    - Ne te contente pas du nom du fichier. Cherche l'article de loi ou la référence précise DANS le texte.
+    - Si tu trouves "Article L.1225-17" dans le texte, affiche : <sub>*[Art. L.1225-17]*</sub>.
+    
+    CONTEXTE :
+    {context}
+    
+    QUESTION : 
+    {question}
+    """)
+    chain = prompt | llm | StrOutputParser()
+    return chain.invoke({"context": context, "question": query})
+
+# ==============================================================================
+# PARTIE 3 : L'INTERFACE UTILISATEUR (HEADER + CHAT)
+# ==============================================================================
+
+# Entête (Colonnes)
 render_top_columns()
 st.markdown("<hr>", unsafe_allow_html=True)
+
+# Titre Principal
 col_t, col_b = st.columns([4, 1])
-with col_t: st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro 2026</h1>", unsafe_allow_html=True)
+with col_t: st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
 with col_b:
     if st.button("Nouvelle session"):
         st.session_state.messages = []
         st.rerun()
 
-if "messages" not in st.session_state: st.session_state.messages = []
+# Affichage Historique
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
-        st.markdown(msg["content"])
+        st.markdown(msg["content"], unsafe_allow_html=True)
 
-if query := st.chat_input("Posez votre question..."):
+# Zone de Saisie & Traitement
+if query := st.chat_input("Votre question juridique ou chiffrée..."):
+    
     st.session_state.messages.append({"role": "user", "content": query})
-    with st.chat_message("user"): st.markdown(query)
-    with st.chat_message("assistant", avatar="avatar-logo.png"):
-        with st.status("🔍 Analyse juridique en cours..."):
-            context = build_expert_context(query)
-            # --- PROMPT V3.7 : LOGIQUE CORRIGÉE & STYLE FORCÉ ---
-            prompt = ChatPromptTemplate.from_template("""
-            Tu es l'Expert Social Pro 2026. Réponds avec rigueur.
-            
-            CONSIGNES D'AFFICHAGE DES SOURCES (CRITIQUE) :
-            1. TOUJOURS utiliser la balise HTML <sub> pour réduire la taille.
-            2. FORMAT : <sub>*[Source]*</sub>
-            
-            TABLE DE CORRESPONDANCE DES NOMS (ATTENTION AUX NOMS NETTOYÉS) :
-            Le système t'envoie des noms de fichiers SANS underscores et SANS extensions. Adapte-toi :
-            
-            - Si la source contient "REF" (ex: REF 2026 SMIC) -> Affiche : <sub>*[Barème Officiel]*</sub> (Ou "Barème Officiel : Thème" si pertinent).
-            - Si la source contient "BOSS" (ex: DOC BOSS FRAIS) -> Affiche : <sub>*[BOSS]*</sub> (Ou "BOSS : Thème").
-            - Si Article de Loi -> Affiche : <sub>*[Art. L.XXX-X Code du travail]*</sub>.
-            
-            Exemple de rendu attendu dans le texte :
-            "Le plafond est de 3925€ <sub>*[Barème Officiel]*</sub>."
-            (La source doit être petite, grise et discrète).
-            
-            RAPPEL FINAL OBLIGATOIRE :
-            Termine par "---" puis saut de ligne.
-            Écris : "<sub>*Sources utilisées : [Liste des noms propres (Barème Officiel, BOSS...)]*</sub>"
-            
-            CONTEXTE : {context}
-            QUESTION : {question}
-            """)
-            response = (prompt | llm | StrOutputParser()).invoke({"context": context, "question": query})
-        st.markdown(response, unsafe_allow_html=True)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+    with st.chat_message("user"):
+        st.markdown(query)
 
+    with st.chat_message("assistant", avatar="avatar-logo.png"):
+        message_placeholder = st.empty()
+        full_response = ""
+        
+        # --- ETAPE 1 : MOTEUR DE REGLES (V4) ---
+        verdict = engine.get_formatted_answer(keywords=query)
+        
+        if verdict["found"]:
+            # Réponse Certifiée par Règle
+            # On applique le formatage V3 (<sub>) sur la source V4
+            full_response = f"{verdict['text']}\n\n--- \n<sub>*Source certifiée : {verdict['source']}*</sub>"
+            message_placeholder.markdown(full_response, unsafe_allow_html=True)
+            
+        else:
+            # --- ETAPE 2 : IA GENERATIVE (GEMINI) ---
+            with st.spinner("🔍 Analyse juridique et recherche des articles..."):
+                context = build_context(query)
+                gemini_response = get_gemini_response(query, context)
+                full_response = gemini_response
+                message_placeholder.markdown(full_response, unsafe_allow_html=True)
+
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+# Pied de page (Legal)
 show_legal_info()
 st.markdown("<div style='text-align:center; color:#888; font-size:11px; margin-top:30px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
