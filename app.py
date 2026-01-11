@@ -130,8 +130,8 @@ def show_legal_info():
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
-    Le site <em>socialexpertfrance.fr</em> est édité par Sylvain Attal EI.<br>
-    Contact : sylvain.attal@businessagent-ai.com<br><br>
+    Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
+    Contact : support@socialexpertfrance.fr<br><br>
     <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
     L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
     Toute reproduction est interdite sans autorisation.<br><br>
@@ -282,7 +282,7 @@ def build_context(query):
     return context_text
 
 def get_gemini_response(query, context):
-    """Prompt Hybride : Intelligence V4 + Formatage Visuel V3 + Footer Sources"""
+    """Prompt Hybride : Intelligence V4 + Formatage Visuel V3 + Footer Sources Standardisé"""
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
@@ -295,9 +295,9 @@ def get_gemini_response(query, context):
        Exemple : <sub>*[Code du Travail - Art. L.1234-9]*</sub>
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
-       À la toute fin de ta réponse, saute deux lignes, ajoute une ligne de séparation "---" puis saute encore une ligne.
-       Ensuite, liste les sources EN TEXTE BRUT (SANS MARQUEURS MARKDOWN, SANS GRAS, SANS ITALIQUE).
-       Format attendu pour le footer : Sources utilisées : Code du Travail (Art. L.XXX), BOSS (Fiche Y)...
+       À la toute fin de ta réponse, saute deux lignes, ajoute une ligne de séparation "---" puis saute une ligne.
+       Ensuite, écris "**Sources utilisées :**" en gras, suivi d'une liste à puces simple listant les documents consultés.
+       NE FAIS PAS de paragraphes ou de commentaires dans ce footer.
     
     INTELLIGENCE JURIDIQUE :
     - Ne te contente pas du nom du fichier. Cherche l'article de loi ou la référence précise DANS le texte.
@@ -360,8 +360,8 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             verdict = engine.get_formatted_answer(keywords=query)
         
         if verdict["found"]:
-            # Réponse Certifiée par Règle
-            full_response = f"{verdict['text']}\n\n--- \n<sub>*Source certifiée : {verdict['source']}*</sub>"
+            # Réponse Certifiée par Règle avec Footer Standardisé
+            full_response = f"{verdict['text']}\n\n---\n**Sources utilisées :**\n* {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
             
         else:
