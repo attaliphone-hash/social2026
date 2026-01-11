@@ -203,8 +203,26 @@ def build_expert_context(query):
     context = [get_data_clean_context()]
     raw_law = vectorstore.similarity_search(query, k=8)
     for d in raw_law:
-        src = d.metadata.get('source', 'Source Inconnue')
-        context.append(f"[SOURCE : {src}]\n{d.page_content}")
+        raw_src = d.metadata.get('source', 'Source Inconnue')
+        
+        # --- MAQUILLAGE FORCE EN PYTHON ---
+        # On renomme la source ICI pour que l'IA ne voie que le beau nom
+        if "REF" in raw_src and "2026" in raw_src:
+            pretty_src = "Barème Officiel 2026"
+        elif "REF" in raw_src and "2025" in raw_src:
+            pretty_src = "Barème Officiel 2025"
+        elif "BOSS" in raw_src:
+            pretty_src = "BOSS" # On simplifie radicalement
+        elif "LEGAL" in raw_src or "Code" in raw_src:
+            pretty_src = "Code du Travail / CSS"
+        else:
+            pretty_src = raw_src # Cas par défaut
+            
+        # On injecte le beau nom dans le contexte
+        context.append(f"[SOURCE : {pretty_src} ({raw_src})]\n{d.page_content}")
+        # Note : je garde ({raw_src}) entre parenthèses pour aider l'IA à distinguer les fichiers si besoin, 
+        # mais le prompt lui dira de n'utiliser que la partie gauche.
+        
     return "\n\n".join(context)
 
 # --- 8. INTERFACE & PROMPT ---
