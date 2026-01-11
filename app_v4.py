@@ -306,17 +306,30 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
         message_placeholder = st.empty()
         full_response = ""
         
-        # --- ETAPE 1 : MOTEUR DE REGLES (V4) ---
-        verdict = engine.get_formatted_answer(keywords=query)
+        # --- ETAPE 1 : ROUTEUR D'INTENTION (ARCHITECTURAL) ---
+        # On détermine si la requête est une "Conversation/Question" (-> IA) ou une "Recherche de Donnée" (-> Moteur)
+        # Critères de détection d'une phrase complexe ou d'une question :
+        markers = ["?", "comment", "pourquoi", "est-ce", "quand", "quel", "quelle", "un salarié", "mon salarié", "l'employeur", "peut-on"]
+        is_conversational = (
+            "?" in query  # Ponctuation explicite
+            or any(m in query.lower() for m in markers)  # Marqueurs de questions ou de mise en situation
+            or len(query.split()) > 7  # Sécurité : une phrase de +7 mots est rarement une simple recherche de variable
+        )
+
+        verdict = {"found": False}
+        
+        # On n'active le Moteur de Règles QUE si ce n'est PAS une conversation/analyse
+        if not is_conversational:
+            verdict = engine.get_formatted_answer(keywords=query)
         
         if verdict["found"]:
-            # Réponse Certifiée par Règle
-            # On applique le formatage V3 (<sub>) sur la source V4
+            # Réponse Certifiée par Règle (Pour les chiffres/taux simples uniquement)
             full_response = f"{verdict['text']}\n\n--- \n<sub>*Source certifiée : {verdict['source']}*</sub>"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
             
         else:
             # --- ETAPE 2 : IA GENERATIVE (GEMINI) ---
+            # Tout ce qui est analyse, question complexe, situation salarié -> GEMINI
             with st.spinner("🔍 Analyse juridique et recherche des articles..."):
                 context = build_context(query)
                 gemini_response = get_gemini_response(query, context)
