@@ -22,7 +22,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # 1. CONFIGURATION PAGE
-st.set_page_config(page_title="Expert Social Pro V4", layout="wide")
+st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
 # PARTIE 0 : MODULE DE VEILLE BOSS (RÉINTÉGRATION)
@@ -111,7 +111,7 @@ ARGUMENTS_UNIFIES = [
     ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
     ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
     ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
+    ("Confidentialité Garantie :", " Aucun cookie déposéVos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
 ]
 
 def render_top_columns():
@@ -134,7 +134,7 @@ def show_legal_info():
     Contact : support@socialexpertfrance.fr<br><br>
     <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
     L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
-    Toute reproduction est interdite sans autorisation.<br><br>
+    Toute reproduction même partielle est interdite sans autorisation.<br><br>
     <strong>RESPONSABILITÉ :</strong><br>
     Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique.
 </div>
@@ -145,7 +145,7 @@ def show_legal_info():
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>CONFIDENTIALITÉ TOTALE :</strong><br>
-    1. <strong>Aucun Stockage :</strong> Traitement volatil en RAM. Données détruites après la réponse.<br>
+    1. <strong>Aucun Stockage :</strong> Traitement volatil en RAM. Données détruites après la réponse. Aucun cookie n'est déposé<br>
     2. <strong>Pas d'Entraînement IA :</strong> Vos données ne servent jamais à entraîner les modèles.<br>
     3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serveurs.<br><br>
     <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
