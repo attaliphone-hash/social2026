@@ -96,42 +96,38 @@ def render_top_columns():
         col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
 
 # --- MODULES LEGAUX ---
-# --- 5. LÉGAL & RGPD (TEXTES COMPLETS) ---
+# --- 5. LÉGAL & RGPD (VERSION CORRIGÉE POUR AFFICHAGE HTML) ---
 def show_legal_info():
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
     
     with col_l:
         with st.expander("Mentions Légales"):
+            # Attention : Le texte HTML doit être collé à gauche dans le bloc """
             st.markdown("""
-            <div style='font-size: 11px; color: #444; line-height: 1.4;'>
-                <strong>ÉDITEUR :</strong><br>
-                Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
-                Contact : sylvain.attal@businessagent-ai.com<br><br>
-                
-                <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
-                L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur et la propriété intellectuelle. 
-                Toute reproduction, diffusion ou utilisation du contenu (textes, base de connaissances, architecture) est interdite sans autorisation écrite.<br><br>
-                
-                <strong>RESPONSABILITÉ :</strong><br>
-                Les réponses fournies par l'IA sont basées sur des sources officielles (BOSS, Code du Travail, Code de la Sécurité Sociale) mais sont données à titre indicatif. 
-                Elles ne sauraient se substituer à une consultation juridique formelle par un avocat.
-            </div>
-            """, unsafe_allow_html=True)
+<div style='font-size: 11px; color: #444; line-height: 1.4;'>
+    <strong>ÉDITEUR :</strong><br>
+    Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
+    Contact : support@socialexpertfrance.fr<br><br>
+    <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
+    L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
+    Toute reproduction est interdite sans autorisation.<br><br>
+    <strong>RESPONSABILITÉ :</strong><br>
+    Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique.
+</div>
+""", unsafe_allow_html=True)
             
     with col_r:
         with st.expander("Politique de Confidentialité (RGPD)"):
             st.markdown("""
-            <div style='font-size: 11px; color: #444; line-height: 1.4;'>
-                <strong>CONFIDENTIALITÉ :</strong><br>
-                Expert Social Pro garantit une confidentialité absolue de vos recherches.<br>
-                1. <strong>Aucun Stockage :</strong> Vos questions et les données analysées sont traitées exclusivement en mémoire vive (RAM) le temps de la réponse, puis instantanément détruites. Aucun cookie n'est déposé.<br>
-                2. <strong>Pas d'Entraînement IA :</strong> Vos données ne sont JAMAIS utilisées pour entraîner ou améliorer les modèles d'intelligence artificielle.<br>
-                3. <strong>Sécurité des Paiements :</strong> Les transactions sont intégralement gérées par Stripe (niveau de sécurité bancaire PCI-DSS). Aucune donnée bancaire ne transite par nos serveurs.<br><br>
-                
-                <em>Conformément au RGPD, ce traitement "volatil" ne nécessitant pas de conservation de données personnelles, il garantit par défaut le droit à l'oubli.</em>
-            </div>
-            """, unsafe_allow_html=True)
+<div style='font-size: 11px; color: #444; line-height: 1.4;'>
+    <strong>CONFIDENTIALITÉ TOTALE :</strong><br>
+    1. <strong>Aucun Stockage :</strong> Traitement volatil en RAM. Données détruites après la réponse.<br>
+    2. <strong>Pas d'Entraînement IA :</strong> Vos données ne servent jamais à entraîner les modèles.<br>
+    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serveurs.<br><br>
+    <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
+</div>
+""", unsafe_allow_html=True)
 # --- SECURITE & STRIPE ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 def create_checkout_session(plan_type):
