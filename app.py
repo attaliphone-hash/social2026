@@ -8,7 +8,7 @@ import requests
 import stripe
 import pypdf  # Pour lecture des fichiers uploadés
 from bs4 import BeautifulSoup
-import re # Nécessaire pour l'extraction fiable du lien RSS
+import re # AJOUTÉ POUR L'EXTRACTION FIABLE DU LIEN RSS
 
 # --- IMPORTS POUR LA GESTION DES DATES (VEILLE BOSS) ---
 from email.utils import parsedate_to_datetime
@@ -31,7 +31,7 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
-# PARTIE 0 : MODULE DE VEILLE BOSS INTELLIGENT (RSS + ALERTE 8 JOURS)
+# PARTIE 0 : MODULE DE VEILLE BOSS INTELLIGENT (CORRIGÉ : LIEN + ONGLET)
 # ==============================================================================
 def check_boss_updates():
     """
@@ -57,13 +57,14 @@ def check_boss_updates():
                 title = title_tag.text.strip() if title_tag else "Actualité BOSS"
                 
                 # 2. Extraction Lien (Via REGEX car html.parser casse la balise <link> du RSS)
+                # On cherche le pattern <link>...</link> dans la chaine brute de l'item
                 link_match = re.search(r"<link>(.*?)</link>", str(latest_item))
                 link = link_match.group(1).strip() if link_match else "https://boss.gouv.fr"
                 
                 # 3. Extraction Date
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
-                # Styles CSS pour l'affichage HTML
+                # Styles CSS pour l'affichage HTML (similaire à st.error/st.success)
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; border: 1px solid #f5c6cb; margin-bottom: 10px;"
                 style_success = "background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; border: 1px solid #c3e6cb; margin-bottom: 10px;"
                 
@@ -74,7 +75,7 @@ def check_boss_updates():
                         days_old = (now - pub_date_obj).days
                         date_str = pub_date_obj.strftime("%d/%m/%Y")
                         
-                        # Création du lien HTML avec target="_blank"
+                        # Création du lien HTML avec target="_blank" pour ouvrir un nouvel onglet
                         html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
                         
                         # Seuil 8 jours
@@ -86,9 +87,9 @@ def check_boss_updates():
                             return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>"""
                             
                     except:
-                        pass 
+                        pass # Si erreur date, on passe au fallback
                 
-                # Fallback simple
+                # Fallback simple (si pas de date ou erreur)
                 return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>"""
             
             return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>"
@@ -269,7 +270,7 @@ def check_password():
         if st.session_state.get("is_admin"):
              with st.expander("🔒 Espace Admin - Veille BOSS (RSS)", expanded=True):
                  
-                 # === AJOUT GESTION BOUTON MASQUER ===
+                 # === GESTION ALERTE VUE / MASQUÉE ===
                  if "boss_alert_seen" not in st.session_state:
                      st.session_state.boss_alert_seen = False
                      
@@ -284,8 +285,8 @@ def check_password():
                              st.session_state.boss_alert_seen = True
                              st.rerun()
                  else:
-                     # MESSAGE DISCRET QUAND MASQUÉ
-                     st.success("✅ Alerte lue.")
+                     # MESSAGE COURT QUAND MASQUÉ
+                     st.success("✅ Alerte masquée")
                      if st.button("Réafficher la veille"):
                          st.session_state.boss_alert_seen = False
                          st.rerun()
@@ -395,6 +396,7 @@ def get_gemini_response(query, context, user_doc_content=None):
     
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
 
+    # MODIFICATION ICI POUR CORRIGER LE FOOTER
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
@@ -407,9 +409,14 @@ def get_gemini_response(query, context, user_doc_content=None):
        INTERDICTION FORMELLE : Ne jamais mentionner "DATA_CLEAN/" ou des extensions comme ".pdf".
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
-       À la toute fin de ta réponse, ajoute une ligne de séparation "---".
-       Puis écris "**Sources utilisées :**" en gras.
-       Liste chaque source ainsi : "* BOSS : [Nom du document]"
+       IMPORTANT : Insère 2 sauts de ligne (\n\n) avant de mettre la barre de séparation pour qu'elle s'affiche correctement.
+       Format attendu à la fin :
+       
+       [Fin du texte]
+       
+       ---
+       **Sources utilisées :**
+       * BOSS : [Nom du document]
     
     CONTEXTE :
     {context}
