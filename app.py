@@ -3,16 +3,12 @@ import sys
 import os
 import time
 import uuid
-import base64
-import requests
 import stripe
 import pypdf  # Pour lecture des fichiers uploadés
-from bs4 import BeautifulSoup
-import re # AJOUTÉ POUR L'EXTRACTION FIABLE DU LIEN RSS
 
-# --- IMPORTS POUR LA GESTION DES DATES (VEILLE BOSS) ---
-from email.utils import parsedate_to_datetime
-from datetime import datetime, timezone
+# --- IMPORT MODULES UI & SERVICES ---
+from ui.styles import apply_pro_design, render_top_columns, show_legal_info
+from services.boss_watcher import check_boss_updates
 
 # --- CHARGEMENT DES VARIABLES D'ENVIRONNEMENT ---
 from dotenv import load_dotenv
@@ -31,217 +27,8 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
-# PARTIE 0 : MODULE DE VEILLE BOSS INTELLIGENT (CORRIGÉ : LIEN + ONGLET)
+# PARTIE 0 : FONCTIONS STRIPE & AUTH (EN ATTENTE D'EXTRACTION)
 # ==============================================================================
-def check_boss_updates():
-    """
-    Scrape le FLUX RSS avec extraction ROBUSTE (Regex) pour le lien.
-    Renvoie du HTML pour permettre l'ouverture dans un nouvel onglet.
-    URL : https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss
-    """
-    try:
-        url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        
-        response = requests.get(url, headers=headers, timeout=5)
-        
-        if response.status_code == 200:
-            # On récupère le contenu brut pour l'extraction Regex
-            content = response.content.decode('utf-8')
-            soup = BeautifulSoup(content, 'html.parser')
-            latest_item = soup.find('item')
-            
-            if latest_item:
-                # 1. Extraction Titre (Via Soup)
-                title_tag = latest_item.find('title')
-                title = title_tag.text.strip() if title_tag else "Actualité BOSS"
-                
-                # 2. Extraction Lien (Via REGEX car html.parser casse la balise <link> du RSS)
-                # On cherche le pattern <link>...</link> dans la chaine brute de l'item
-                link_match = re.search(r"<link>(.*?)</link>", str(latest_item))
-                link = link_match.group(1).strip() if link_match else "https://boss.gouv.fr"
-                
-                # 3. Extraction Date
-                date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
-                
-                # Styles CSS pour l'affichage HTML (similaire à st.error/st.success)
-                style_alert = "background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; border: 1px solid #f5c6cb; margin-bottom: 10px;"
-                style_success = "background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; border: 1px solid #c3e6cb; margin-bottom: 10px;"
-                
-                if date_tag:
-                    try:
-                        pub_date_obj = parsedate_to_datetime(date_tag.text.strip())
-                        now = datetime.now(timezone.utc)
-                        days_old = (now - pub_date_obj).days
-                        date_str = pub_date_obj.strftime("%d/%m/%Y")
-                        
-                        # Création du lien HTML avec target="_blank" pour ouvrir un nouvel onglet
-                        html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
-                        
-                        # Seuil 8 jours
-                        if days_old < 8:
-                            # ALERTE ROUGE
-                            return f"""<div style='{style_alert}'>🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link} (Il y a {days_old} jours)</div>"""
-                        else:
-                            # INFO VERTE
-                            return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>"""
-                            
-                    except:
-                        pass # Si erreur date, on passe au fallback
-                
-                # Fallback simple (si pas de date ou erreur)
-                return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>"""
-            
-            return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>"
-            
-        return "<div style='color:red;'>⚠️ Flux RSS inaccessible.</div>"
-    except Exception as e:
-        return f"<div style='color:red;'>⚠️ Erreur Module Veille : {e}</div>"
-
-# ==============================================================================
-# PARTIE 1 : DESIGN & UTILITAIRES
-# ==============================================================================
-
-def get_base64(bin_file):
-    if os.path.exists(bin_file):
-        return base64.b64encode(open(bin_file, "rb").read()).decode()
-    return ""
-
-def apply_pro_design():
-    # CSS EXACT + CSS UPLOAD DISCRET + TRADUCTION BOUTON
-    st.markdown("""
-        <style>
-        #MainMenu {visibility: hidden;}
-        header {visibility: hidden !important; height: 0px;}
-        footer {visibility: hidden;}
-        [data-testid="stHeader"] {display: none;}
-        .block-container { padding-top: 1.5rem !important; }
-        
-        /* Design des bulles de chat */
-        .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
-        .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
-        
-        /* --- CSS UPLOAD DISCRET & TRADUIT --- */
-        .stFileUploader section {
-            background-color: transparent !important;
-            border: none !important;
-            padding: 0 !important;
-            min-height: 0 !important;
-        }
-        .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] {
-            display: none !important;
-        }
-        .stFileUploader div[data-testid="stFileUploaderInterface"] {
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-        
-        /* REECRITURE DU TEXTE DU BOUTON (HACK CSS) */
-        .stFileUploader button {
-            border: 1px solid #ccc !important;
-            background-color: white !important;
-            color: transparent !important; /* On cache le texte 'Browse files' */
-            padding: 0.25rem 0.75rem !important;
-            font-size: 14px !important;
-            margin-top: 3px !important;
-            position: relative;
-            width: 250px !important; /* Largeur fixe pour accueillir le texte français */
-        }
-        
-        /* On écrit le nouveau texte par-dessus */
-        .stFileUploader button::after {
-            content: "Charger un document pour analyse";
-            color: #333 !important;
-            position: absolute;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 500;
-        }
-        
-        /* CITATIONS (sub) - Style Expert Social */
-        sub {
-            font-size: 0.75em !important;
-            color: #666 !important;
-            vertical-align: baseline !important;
-            position: relative;
-            top: -0.3em;
-        }
-        
-        .assurance-text { font-size: 11px !important; color: #024c6f !important; text-align: left; display: block; line-height: 1.3; margin-bottom: 20px; }
-        .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
-        .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
-        
-        h1 { font-family: 'Helvetica Neue', sans-serif; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
-        
-        /* --- OPTIMISATION MOBILE --- */
-        @media (max-width: 768px) {
-            .block-container { padding-top: 0.2rem !important; }
-            iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
-            .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
-            h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
-        }
-        
-        .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
-        .stExpander { border: none !important; background-color: transparent !important; }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    # CHARGEMENT FOND D'ECRAN
-    bg_data = get_base64('background.webp')
-    if bg_data:
-        st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
-    else:
-        st.markdown("""<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""", unsafe_allow_html=True)
-
-# --- TEXTES DE RÉASSURANCE ---
-ARGUMENTS_UNIFIES = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
-    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
-    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
-    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Aucun cookie déposé. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
-]
-
-def render_top_columns():
-    cols = st.columns(5)
-    for i, col in enumerate(cols):
-        title, desc = ARGUMENTS_UNIFIES[i]
-        col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
-
-# --- MODULES LEGAUX ---
-def show_legal_info():
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
-    
-    with col_l:
-        with st.expander("Mentions Légales"):
-            st.markdown("""
-<div style='font-size: 11px; color: #444; line-height: 1.4;'>
-    <strong>ÉDITEUR :</strong><br>
-    Le site <em>socialexpertfrance.fr</em> est édité par la BUSINESS AGENT AI.<br>
-    Contact : sylvain.attal@businessagent-ai.com<br><br>
-    <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
-    L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
-    L'architecture, le code et le design sont la propriété exclusive de BUSINESS AGENT AI®. La réutilisation des réponses générées est autorisée dans le cadre de vos missions professionnelles.<br><br>
-    <strong>RESPONSABILITÉ :</strong><br>
-    Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique. L'utilisateur de l'application doit en toute circonstance vérifier les réponses de l'IA qui n'engagent pas l'éditeur de l'application
-</div>
-""", unsafe_allow_html=True)
-            
-    with col_r:
-        with st.expander("Politique de Confidentialité (RGPD)"):
-            st.markdown("""
-<div style='font-size: 11px; color: #444; line-height: 1.4;'>
-    <strong>CONFIDENTIALITÉ TOTALE :</strong><br>
-    1. <strong>Aucun Stockage :</strong> Traitement volatil en RAM. Données détruites après la réponse. Aucun cookie n'est déposé<br>
-    2. <strong>Pas d'Entraînement IA :</strong> Vos données ne servent jamais à entraîner les modèles.<br>
-    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serveurs.<br><br>
-    <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
-</div>
-""", unsafe_allow_html=True)
 
 # --- SECURITE & STRIPE ---
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -266,7 +53,7 @@ def check_password():
     
     # 1. SI DÉJÀ CONNECTÉ
     if st.session_state.get("password_correct"):
-        # -- SI ADMIN : VEILLE BOSS --
+        # -- SI ADMIN : VEILLE BOSS (Via le nouveau service) --
         if st.session_state.get("is_admin"):
              with st.expander("🔒 Espace Admin - Veille BOSS (RSS)", expanded=True):
                  
@@ -275,7 +62,7 @@ def check_password():
                      st.session_state.boss_alert_seen = False
                      
                  if not st.session_state.boss_alert_seen:
-                     # AFFICHE L'ALERTE
+                     # AFFICHE L'ALERTE (Appel au fichier services/boss_watcher.py)
                      st.markdown(check_boss_updates(), unsafe_allow_html=True)
                      
                      # BOUTON POUR MASQUER
@@ -434,29 +221,22 @@ def get_gemini_response(query, context, user_doc_content=None):
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# Titre Principal et Boutons (MODIFICATION PLACEMENT UPLOAD)
-# On donne un peu plus de place à droite pour les deux boutons
-# MODIFICATION : On passe à [3, 2] pour donner plus d'espace au bloc de droite
+# Titre Principal et Boutons
 col_t, col_buttons = st.columns([3, 2]) 
 
 with col_t: 
     st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
 
 with col_buttons:
-    # MODIFICATION : On donne plus de largeur à l'upload (1.6) qu'à la session (1)
-    # Cela permet au long texte "Charger un document..." de tenir sans écraser le voisin
     c_up, c_new = st.columns([1.6, 1])
-    
     with c_up:
-        # BOUTON UPLOAD (CSS le rend discret et traduit)
         uploaded_file = st.file_uploader("Upload", type=["pdf", "txt"], label_visibility="collapsed")
-    
     with c_new:
         if st.button("Nouvelle session"):
             st.session_state.messages = []
             st.rerun()
 
-# Traitement immédiat du document uploadé (pour le rendre dispo dans le chat)
+# Traitement immédiat du document uploadé
 user_doc_text = None
 if uploaded_file:
     try:
@@ -496,7 +276,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             "?" in query 
             or any(m in query.lower() for m in markers) 
             or len(query.split()) > 7 
-            or user_doc_text # SI DOC UPLOADÉ, ON FORCE L'IA
+            or user_doc_text 
         )
 
         verdict = {"found": False}
@@ -511,13 +291,11 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             wait_msg = "🔍 Analyse de votre document et des textes..." if user_doc_text else "🔍 Analyse juridique et recherche des références..."
             with st.spinner(wait_msg):
                 context = build_context(query)
-                # On passe le doc utilisateur à la fonction
                 gemini_response = get_gemini_response(query, context, user_doc_content=user_doc_text)
                 full_response = gemini_response
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# Pied de page (Legal)
 show_legal_info()
 st.markdown("<div style='text-align:center; color:#888; font-size:11px; margin-top:30px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
