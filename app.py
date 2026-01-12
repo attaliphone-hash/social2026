@@ -26,38 +26,43 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
-# PARTIE 0 : MODULE DE VEILLE BOSS (VIA FLUX RSS OFFICIEL)
+# PARTIE 0 : MODULE DE VEILLE BOSS (CORRIGÉ : COMPATIBLE PARTOUT)
 # ==============================================================================
 def check_boss_updates():
     """
-    Scrape le FLUX RSS officiel (BOSS + Rescrits) pour une fiabilité maximale.
+    Scrape le FLUX RSS officiel (BOSS + Rescrits).
+    CORRECTIF : Utilise 'html.parser' pour éviter l'erreur 'lxml not found'.
     URL : https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss
     """
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
         headers = {"User-Agent": "Mozilla/5.0"}
         
-        # On récupère le fichier XML du flux
         response = requests.get(url, headers=headers, timeout=5)
         
         if response.status_code == 200:
-            # On utilise 'xml' pour parser le flux proprement
-            soup = BeautifulSoup(response.content, 'xml')
+            # ON UTILISE LE PARSER STANDARD (html.parser) QUI EST TOUJOURS DISPO
+            soup = BeautifulSoup(response.content, 'html.parser')
             
-            # On cherche le premier <item> (l'actualité la plus récente)
+            # On cherche le premier <item>
             latest_item = soup.find('item')
             
             if latest_item:
-                title = latest_item.title.text.strip()
-                pub_date = latest_item.pubDate.text.strip()
-                # On retourne le titre et la date brute fournie par le flux
+                # Avec html.parser, les tags sont parfois mis en minuscule
+                # On sécurise la recherche du titre
+                title_tag = latest_item.find('title')
+                title = title_tag.text.strip() if title_tag else "Titre inconnu"
+                
+                # On sécurise la recherche de la date (pubDate ou pubdate)
+                date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
+                pub_date = date_tag.text.strip() if date_tag else "Date inconnue"
+                
                 return f"📢 ALERTE BOSS : {title} ({pub_date})"
             
             return "✅ Veille BOSS : Aucune actualité récente détectée dans le flux RSS."
             
         return "⚠️ Flux RSS BOSS inaccessible (Erreur serveur)."
     except Exception as e:
-        # Fallback silencieux ou message d'erreur technique
         return f"⚠️ Erreur lecture Flux RSS : {e}"
 
 # ==============================================================================
