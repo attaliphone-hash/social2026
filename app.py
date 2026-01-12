@@ -8,7 +8,7 @@ import requests
 import stripe
 import pypdf  # Pour lecture des fichiers uploadés
 from bs4 import BeautifulSoup
-import re # AJOUTÉ POUR L'EXTRACTION FIABLE DU LIEN RSS
+import re # Nécessaire pour l'extraction fiable du lien RSS
 
 # --- IMPORTS POUR LA GESTION DES DATES (VEILLE BOSS) ---
 from email.utils import parsedate_to_datetime
@@ -31,7 +31,7 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
-# PARTIE 0 : MODULE DE VEILLE BOSS INTELLIGENT (CORRIGÉ : LIEN + ONGLET)
+# PARTIE 0 : MODULE DE VEILLE BOSS INTELLIGENT (RSS + ALERTE 8 JOURS)
 # ==============================================================================
 def check_boss_updates():
     """
@@ -57,14 +57,13 @@ def check_boss_updates():
                 title = title_tag.text.strip() if title_tag else "Actualité BOSS"
                 
                 # 2. Extraction Lien (Via REGEX car html.parser casse la balise <link> du RSS)
-                # On cherche le pattern <link>...</link> dans la chaine brute de l'item
                 link_match = re.search(r"<link>(.*?)</link>", str(latest_item))
                 link = link_match.group(1).strip() if link_match else "https://boss.gouv.fr"
                 
                 # 3. Extraction Date
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
-                # Styles CSS pour l'affichage HTML (similaire à st.error/st.success)
+                # Styles CSS pour l'affichage HTML
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; border: 1px solid #f5c6cb; margin-bottom: 10px;"
                 style_success = "background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; border: 1px solid #c3e6cb; margin-bottom: 10px;"
                 
@@ -75,7 +74,7 @@ def check_boss_updates():
                         days_old = (now - pub_date_obj).days
                         date_str = pub_date_obj.strftime("%d/%m/%Y")
                         
-                        # Création du lien HTML avec target="_blank" pour ouvrir un nouvel onglet
+                        # Création du lien HTML avec target="_blank"
                         html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
                         
                         # Seuil 8 jours
@@ -87,9 +86,9 @@ def check_boss_updates():
                             return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>"""
                             
                     except:
-                        pass # Si erreur date, on passe au fallback
+                        pass 
                 
-                # Fallback simple (si pas de date ou erreur)
+                # Fallback simple
                 return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>"""
             
             return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>"
@@ -269,8 +268,28 @@ def check_password():
         # -- SI ADMIN : VEILLE BOSS --
         if st.session_state.get("is_admin"):
              with st.expander("🔒 Espace Admin - Veille BOSS (RSS)", expanded=True):
-                 # MODIFICATION : On utilise st.markdown pour interpréter le HTML et les liens
-                 st.markdown(check_boss_updates(), unsafe_allow_html=True)
+                 
+                 # === AJOUT GESTION BOUTON MASQUER ===
+                 if "boss_alert_seen" not in st.session_state:
+                     st.session_state.boss_alert_seen = False
+                     
+                 if not st.session_state.boss_alert_seen:
+                     # AFFICHE L'ALERTE
+                     st.markdown(check_boss_updates(), unsafe_allow_html=True)
+                     
+                     # BOUTON POUR MASQUER
+                     c_dismiss, _ = st.columns([1.5, 3.5])
+                     with c_dismiss:
+                         if st.button("✅ Marquer comme vu / Masquer"):
+                             st.session_state.boss_alert_seen = True
+                             st.rerun()
+                 else:
+                     # MESSAGE DISCRET QUAND MASQUÉ
+                     st.success("✅ Alerte lue.")
+                     if st.button("Réafficher la veille"):
+                         st.session_state.boss_alert_seen = False
+                         st.rerun()
+                         
         return True
     
     # 2. SI NON CONNECTÉ (Ecran de Login)
