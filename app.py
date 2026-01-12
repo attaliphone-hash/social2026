@@ -6,6 +6,7 @@ import uuid
 import base64
 import requests
 import stripe
+import pypdf  # AJOUTÉ POUR LIRE LES FICHIERS UPLOADÉS
 from bs4 import BeautifulSoup
 
 # --- CHARGEMENT DES VARIABLES D'ENVIRONNEMENT ---
@@ -25,7 +26,7 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
-# PARTIE 0 : MODULE DE VEILLE BOSS (RÉINTÉGRATION)
+# PARTIE 0 : MODULE DE VEILLE BOSS (STRICTEMENT CELUI FOURNI)
 # ==============================================================================
 def check_boss_updates():
     """Scrape le site du BOSS pour vérifier les mises à jour récentes"""
@@ -54,7 +55,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    # CSS EXACT (V3 + CORRECTIF MOBILE RÉINTÉGRÉ)
+    # CSS EXACT + CSS UPLOAD DISCRET
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -66,6 +67,31 @@ def apply_pro_design():
         /* Design des bulles de chat */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
+        
+        /* --- CSS UPLOAD DISCRET (NOUVEAU) --- */
+        /* Supprime le cadre gris et le texte 'Drag and drop' */
+        .stFileUploader section {
+            background-color: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            min-height: 0 !important;
+        }
+        .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] {
+            display: none !important;
+        }
+        .stFileUploader div[data-testid="stFileUploaderInterface"] {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        /* Style du bouton Browse pour qu'il s'aligne avec 'Nouvelle Session' */
+        .stFileUploader button {
+            border: 1px solid #ccc !important;
+            background-color: white !important;
+            color: #333 !important;
+            padding: 0.25rem 0.75rem !important;
+            font-size: 14px !important;
+            margin-top: 3px !important; /* Petit ajustement pour alignement vertical */
+        }
         
         /* CITATIONS (sub) - Style Expert Social */
         sub {
@@ -82,14 +108,11 @@ def apply_pro_design():
         
         h1 { font-family: 'Helvetica Neue', sans-serif; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
         
-        /* --- OPTIMISATION MOBILE (RÉINTÉGRÉE) --- */
+        /* --- OPTIMISATION MOBILE --- */
         @media (max-width: 768px) {
             .block-container { padding-top: 0.2rem !important; }
-            /* Cache les sauts de ligne inutiles sur mobile pour gagner de la place */
             iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
-            /* Ajustement fin des textes d'assurance */
             .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
-            /* Réduction de la taille du Titre H1 sur mobile */
             h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
         
@@ -194,7 +217,7 @@ def check_password():
         with tab_login:
             pwd = st.text_input("Code d'accès :", type="password")
             if st.button("Se connecter"):
-                # Récupération des mots de passe (avec valeurs par défaut identiques à app.py)
+                # Récupération des mots de passe
                 admin_pwd = os.getenv("ADMIN_PASSWORD", "ADMIN2026")
                 user_pwd = os.getenv("APP_PASSWORD", "DEFAUT_USER_123")
                 
@@ -231,7 +254,7 @@ def check_password():
 # PARTIE 2 : LE MOTEUR V4 (INTELLIGENCE HYBRIDE & CLOUD)
 # ==============================================================================
 
-# Vérification Connexion (Inclut maintenant la logique Admin/User)
+# Vérification Connexion
 check_password()
 apply_pro_design()
 render_top_columns()
@@ -245,7 +268,6 @@ def load_engine():
 def load_ia_system():
     """Charge le Cerveau Créatif (Gemini + Pinecone CLOUD)"""
     api_key = os.getenv("GOOGLE_API_KEY")
-    pinecone_key = os.getenv("PINECONE_API_KEY")
     
     # 1. Modèle d'Embedding
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
@@ -266,11 +288,10 @@ engine = load_engine()
 vectorstore, llm = load_ia_system()
 
 def build_context(query):
-    """Construction contexte IA avec priorité aux documents et nettoyage chirurgical des noms"""
+    """Construction contexte IA"""
     raw_docs = vectorstore.similarity_search(query, k=20)
     context_text = ""
     for d in raw_docs:
-        # Nettoyage pour que l'IA ne voit que des noms propres
         raw_src = d.metadata.get('source', 'Source Inconnue')
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
         
@@ -281,8 +302,11 @@ def build_context(query):
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
     return context_text
 
-def get_gemini_response(query, context):
-    """Prompt Hybride : Force l'IA à ignorer les chemins techniques et à utiliser le format convenu"""
+def get_gemini_response(query, context, user_doc_content=None):
+    """Prompt Hybride : Gère BOSS + Document Utilisateur"""
+    
+    user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
+
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
@@ -291,7 +315,7 @@ def get_gemini_response(query, context):
     
     CONSIGNES D'AFFICHAGE STRICTES (ACCORD CLIENT) :
     1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises.
-       Format impératif : <sub>*[BOSS : Nom du document]*</sub>
+       Format impératif : <sub>*[BOSS : Nom du document]*</sub> ou <sub>*[Document Utilisateur]*</sub>
        INTERDICTION FORMELLE : Ne jamais mentionner "DATA_CLEAN/" ou des extensions comme ".pdf".
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
@@ -301,7 +325,7 @@ def get_gemini_response(query, context):
     
     CONTEXTE :
     {context}
-    
+    """ + user_doc_section + """
     QUESTION : 
     {question}
     """)
@@ -314,13 +338,38 @@ def get_gemini_response(query, context):
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# Titre Principal
-col_t, col_b = st.columns([4, 1])
-with col_t: st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
-with col_b:
-    if st.button("Nouvelle session"):
-        st.session_state.messages = []
-        st.rerun()
+# Titre Principal et Boutons (MODIFICATION PLACEMENT UPLOAD)
+# On donne un peu plus de place à droite pour les deux boutons
+col_t, col_buttons = st.columns([3.5, 1.5]) 
+
+with col_t: 
+    st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
+
+with col_buttons:
+    # Sous-colonnes pour aligner : Upload | Nouvelle Session
+    c_up, c_new = st.columns([1, 1])
+    
+    with c_up:
+        # BOUTON UPLOAD (CSS le rend discret)
+        uploaded_file = st.file_uploader("Upload", type=["pdf", "txt"], label_visibility="collapsed")
+    
+    with c_new:
+        if st.button("Nouvelle session"):
+            st.session_state.messages = []
+            st.rerun()
+
+# Traitement immédiat du document uploadé (pour le rendre dispo dans le chat)
+user_doc_text = None
+if uploaded_file:
+    try:
+        if uploaded_file.type == "application/pdf":
+            reader = pypdf.PdfReader(uploaded_file)
+            user_doc_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+        else:
+            user_doc_text = uploaded_file.read().decode("utf-8")
+        st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
+    except Exception as e:
+        st.error(f"Erreur lecture fichier: {e}")
 
 # Affichage Historique
 if "messages" not in st.session_state:
@@ -336,6 +385,8 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
+        if uploaded_file:
+            st.markdown(f"<sub>📎 *Analyse incluant : {uploaded_file.name}*</sub>", unsafe_allow_html=True)
 
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
@@ -347,10 +398,11 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             "?" in query 
             or any(m in query.lower() for m in markers) 
             or len(query.split()) > 7 
+            or user_doc_text # SI DOC UPLOADÉ, ON FORCE L'IA
         )
 
         verdict = {"found": False}
-        if not is_conversational:
+        if not is_conversational and not user_doc_text:
             verdict = engine.get_formatted_answer(keywords=query)
         
         if verdict["found"]:
@@ -358,9 +410,11 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         else:
             # --- ETAPE 2 : IA GENERATIVE (GEMINI + PINECONE) ---
-            with st.spinner("🔍 Analyse juridique et recherche des articles..."):
+            wait_msg = "🔍 Analyse de votre document et des textes..." if user_doc_text else "🔍 Analyse juridique et recherche des articles..."
+            with st.spinner(wait_msg):
                 context = build_context(query)
-                gemini_response = get_gemini_response(query, context)
+                # On passe le doc utilisateur à la fonction
+                gemini_response = get_gemini_response(query, context, user_doc_content=user_doc_text)
                 full_response = gemini_response
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
