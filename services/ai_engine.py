@@ -41,22 +41,13 @@ def load_ia_system():
 def build_context(query, vectorstore):
     """
     Construction du contexte via Pinecone.
-    ROLLBACK V4 : Retour à k=20 pour garantir la précision juridique.
+    VERSION GOLDEN : k=20 et AUCUN filtrage, on prend tout ce que Pinecone donne.
     """
-    # k=20 : Nécessaire pour capter le Code du Travail ET les détails du BOSS
     raw_docs = vectorstore.similarity_search(query, k=20)
     
     context_text = ""
-    seen_content = set() # On garde l'optimisation anti-doublons
-    
+    # On ne filtre plus les doublons ici, on fait confiance au score de Pinecone
     for d in raw_docs:
-        # Nettoyage du contenu (s'il y a des doublons exacts dans la base, on les saute)
-        content = d.page_content
-        if content in seen_content:
-            continue
-        seen_content.add(content)
-        
-        # Gestion propre du nom de la source
         raw_src = d.metadata.get('source', 'Source Inconnue')
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
         
@@ -64,7 +55,7 @@ def build_context(query, vectorstore):
         elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
         else: pretty_src = f"BOSS : {clean_name}"
         
-        context_text += f"[DOCUMENT : {pretty_src}]\n{content}\n\n"
+        context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
         
     return context_text
 
@@ -76,30 +67,25 @@ def get_gemini_response(query, context, llm, user_doc_content=None):
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
+    MISSION :
+    Réponds aux questions en t'appuyant EXCLUSIVEMENT sur les DOCUMENTS fournis.
+    
+    CONSIGNES D'AFFICHAGE STRICTES (ACCORD CLIENT) :
+    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises.
+       Format impératif : <sub>*[BOSS : Nom du document]*</sub> ou <sub>*[Document Utilisateur]*</sub>
+       INTERDICTION FORMELLE : Ne jamais mentionner "DATA_CLEAN/" ou des extensions comme ".pdf".
+    
+    2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
+       À la toute fin de ta réponse, ajoute une ligne de séparation "---".
+       Puis écris "**Sources utilisées :**" en gras.
+       Liste chaque source ainsi : "* BOSS : [Nom du document]"
+    
     CONTEXTE :
     {context}
     """ + user_doc_section + """
     
-    MISSION :
-    Réponds à la question suivante en t'appuyant EXCLUSIVEMENT sur les documents ci-dessus.
-    QUESTION : {question}
-    
-    CONSIGNES D'AFFICHAGE STRICTES :
-    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises (ex: <sub>*[BOSS : Barème]*</sub>).
-    
-    2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
-       Tu DOIS terminer ta réponse EXACTEMENT par ce bloc (avec la ligne de séparation) :
-       
-       ---
-       **Sources utilisées :**
-       * BOSS : [Nom du document]
-       * [Autre Source]
+    QUESTION : 
+    {question}
     """)
     chain = prompt | llm | StrOutputParser()
-    response = chain.invoke({"context": context, "question": query})
-    
-    # SÉCURITÉ ANTI-ERRATIQUE
-    if "Sources utilisées :" in response and "---" not in response[-500:]:
-        response = response.replace("**Sources utilisées :**", "\n\n---\n**Sources utilisées :**")
-        
-    return response
+    return chain.invoke({"context": context, "question": query})
