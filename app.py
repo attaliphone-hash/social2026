@@ -3,12 +3,12 @@ import sys
 import os
 import time
 import uuid
-import stripe
 import pypdf  # Pour lecture des fichiers uploadés
 
 # --- IMPORT MODULES UI & SERVICES ---
 from ui.styles import apply_pro_design, render_top_columns, show_legal_info
 from services.boss_watcher import check_boss_updates
+from services.stripe_service import create_checkout_session # <--- NOUVEL IMPORT
 
 # --- CHARGEMENT DES VARIABLES D'ENVIRONNEMENT ---
 from dotenv import load_dotenv
@@ -27,33 +27,15 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
-# PARTIE 0 : FONCTIONS STRIPE & AUTH (EN ATTENTE D'EXTRACTION)
+# PARTIE 0 : AUTHENTIFICATION (PROCHAINE ETAPE À EXTRAIRE)
 # ==============================================================================
-
-# --- SECURITE & STRIPE ---
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-def create_checkout_session(plan_type):
-    # IDs Stripe
-    price_id = "price_1SnaTDQZ5ivv0RayXfKqvJ6I" if plan_type == "Mensuel" else "price_1SnaUOQZ5ivv0RayFnols3TI"
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{'price': price_id, 'quantity': 1}],
-            mode='subscription',
-            success_url="https://socialexpertfrance.fr?payment=success",
-            cancel_url="https://socialexpertfrance.fr?payment=cancel",
-        )
-        return checkout_session.url
-    except Exception as e:
-        st.error(f"Erreur Stripe : {e}")
-        return None
 
 def check_password():
     """Gère l'authentification et l'affichage de la page de login"""
     
     # 1. SI DÉJÀ CONNECTÉ
     if st.session_state.get("password_correct"):
-        # -- SI ADMIN : VEILLE BOSS (Via le nouveau service) --
+        # -- SI ADMIN : VEILLE BOSS (Via le service dédié) --
         if st.session_state.get("is_admin"):
              with st.expander("🔒 Espace Admin - Veille BOSS (RSS)", expanded=True):
                  
@@ -62,7 +44,7 @@ def check_password():
                      st.session_state.boss_alert_seen = False
                      
                  if not st.session_state.boss_alert_seen:
-                     # AFFICHE L'ALERTE (Appel au fichier services/boss_watcher.py)
+                     # AFFICHE L'ALERTE
                      st.markdown(check_boss_updates(), unsafe_allow_html=True)
                      
                      # BOUTON POUR MASQUER
@@ -114,12 +96,14 @@ def check_password():
             with col_sub1:
                 st.info("📅 **Mensuel**\n\nFlexibilité totale.")
                 if st.button("S'abonner (Mensuel)", use_container_width=True):
+                    # APPEL DU NOUVEAU SERVICE STRIPE
                     url = create_checkout_session("Mensuel")
                     if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
             
             with col_sub2:
                 st.success("🗓 **Annuel**\n\n2 mois offerts !")
                 if st.button("S'abonner (Annuel)", use_container_width=True):
+                    # APPEL DU NOUVEAU SERVICE STRIPE
                     url = create_checkout_session("Annuel")
                     if url: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
     
@@ -183,7 +167,7 @@ def get_gemini_response(query, context, user_doc_content=None):
     
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
 
-    # MODIFICATION : Structure inversée pour forcer le respect du format (Recency Bias)
+    # Prompt
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
@@ -209,7 +193,7 @@ def get_gemini_response(query, context, user_doc_content=None):
     chain = prompt | llm | StrOutputParser()
     response = chain.invoke({"context": context, "question": query})
     
-    # SÉCURITÉ ANTI-ERRATIQUE : Si l'IA oublie le tiret de séparation, on le force.
+    # SÉCURITÉ ANTI-ERRATIQUE
     if "Sources utilisées :" in response and "---" not in response[-500:]:
         response = response.replace("**Sources utilisées :**", "\n\n---\n**Sources utilisées :**")
         
