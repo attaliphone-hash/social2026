@@ -396,36 +396,37 @@ def get_gemini_response(query, context, user_doc_content=None):
     
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
 
-    # MODIFICATION ICI POUR CORRIGER LE FOOTER
+    # MODIFICATION : Structure inversée pour forcer le respect du format (Recency Bias)
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
-    
-    MISSION :
-    Réponds aux questions en t'appuyant EXCLUSIVEMENT sur les DOCUMENTS fournis.
-    
-    CONSIGNES D'AFFICHAGE STRICTES (ACCORD CLIENT) :
-    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises.
-       Format impératif : <sub>*[BOSS : Nom du document]*</sub> ou <sub>*[Document Utilisateur]*</sub>
-       INTERDICTION FORMELLE : Ne jamais mentionner "DATA_CLEAN/" ou des extensions comme ".pdf".
-    
-    2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
-       IMPORTANT : Insère 2 sauts de ligne (\n\n) avant de mettre la barre de séparation pour qu'elle s'affiche correctement.
-       Format attendu à la fin :
-       
-       [Fin du texte]
-       
-       ---
-       **Sources utilisées :**
-       * BOSS : [Nom du document]
     
     CONTEXTE :
     {context}
     """ + user_doc_section + """
-    QUESTION : 
-    {question}
+    
+    MISSION :
+    Réponds à la question suivante en t'appuyant EXCLUSIVEMENT sur les documents ci-dessus.
+    QUESTION : {question}
+    
+    CONSIGNES D'AFFICHAGE STRICTES :
+    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises (ex: <sub>*[BOSS : Barème]*</sub>).
+    
+    2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
+       Tu DOIS terminer ta réponse EXACTEMENT par ce bloc (avec la ligne de séparation) :
+       
+       ---
+       **Sources utilisées :**
+       * BOSS : [Nom du document]
+       * [Autre Source]
     """)
     chain = prompt | llm | StrOutputParser()
-    return chain.invoke({"context": context, "question": query})
+    response = chain.invoke({"context": context, "question": query})
+    
+    # SÉCURITÉ ANTI-ERRATIQUE : Si l'IA oublie le tiret de séparation, on le force.
+    if "Sources utilisées :" in response and "---" not in response[-500:]:
+        response = response.replace("**Sources utilisées :**", "\n\n---\n**Sources utilisées :**")
+        
+    return response
 
 # ==============================================================================
 # PARTIE 3 : L'INTERFACE UTILISATEUR (HEADER + CHAT)
