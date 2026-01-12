@@ -39,10 +39,24 @@ def load_ia_system():
 # ==============================================================================
 
 def build_context(query, vectorstore):
-    """Construction du contexte via Pinecone"""
-    raw_docs = vectorstore.similarity_search(query, k=20)
+    """
+    Construction du contexte via Pinecone.
+    OPTIMISATION V4 : Passage à k=12 pour équilibre précision/performance
+    """
+    # k=12 : Zone de sécurité (ni trop aveugle comme k=5, ni trop bruyant comme k=20)
+    raw_docs = vectorstore.similarity_search(query, k=12)
+    
     context_text = ""
+    seen_content = set() # Pour éviter les doublons parfaits et économiser des tokens
+    
     for d in raw_docs:
+        # Nettoyage du contenu (s'il y a des doublons exacts dans la base, on les saute)
+        content = d.page_content
+        if content in seen_content:
+            continue
+        seen_content.add(content)
+        
+        # Gestion propre du nom de la source
         raw_src = d.metadata.get('source', 'Source Inconnue')
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
         
@@ -50,7 +64,8 @@ def build_context(query, vectorstore):
         elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
         else: pretty_src = f"BOSS : {clean_name}"
         
-        context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
+        context_text += f"[DOCUMENT : {pretty_src}]\n{content}\n\n"
+        
     return context_text
 
 def get_gemini_response(query, context, llm, user_doc_content=None):
