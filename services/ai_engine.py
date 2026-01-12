@@ -41,13 +41,13 @@ def load_ia_system():
 def build_context(query, vectorstore):
     """
     Construction du contexte via Pinecone.
-    OPTIMISATION V4 : Passage à k=12 pour équilibre précision/performance
+    ROLLBACK V4 : Retour à k=20 pour garantir la précision juridique.
     """
-    # k=12 : Zone de sécurité (ni trop aveugle comme k=5, ni trop bruyant comme k=20)
-    raw_docs = vectorstore.similarity_search(query, k=12)
+    # k=20 : Nécessaire pour capter le Code du Travail ET les détails du BOSS
+    raw_docs = vectorstore.similarity_search(query, k=20)
     
     context_text = ""
-    seen_content = set() # Pour éviter les doublons parfaits et économiser des tokens
+    seen_content = set() # On garde l'optimisation anti-doublons
     
     for d in raw_docs:
         # Nettoyage du contenu (s'il y a des doublons exacts dans la base, on les saute)
