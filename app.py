@@ -6,8 +6,12 @@ import uuid
 import base64
 import requests
 import stripe
-import pypdf  # AJOUTÉ POUR LIRE LES FICHIERS UPLOADÉS
+import pypdf  # Pour lecture des fichiers uploadés
 from bs4 import BeautifulSoup
+
+# --- IMPORTS POUR LA GESTION DES DATES (VEILLE BOSS) ---
+from email.utils import parsedate_to_datetime
+from datetime import datetime, timezone
 
 # --- CHARGEMENT DES VARIABLES D'ENVIRONNEMENT ---
 from dotenv import load_dotenv
@@ -26,12 +30,12 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
-# PARTIE 0 : MODULE DE VEILLE BOSS (CORRIGÉ : COMPATIBLE PARTOUT)
+# PARTIE 0 : MODULE DE VEILLE BOSS INTELLIGENT (RSS + ALERTE 8 JOURS)
 # ==============================================================================
 def check_boss_updates():
     """
-    Scrape le FLUX RSS officiel (BOSS + Rescrits).
-    CORRECTIF : Utilise 'html.parser' pour éviter l'erreur 'lxml not found'.
+    Scrape le FLUX RSS officiel, récupère le LIEN et vérifie la DATE.
+    Affiche une ALERTE ROUGE si < 8 jours, sinon un message VERT (R.A.S).
     URL : https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss
     """
     try:
@@ -41,29 +45,53 @@ def check_boss_updates():
         response = requests.get(url, headers=headers, timeout=5)
         
         if response.status_code == 200:
-            # ON UTILISE LE PARSER STANDARD (html.parser) QUI EST TOUJOURS DISPO
+            # Utilisation de html.parser pour compatibilité maximale
             soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # On cherche le premier <item>
             latest_item = soup.find('item')
             
             if latest_item:
-                # Avec html.parser, les tags sont parfois mis en minuscule
-                # On sécurise la recherche du titre
+                # 1. Extraction des infos (Sécurisée)
                 title_tag = latest_item.find('title')
                 title = title_tag.text.strip() if title_tag else "Titre inconnu"
                 
-                # On sécurise la recherche de la date (pubDate ou pubdate)
-                date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
-                pub_date = date_tag.text.strip() if date_tag else "Date inconnue"
+                link_tag = latest_item.find('link')
+                link = link_tag.text.strip() if link_tag else "#"
                 
-                return f"📢 ALERTE BOSS : {title} ({pub_date})"
+                # Le tag date peut varier (pubDate ou pubdate selon le parser)
+                date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
+                
+                # 2. Analyse de la fraicheur de l'info
+                if date_tag:
+                    try:
+                        # Conversion de la date RSS en date Python
+                        pub_date_obj = parsedate_to_datetime(date_tag.text.strip())
+                        now = datetime.now(timezone.utc)
+                        
+                        # Calcul de l'ancienneté
+                        delta = now - pub_date_obj
+                        days_old = delta.days
+                        
+                        date_str = pub_date_obj.strftime("%d/%m/%Y")
+                        
+                        # 3. Logique de décision (SEUIL FIXÉ À 8 JOURS)
+                        if days_old < 8:
+                            # C'est RÉCENT (< 8 jours) -> ALERTE ROUGE CLIQUABLE
+                            return f"🚨 **NOUVELLE MISE À JOUR BOSS ({date_str})** : [{title}]({link}) (Il y a {days_old} jours)"
+                        else:
+                            # C'est ANCIEN (> 8 jours) -> INFO VERTE
+                            return f"✅ **Veille BOSS (R.A.S)** : Dernière actu du {date_str} : [{title}]({link})"
+                            
+                    except:
+                        # En cas d'échec calcul date, on affiche l'info brute
+                        return f"📢 ALERTE BOSS : [{title}]({link}) ({date_tag.text})"
+                
+                return f"📢 ALERTE BOSS : [{title}]({link})"
             
-            return "✅ Veille BOSS : Aucune actualité récente détectée dans le flux RSS."
+            return "✅ Veille BOSS : Aucune actualité détectée."
             
-        return "⚠️ Flux RSS BOSS inaccessible (Erreur serveur)."
+        return "⚠️ Flux RSS inaccessible."
     except Exception as e:
-        return f"⚠️ Erreur lecture Flux RSS : {e}"
+        return f"⚠️ Erreur Module Veille : {e}"
 
 # ==============================================================================
 # PARTIE 1 : DESIGN & UTILITAIRES
