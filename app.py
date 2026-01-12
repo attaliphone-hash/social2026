@@ -168,13 +168,13 @@ def show_legal_info():
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
-    Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
-    Contact : support@socialexpertfrance.fr<br><br>
+    Le site <em>socialexpertfrance.fr</em> est édité par la BUSINESS AGENT AI.<br>
+    Contact : sylvain.attal@businessagent-ai.com<br><br>
     <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
     L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
-    Toute reproduction même partielle est interdite sans autorisation.<br><br>
+    L'architecture, le code et le design sont la propriété exclusive de BUSINESS AGENT AI®. La réutilisation des réponses générées est autorisée dans le cadre de vos missions professionnelles.<br><br>
     <strong>RESPONSABILITÉ :</strong><br>
-    Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique.
+    Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique. L'utilisateur de l'application doit en toute circonstance vérifier les réponses de l'IA qui n'engagent pas l'éditeur de l'application
 </div>
 """, unsafe_allow_html=True)
             
