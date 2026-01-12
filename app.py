@@ -55,7 +55,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    # CSS EXACT + CSS UPLOAD DISCRET
+    # CSS EXACT + CSS UPLOAD DISCRET + TRADUCTION BOUTON
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -68,8 +68,7 @@ def apply_pro_design():
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
         
-        /* --- CSS UPLOAD DISCRET (NOUVEAU) --- */
-        /* Supprime le cadre gris et le texte 'Drag and drop' */
+        /* --- CSS UPLOAD DISCRET & TRADUIT --- */
         .stFileUploader section {
             background-color: transparent !important;
             border: none !important;
@@ -83,14 +82,30 @@ def apply_pro_design():
             padding: 0 !important;
             margin: 0 !important;
         }
-        /* Style du bouton Browse pour qu'il s'aligne avec 'Nouvelle Session' */
+        
+        /* REECRITURE DU TEXTE DU BOUTON (HACK CSS) */
         .stFileUploader button {
             border: 1px solid #ccc !important;
             background-color: white !important;
-            color: #333 !important;
+            color: transparent !important; /* On cache le texte 'Browse files' */
             padding: 0.25rem 0.75rem !important;
             font-size: 14px !important;
-            margin-top: 3px !important; /* Petit ajustement pour alignement vertical */
+            margin-top: 3px !important;
+            position: relative;
+            width: 160px !important; /* Largeur fixe pour accueillir le texte français */
+        }
+        
+        /* On écrit le nouveau texte par-dessus */
+        .stFileUploader button::after {
+            content: "Charger un document pour analyse";
+            color: #333 !important;
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 500;
         }
         
         /* CITATIONS (sub) - Style Expert Social */
@@ -153,8 +168,8 @@ def show_legal_info():
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
-    Le site <em>socialexpertfrance.fr</em> est édité par BUSINESS AGENT AI.<br>
-    Contact : sylvain.attal@businessagent-ai.com<br><br>
+    Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
+    Contact : support@socialexpertfrance.fr<br><br>
     <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
     L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
     Toute reproduction même partielle est interdite sans autorisation.<br><br>
@@ -168,10 +183,10 @@ def show_legal_info():
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>CONFIDENTIALITÉ TOTALE :</strong><br>
-    1. <strong>Aucun Stockage :</strong> Aucun cookie n'est déposé. Traitement volatil en RAM. Données détruites après la réponse.<br>
+    1. <strong>Aucun Stockage :</strong> Traitement volatil en RAM. Données détruites après la réponse. Aucun cookie n'est déposé<br>
     2. <strong>Pas d'Entraînement IA :</strong> Vos données ne servent jamais à entraîner les modèles.<br>
-    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serveurs.<br><br>
-    <em>Conformité RGPD : Droit à l'oubli garanti par défaut (Pas de cookie déposé).</em>
+    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serverurs.<br><br>
+    <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
 </div>
 """, unsafe_allow_html=True)
 
@@ -350,7 +365,7 @@ with col_buttons:
     c_up, c_new = st.columns([1, 1])
     
     with c_up:
-        # BOUTON UPLOAD (CSS le rend discret)
+        # BOUTON UPLOAD (CSS le rend discret et traduit)
         uploaded_file = st.file_uploader("Upload", type=["pdf", "txt"], label_visibility="collapsed")
     
     with c_new:
