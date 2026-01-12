@@ -25,7 +25,7 @@ if not check_password():
     st.stop()
 
 # ==============================================================================
-# PARTIE 2 : LE CERVEAU (DIRECTEMENT DANS APP.PY COMME AVANT)
+# PARTIE 2 : LE CERVEAU (DIRECTEMENT DANS APP.PY)
 # ==============================================================================
 apply_pro_design()
 
@@ -73,11 +73,11 @@ def build_context(query):
     return context_text
 
 def get_gemini_response(query, context, user_doc_content=None):
-    """Prompt Hybride - VERSION GOLDEN DIRECTE"""
+    """Prompt Hybride - VERSION GOLDEN + REFERENCES PRECISES"""
     
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
 
-    # PROMPT EXACT DE LA GOLDEN APP
+    # PROMPT AJUSTÉ : On demande les articles dans le FORMAT et non dans la MISSION
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
@@ -85,14 +85,16 @@ def get_gemini_response(query, context, user_doc_content=None):
     Réponds aux questions en t'appuyant EXCLUSIVEMENT sur les DOCUMENTS fournis.
     
     CONSIGNES D'AFFICHAGE STRICTES (ACCORD CLIENT) :
-    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises.
-        Format impératif : <sub>*[BOSS : Nom du document]*</sub> ou <sub>*[Document Utilisateur]*</sub>
-        INTERDICTION FORMELLE : Ne jamais mentionner "DATA_CLEAN/" ou des extensions comme ".pdf".
+    1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour sourcer tes propos.
+        * Règle d'or : Si le texte source contient un numéro d'article (ex: Art. L.3121-1), tu DOIS l'inclure dans la balise.
+        * Format Code du Travail : <sub>*[C. Trav : Art. L.XXXX]*</sub>
+        * Format BOSS : <sub>*[BOSS : Nom fiche]*</sub>
+        * Format Document : <sub>*[Document Utilisateur]*</sub>
+        * INTERDICTION : Ne jamais mettre "DATA_CLEAN" ou ".pdf".
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
-        À la toute fin de ta réponse, ajoute une ligne de séparation "---".
-        Puis écris "**Sources utilisées :**" en gras.
-        Liste chaque source ainsi : "* BOSS : [Nom du document]"
+        Termine ta réponse par une ligne de séparation "---", puis "**Sources utilisées :**".
+        Liste les sources avec leurs références précises (ex: * Code du Travail : Art. L.1234-9).
     
     CONTEXTE :
     {context}
@@ -162,7 +164,6 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
         else:
             wait_msg = "🔍 Analyse..." if user_doc_text else "🔍 Recherche juridique..."
             with st.spinner(wait_msg):
-                # Appel direct des fonctions locales
                 context = build_context(query)
                 gemini_response = get_gemini_response(query, context, user_doc_content=user_doc_text)
                 
