@@ -26,24 +26,39 @@ from langchain_core.output_parsers import StrOutputParser
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
 # ==============================================================================
-# PARTIE 0 : MODULE DE VEILLE BOSS (STRICTEMENT CELUI FOURNI)
+# PARTIE 0 : MODULE DE VEILLE BOSS (VIA FLUX RSS OFFICIEL)
 # ==============================================================================
 def check_boss_updates():
-    """Scrape le site du BOSS pour vérifier les mises à jour récentes"""
+    """
+    Scrape le FLUX RSS officiel (BOSS + Rescrits) pour une fiabilité maximale.
+    URL : https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss
+    """
     try:
-        url = "https://boss.gouv.fr/portail/accueil.html"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
-        response = requests.get(url, headers=headers, timeout=5) # Timeout court pour ne pas ralentir
+        url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        
+        # On récupère le fichier XML du flux
+        response = requests.get(url, headers=headers, timeout=5)
+        
         if response.status_code == 200:
-            soup = BeautifulSoup(response.text, 'html.parser')
-            actualites = soup.find_all('p')
-            for p in actualites:
-                if "mise à jour" in p.text.lower():
-                    return f"📢 ALERTE BOSS : {p.text.strip()}"
-            return "✅ Veille BOSS : Aucune mise à jour détectée ce jour (Base 2026 à jour)."
-        return "⚠️ Serveur BOSS injoignable pour vérification."
-    except:
-        return "⚠️ Module de veille BOSS temporairement indisponible."
+            # On utilise 'xml' pour parser le flux proprement
+            soup = BeautifulSoup(response.content, 'xml')
+            
+            # On cherche le premier <item> (l'actualité la plus récente)
+            latest_item = soup.find('item')
+            
+            if latest_item:
+                title = latest_item.title.text.strip()
+                pub_date = latest_item.pubDate.text.strip()
+                # On retourne le titre et la date brute fournie par le flux
+                return f"📢 ALERTE BOSS : {title} ({pub_date})"
+            
+            return "✅ Veille BOSS : Aucune actualité récente détectée dans le flux RSS."
+            
+        return "⚠️ Flux RSS BOSS inaccessible (Erreur serveur)."
+    except Exception as e:
+        # Fallback silencieux ou message d'erreur technique
+        return f"⚠️ Erreur lecture Flux RSS : {e}"
 
 # ==============================================================================
 # PARTIE 1 : DESIGN & UTILITAIRES
@@ -215,7 +230,7 @@ def check_password():
     if st.session_state.get("password_correct"):
         # -- SI ADMIN : VEILLE BOSS --
         if st.session_state.get("is_admin"):
-             with st.expander("🔒 Espace Admin - Veille BOSS", expanded=True):
+             with st.expander("🔒 Espace Admin - Veille BOSS (RSS)", expanded=True):
                  st.info(check_boss_updates())
         return True
     
