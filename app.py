@@ -6,6 +6,7 @@ import uuid
 import base64
 import requests
 import stripe
+import pypdf  # AJOUT POUR LECTURE PDF
 from bs4 import BeautifulSoup
 
 # --- CHARGEMENT DES VARIABLES D'ENVIRONNEMENT ---
@@ -54,7 +55,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    # CSS EXACT (V3 + CORRECTIF MOBILE RÉINTÉGRÉ)
+    # CSS EXACT (V3 + CORRECTIF MOBILE RÉINTÉGRÉ + CSS UPLOAD COMPACT)
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -67,6 +68,26 @@ def apply_pro_design():
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
         
+        /* DESIGN DU BOUTON UPLOAD COMPACT */
+        .stFileUploader {
+            padding-top: 0px;
+            padding-bottom: 0px;
+        }
+        .stFileUploader section {
+            padding: 0.3rem !important;
+            min-height: 40px !important;
+            background-color: transparent !important;
+            border: 1px dashed #cccccc !important;
+        }
+        /* Cache le label "Choose a file" pour gagner de la place */
+        .stFileUploader label {
+            display: none;
+        }
+        /* Petite icône trombone ou texte upload */
+        .stFileUploader div[data-testid="stFileUploaderDropzoneInstructions"] {
+            font-size: 0.8rem;
+        }
+
         /* CITATIONS (sub) - Style Expert Social */
         sub {
             font-size: 0.75em !important;
@@ -281,26 +302,44 @@ def build_context(query):
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
     return context_text
 
-def get_gemini_response(query, context):
-    """Prompt Hybride : Force l'IA à ignorer les chemins techniques et à utiliser le format convenu"""
+def get_gemini_response(query, context, user_doc_content=None):
+    """Prompt Hybride : Force l'IA à utiliser le document utilisateur SI présent + BOSS"""
+    
+    # Intégration conditionnelle du document utilisateur
+    user_doc_section = ""
+    if user_doc_content:
+        user_doc_section = f"""
+        --- DOCUMENT FOURNI PAR L'UTILISATEUR (A ANALYSER AVEC PRIORITÉ) ---
+        L'utilisateur a joint ce document pour analyse spécifique. Compare-le aux règles officielles.
+        CONTENU DU DOCUMENT UTILISATEUR :
+        {user_doc_content}
+        -------------------------------------------------------------------
+        """
+
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro 2026.
     
     MISSION :
     Réponds aux questions en t'appuyant EXCLUSIVEMENT sur les DOCUMENTS fournis.
     
+    INSTRUCTIONS SPÉCIFIQUES :
+    1. Si un 'DOCUMENT FOURNI PAR L'UTILISATEUR' est présent, analyse-le en priorité.
+    2. Si le document utilisateur contient une clause illégale au regard du BOSS, signale-le clairement.
+    
     CONSIGNES D'AFFICHAGE STRICTES (ACCORD CLIENT) :
     1. CITATIONS DANS LE TEXTE : Utilise la balise HTML <sub> pour les citations précises.
-       Format impératif : <sub>*[BOSS : Nom du document]*</sub>
+       Format impératif : <sub>*[BOSS : Nom du document]*</sub> ou <sub>*[Document Utilisateur]*</sub>
        INTERDICTION FORMELLE : Ne jamais mentionner "DATA_CLEAN/" ou des extensions comme ".pdf".
     
     2. FOOTER RÉCAPITULATIF (OBLIGATOIRE) :
        À la toute fin de ta réponse, ajoute une ligne de séparation "---".
        Puis écris "**Sources utilisées :**" en gras.
-       Liste chaque source ainsi : "* BOSS : [Nom du document]"
+       Liste chaque source ainsi : "* BOSS : [Nom du document]" ou "* Document Utilisateur"
     
-    CONTEXTE :
+    CONTEXTE JURIDIQUE OFFICIEL (BOSS/CODE) :
     {context}
+    
+    """ + user_doc_section + """
     
     QUESTION : 
     {question}
@@ -330,12 +369,35 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)
 
+# --- ZONE D'UPLOAD ET SAISIE ---
+# On utilise des colonnes pour aligner le bouton d'upload à gauche juste au-dessus du chat
+col_upload, _ = st.columns([1, 4])
+with col_upload:
+    uploaded_file = st.file_uploader("Joindre doc", type=["pdf", "txt"], label_visibility="collapsed")
+
+# Traitement du fichier uploadé (Extraction de texte)
+user_doc_text = None
+if uploaded_file:
+    try:
+        if uploaded_file.type == "application/pdf":
+            pdf_reader = pypdf.PdfReader(uploaded_file)
+            user_doc_text = "\n".join([page.extract_text() for page in pdf_reader.pages if page.extract_text()])
+        else: # txt
+            user_doc_text = uploaded_file.read().decode("utf-8")
+        
+        # Petit indicateur discret que le fichier est pris en compte
+        st.toast(f"📎 Document '{uploaded_file.name}' prêt pour analyse.", icon="✅")
+    except Exception as e:
+        st.error(f"Erreur de lecture du fichier : {e}")
+
 # Zone de Saisie & Traitement
 if query := st.chat_input("Votre question juridique ou chiffrée..."):
     
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
+        if uploaded_file:
+            st.markdown(f"<sub>📎 *Pièce jointe : {uploaded_file.name}*</sub>", unsafe_allow_html=True)
 
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
@@ -347,20 +409,24 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             "?" in query 
             or any(m in query.lower() for m in markers) 
             or len(query.split()) > 7 
+            or user_doc_text is not None # SI FICHIER PRÉSENT, ON PASSE TOUJOURS PAR L'IA
         )
 
         verdict = {"found": False}
-        if not is_conversational:
+        if not is_conversational and not user_doc_text:
             verdict = engine.get_formatted_answer(keywords=query)
         
         if verdict["found"]:
             full_response = f"{verdict['text']}\n\n---\n**Sources utilisées :**\n* {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         else:
-            # --- ETAPE 2 : IA GENERATIVE (GEMINI + PINECONE) ---
-            with st.spinner("🔍 Analyse juridique et recherche des articles..."):
+            # --- ETAPE 2 : IA GENERATIVE (GEMINI + PINECONE + FICHIER USER) ---
+            wait_msg = "🔍 Analyse de votre document et des textes officiels..." if user_doc_text else "🔍 Analyse juridique et recherche des articles..."
+            
+            with st.spinner(wait_msg):
                 context = build_context(query)
-                gemini_response = get_gemini_response(query, context)
+                # On passe le contenu du doc utilisateur à la fonction IA
+                gemini_response = get_gemini_response(query, context, user_doc_content=user_doc_text)
                 full_response = gemini_response
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
