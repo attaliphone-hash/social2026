@@ -153,8 +153,8 @@ def show_legal_info():
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>ÉDITEUR :</strong><br>
-    Le site <em>socialexpertfrance.fr</em> est édité par la Direction Expert Social Pro.<br>
-    Contact : support@socialexpertfrance.fr<br><br>
+    Le site <em>socialexpertfrance.fr</em> est édité par BUSINESS AGENT AI.<br>
+    Contact : sylvain.attal@businessagent-ai.com<br><br>
     <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
     L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
     Toute reproduction même partielle est interdite sans autorisation.<br><br>
@@ -168,10 +168,10 @@ def show_legal_info():
             st.markdown("""
 <div style='font-size: 11px; color: #444; line-height: 1.4;'>
     <strong>CONFIDENTIALITÉ TOTALE :</strong><br>
-    1. <strong>Aucun Stockage :</strong> Traitement volatil en RAM. Données détruites après la réponse. Aucun cookie n'est déposé<br>
+    1. <strong>Aucun Stockage :</strong> Aucun cookie n'est déposé. Traitement volatil en RAM. Données détruites après la réponse.<br>
     2. <strong>Pas d'Entraînement IA :</strong> Vos données ne servent jamais à entraîner les modèles.<br>
-    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serverurs.<br><br>
-    <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
+    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serveurs.<br><br>
+    <em>Conformité RGPD : Droit à l'oubli garanti par défaut (Pas de cookie déposé).</em>
 </div>
 """, unsafe_allow_html=True)
 
