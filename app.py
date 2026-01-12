@@ -45,16 +45,28 @@ with col_buttons:
             st.session_state.messages = []
             st.rerun()
 
-# Gestion du document uploadé
+# Gestion du document uploadé (ROBUSTESSE AJOUTÉE)
 user_doc_text = None
 if uploaded_file:
     try:
         if uploaded_file.type == "application/pdf":
             reader = pypdf.PdfReader(uploaded_file)
-            user_doc_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            extracted_text = []
+            for p in reader.pages:
+                text = p.extract_text()
+                if text:
+                    extracted_text.append(text)
+            user_doc_text = "\n".join(extracted_text)
         else:
             user_doc_text = uploaded_file.read().decode("utf-8")
-        st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
+        
+        # --- VERIFICATION ANTI-SCAN ---
+        if not user_doc_text or len(user_doc_text.strip()) < 50:
+            st.error("⚠️ ATTENTION : Ce document semble vide ou scanné (image). L'IA ne peut pas le lire. Veuillez utiliser un PDF avec du texte sélectionnable.")
+            user_doc_text = None # On annule la prise en compte pour ne pas tromper l'IA
+        else:
+            st.toast(f"📎 {uploaded_file.name} analysé ({len(user_doc_text)} caractères)", icon="✅")
+            
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
 
@@ -69,13 +81,14 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
-        if uploaded_file: st.markdown(f"<sub>📎 *Analyse incluant : {uploaded_file.name}*</sub>", unsafe_allow_html=True)
+        if user_doc_text: # On affiche le clip uniquement si le texte a été validé
+            st.markdown(f"<sub>📎 *Analyse incluant : {uploaded_file.name}*</sub>", unsafe_allow_html=True)
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
         
         # Routeur d'intention
-        is_conversational = ("?" in query or len(query.split()) > 7 or uploaded_file)
+        is_conversational = ("?" in query or len(query.split()) > 7 or user_doc_text)
         verdict = {"found": False}
         if not is_conversational: 
             verdict = engine.get_formatted_answer(keywords=query)
@@ -84,7 +97,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             full_response = f"{verdict['text']}\n\n---\n**Sources utilisées :**\n* {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         else:
-            wait_msg = "🔍 Analyse..." if uploaded_file else "🔍 Recherche juridique..."
+            wait_msg = "🔍 Analyse..." if user_doc_text else "🔍 Recherche juridique..."
             with st.spinner(wait_msg):
                 # On passe vectorstore et llm en arguments car ils sont chargés ici
                 context = build_context(query, vectorstore)
