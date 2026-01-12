@@ -202,7 +202,7 @@ ARGUMENTS_UNIFIES = [
     ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
     ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
     ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Aucun cookie déposéVos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
+    ("Confidentialité Garantie :", " Aucun cookie déposé. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais stockées, ni utilisées pour entraîner des modèles d'IA.")
 ]
 
 def render_top_columns():
@@ -238,7 +238,7 @@ def show_legal_info():
     <strong>CONFIDENTIALITÉ TOTALE :</strong><br>
     1. <strong>Aucun Stockage :</strong> Traitement volatil en RAM. Données détruites après la réponse. Aucun cookie n'est déposé<br>
     2. <strong>Pas d'Entraînement IA :</strong> Vos données ne servent jamais à entraîner les modèles.<br>
-    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serverurs.<br><br>
+    3. <strong>Sécurité Stripe :</strong> Aucune donnée bancaire ne transite par nos serveurs.<br><br>
     <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
 </div>
 """, unsafe_allow_html=True)
@@ -286,7 +286,7 @@ def check_password():
                              st.rerun()
                  else:
                      # MESSAGE COURT QUAND MASQUÉ
-                     st.success("✅ Alerte masquée")
+                     st.success("✅ Alerte lue")
                      if st.button("Réafficher la veille"):
                          st.session_state.boss_alert_seen = False
                          st.rerun()
@@ -508,7 +508,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         else:
             # --- ETAPE 2 : IA GENERATIVE (GEMINI + PINECONE) ---
-            wait_msg = "🔍 Analyse de votre document et des textes..." if user_doc_text else "🔍 Analyse juridique et recherche des articles..."
+            wait_msg = "🔍 Analyse de votre document et des textes..." if user_doc_text else "🔍 Analyse juridique et recherche des références..."
             with st.spinner(wait_msg):
                 context = build_context(query)
                 # On passe le doc utilisateur à la fonction
