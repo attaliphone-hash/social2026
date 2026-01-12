@@ -92,7 +92,7 @@ def apply_pro_design():
             font-size: 14px !important;
             margin-top: 3px !important;
             position: relative;
-            width: 160px !important; /* Largeur fixe pour accueillir le texte français */
+            width: 250px !important; /* Largeur fixe pour accueillir le texte français */
         }
         
         /* On écrit le nouveau texte par-dessus */
@@ -355,14 +355,16 @@ st.markdown("<hr>", unsafe_allow_html=True)
 
 # Titre Principal et Boutons (MODIFICATION PLACEMENT UPLOAD)
 # On donne un peu plus de place à droite pour les deux boutons
-col_t, col_buttons = st.columns([3.5, 1.5]) 
+# MODIFICATION : On passe à [3, 2] pour donner plus d'espace au bloc de droite
+col_t, col_buttons = st.columns([3, 2]) 
 
 with col_t: 
     st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
 
 with col_buttons:
-    # Sous-colonnes pour aligner : Upload | Nouvelle Session
-    c_up, c_new = st.columns([1, 1])
+    # MODIFICATION : On donne plus de largeur à l'upload (1.6) qu'à la session (1)
+    # Cela permet au long texte "Charger un document..." de tenir sans écraser le voisin
+    c_up, c_new = st.columns([1.6, 1])
     
     with c_up:
         # BOUTON UPLOAD (CSS le rend discret et traduit)
