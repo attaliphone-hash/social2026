@@ -210,6 +210,10 @@ st.markdown("<hr>", unsafe_allow_html=True)
 if st.session_state.get("user_email") == "ADMINISTRATEUR":
     show_boss_alert()
 
+# --- RETOUR DES COLONNES ARGUMENTS (POST-LOGIN) ---
+render_top_columns()
+st.markdown("<br>", unsafe_allow_html=True)
+
 col_t, col_buttons = st.columns([3, 2]) 
 with col_t: 
     st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
