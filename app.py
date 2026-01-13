@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# --- IMPORTS UI (Ajout de render_subscription_cards) ---
+# --- IMPORTS UI ---
 from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
@@ -33,12 +33,23 @@ supabase: Client = create_client(url, key)
 # Configuration Stripe
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 
-# --- FONCTION ROBUSTE (Issue de boss_watcher.py) ---
+# --- FONCTION PORTAIL CLIENT STRIPE ---
+def manage_subscription_link(email):
+    try:
+        customers = stripe.Customer.list(email=email, limit=1)
+        if customers and len(customers.data) > 0:
+            customer_id = customers.data[0].id
+            session = stripe.billing_portal.Session.create(
+                customer=customer_id,
+                return_url="https://socialexpertfrance.fr" 
+            )
+            return session.url
+    except Exception as e:
+        print(f"Erreur Stripe Portal: {e}")
+    return None
+
+# --- FONCTION ROBUSTE (Veille BOSS) ---
 def get_boss_status_html():
-    """
-    Scrape le FLUX RSS avec extraction ROBUSTE (Regex) pour le lien.
-    Renvoie du HTML prêt à l'emploi.
-    """
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
         headers = {"User-Agent": "Mozilla/5.0"}
@@ -87,7 +98,6 @@ def get_boss_status_html():
     except Exception:
         return "", ""
 
-# --- FONCTION D'AFFICHAGE AVEC BOUTON "FERMER" ---
 def show_boss_alert():
     if "news_closed" not in st.session_state:
         st.session_state.news_closed = False
@@ -116,7 +126,6 @@ def check_password():
 
     st.markdown("<h2 style='text-align: center; color: #024c6f;'>Expert Social Pro - Accès</h2>", unsafe_allow_html=True)
     
-    # Rendu des colonnes de réassurance
     render_top_columns()
     st.markdown("---")
 
@@ -139,12 +148,10 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
         
-        # --- APPEL PROPRE À LA FONCTION DE DESIGN ---
         link_month = "https://checkout.stripe.com/c/pay/cs_live_a1YuxowVQDoKMTBPa1aAK7S8XowoioMzray7z6oruWL2r1925Bz0NdVA6M#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
         link_year = "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
         
         render_subscription_cards(link_month, link_year)
-        # -----------------------------------------------
 
     with tab2:
         st.caption("Code d'accès personnel")
@@ -182,17 +189,24 @@ def load_ia_system():
 engine = load_engine()
 vectorstore, llm = load_ia_system()
 
+# --- MODIFICATION ICI : On renvoie aussi la liste des sources ! ---
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=20)
     context_text = ""
+    used_sources = set() # Set pour dédoublonner les sources
+    
     for d in raw_docs:
         raw_src = d.metadata.get('source', 'Source Inconnue')
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
+        
         if "REF" in clean_name: pretty_src = "Barème Officiel"
         elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
         else: pretty_src = f"BOSS : {clean_name}"
+        
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
-    return context_text
+        used_sources.add(pretty_src)
+        
+    return context_text, list(used_sources) # <-- On renvoie le texte ET les sources
 
 def get_gemini_response_stream(query, context, user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
@@ -203,14 +217,26 @@ def get_gemini_response_stream(query, context, user_doc_content=None):
     chain = prompt | llm | StrOutputParser()
     return chain.stream({"context": context, "question": query})
 
-# --- 4. INTERFACE DE CHAT ---
+# --- 4. INTERFACE DE CHAT ET SIDEBAR ---
+
+# GESTION DU COMPTE
+user_email = st.session_state.get("user_email", "")
+if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
+    with st.sidebar:
+        st.markdown("### 👤 Mon Compte")
+        st.write(f"Connecté : {user_email}")
+        if st.button("💳 Gérer mon abonnement", help="Factures, changement de carte, désabonnement"):
+            portal_url = manage_subscription_link(user_email)
+            if portal_url:
+                st.link_button("👉 Accéder au portail Stripe", portal_url)
+            else:
+                st.info("Aucun abonnement actif trouvé.")
+
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# VEILLE BOSS : Uniquement si c'est l'ADMINISTRATEUR qui est connecté
-if st.session_state.get("user_email") == "ADMINISTRATEUR":
+if user_email == "ADMINISTRATEUR":
     show_boss_alert()
 
-# --- RETOUR DES COLONNES ARGUMENTS (POST-LOGIN) ---
 render_top_columns()
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -261,11 +287,22 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         else:
             with st.spinner("Analyse en cours..."):
-                context = build_context(query)
+                # 1. On récupère le texte ET les sources
+                context_text, sources_list = build_context(query)
+                
                 full_response = ""
-                for chunk in get_gemini_response_stream(query, context, user_doc_content=user_doc_text):
+                # 2. On streame la réponse de l'IA
+                for chunk in get_gemini_response_stream(query, context_text, user_doc_content=user_doc_text):
                     full_response += chunk
                     message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
+                
+                # 3. À la fin, on ajoute le footer des sources
+                if sources_list:
+                    footer = "\n\n---\n**📚 Sources analysées :**\n"
+                    for src in sorted(sources_list):
+                        footer += f"* {src}\n"
+                    full_response += footer
+                
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
