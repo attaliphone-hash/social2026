@@ -5,9 +5,20 @@ import stripe
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+# --- IMPORTS UI (DÉPLACÉS EN HAUT POUR CHARGER LE STYLE IMMÉDIATEMENT) ---
+from ui.styles import apply_pro_design, show_legal_info, render_top_columns
+from rules.engine import SocialRuleEngine
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_pinecone import PineconeVectorStore
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
+
+# --- APPLICATION DU DESIGN PRO (IMMÉDIATEMENT APRES LA CONFIG) ---
+apply_pro_design()
 
 # Connexion Supabase
 url = os.getenv("SUPABASE_URL")
@@ -25,7 +36,12 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
+    # ENTÊTE DE LA PAGE DE CONNEXION
     st.markdown("<h2 style='text-align: center; color: #024c6f;'>Expert Social Pro - Accès</h2>", unsafe_allow_html=True)
+    
+    # AFFICHAGE DES ARGUMENTS (LES COLONNES)
+    render_top_columns()
+    st.markdown("---")
     
     tab1, tab2 = st.tabs(["🔐 Espace Client Abonnés", "🎁 Accès Promotionnel / Admin"])
 
@@ -72,16 +88,7 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- 3. IMPORTS DES MODULES FIABLES ---
-from ui.styles import apply_pro_design, show_legal_info
-from rules.engine import SocialRuleEngine
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from langchain_pinecone import PineconeVectorStore
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-
-apply_pro_design()
-
+# --- 3. CHARGEMENT MOTEUR IA ---
 @st.cache_resource
 def load_engine():
     return SocialRuleEngine()
@@ -120,6 +127,10 @@ def get_gemini_response_stream(query, context, user_doc_content=None):
 
 # --- 4. INTERFACE DE CHAT ---
 st.markdown("<hr>", unsafe_allow_html=True)
+
+# OPTIONNEL : Si tu veux les colonnes aussi sur la page principale, décommente la ligne ci-dessous :
+# render_top_columns() 
+
 col_t, col_buttons = st.columns([3, 2]) 
 with col_t: 
     st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
