@@ -6,7 +6,7 @@
 # 1. CHIFFRES CLÉS & PLAFONDS (SOURCES : JO / BOSS / URSSAF)
 # -------------------------------------------------------------------------
 - id: PASS_2026
-  keywords: ["pass", "pmss", "plafond securite sociale"]
+  keywords: ["pass", "pmss", "plafond", "securite sociale", "sécurité sociale", "plafond mensuel"]
   valeurs:
     annuel: 48060
     mensuel: 4005
@@ -15,7 +15,7 @@
   text: "Le Plafond Mensuel de la Sécurité Sociale (PMSS) 2026 est officiellement de 4 005 € (48 060 € par an)."
 
 - id: SMIC_2026
-  keywords: ["smic", "smic horaire", "salaire minimum"]
+  keywords: ["smic", "smic horaire", "salaire minimum", "smic mensuel", "smic brut"]
   valeurs:
     horaire: 12.02
     mensuel_35h: 1823.03
@@ -23,7 +23,7 @@
   text: "Au 1er janvier 2026, le SMIC est de 12,02 € brut/heure, soit 1 823,03 € brut mensuel (35h)."
 
 - id: MG_2026
-  keywords: ["mg", "minimum garanti"]
+  keywords: ["mg", "minimum garanti", "valeur du mg"]
   valeurs:
     montant: 4.25
   source: "Barème URSSAF 2026"
@@ -33,7 +33,7 @@
 # 2. AVANTAGES EN NATURE & FRAIS
 # -------------------------------------------------------------------------
 - id: AVN_REPAS_2026
-  keywords: ["repas", "nourriture", "avantage en nature repas"]
+  keywords: ["repas", "nourriture", "avantage en nature repas", "avantage nourriture"]
   valeurs:
     un_repas: 5.50
     deux_repas: 11.00
@@ -41,14 +41,14 @@
   text: "L'avantage en nature nourriture est maintenu à 5,50 € par repas en 2026 (sauf HCR : 4,25 €)."
 
 - id: TICKET_RESTO_2026
-  keywords: ["ticket resto", "titre restaurant"]
+  keywords: ["ticket resto", "titre restaurant", "titres-restaurant", "cheque dejeuner"]
   valeurs:
     plafond_exonération: 7.32
   source: "Mise à jour URSSAF / BOSS Janvier 2026"
   text: "La limite d'exonération de la part patronale des titres-restaurant est de 7,32 € en 2026."
 
 - id: AVN_VEHICULE_ELEC_2026
-  keywords: ["vehicule electrique", "abattement electrique"]
+  keywords: ["vehicule electrique", "véhicule électrique", "abattement electrique", "voiture electrique"]
   valeurs:
     plafond_abattement: 2003.00
   source: "URSSAF 2026 (Plafond indexé sur le PASS)"
@@ -58,15 +58,45 @@
 # 3. STAGES & SAISIES
 # -------------------------------------------------------------------------
 - id: GRATIFICATION_STAGE_2026
-  keywords: ["stage", "stagiaire", "gratification minimale"]
+  keywords: ["stage", "stagiaire", "gratification minimale", "indemnité stage"]
   valeurs:
     taux_horaire: 4.50
   source: "Service-Public 2026 (15% du plafond horaire SS)"
   text: "La gratification minimale des stagiaires passe à 4,50 € par heure au 1er janvier 2026."
 
 - id: SBI_2026
-  keywords: ["sbi", "solde bancaire insaisissable"]
+  keywords: ["sbi", "solde bancaire insaisissable", "solde bancaire", "saisie salaire"]
   valeurs:
     montant: 645.50
   source: "Barème Saisie 2026"
   text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 645,50 € pour 2026."
+
+# -------------------------------------------------------------------------
+# 4. FRAIS DE SANTÉ (MUTUELLE) & PRÉVOYANCE
+# -------------------------------------------------------------------------
+- id: HCR_SANTE_2026
+  keywords: ["hcr", "mutuelle hcr", "frais de sante hcr"]
+  valeurs:
+    cotisation_base: 52.00
+  source: "Avenant HCR 2026"
+  text: "La cotisation de base Mutuelle HCR est de 52,00 € au 1er janvier 2026, répartie à 50/50."
+
+# -------------------------------------------------------------------------
+# 5. RUPTURE DU CONTRAT & INDEMNITÉS
+# -------------------------------------------------------------------------
+- id: INDEMNITE_LICENCIEMENT_2026
+  keywords: ["licenciement", "indemnite legale", "calcul licenciement"]
+  valeurs:
+    taux_base: "1/4 de mois par an"
+  source: "Code du Travail 2026"
+  text: "L'indemnité légale de licenciement est de 1/4 de mois par an d'ancienneté (jusqu'à 10 ans) et 1/3 au-delà."
+
+# -------------------------------------------------------------------------
+# 6. LOGEMENT (AVANTAGE EN NATURE)
+# -------------------------------------------------------------------------
+- id: AVN_LOGEMENT_2026
+  keywords: ["logement", "avantage logement", "loyer", "logement de fonction"]
+  valeurs:
+    base: "Barème selon rémunération"
+  source: "URSSAF 2026"
+  text: "L'évaluation de l'avantage logement est basée sur un barème de 8 tranches indexé sur le PASS."
