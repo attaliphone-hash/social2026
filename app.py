@@ -189,7 +189,7 @@ def load_ia_system():
 engine = load_engine()
 vectorstore, llm = load_ia_system()
 
-# Fonction de nettoyage pour le Moteur de Règles (Gardée car très utile)
+# Fonction de nettoyage pour le Moteur de Règles
 def clean_query_for_engine(q):
     stop_words = ["quel", "est", "le", "montant", "du", "de", "la", "les", "actuel", "en", "2026", "pour", "?", "l'"]
     words = q.lower().split()
@@ -198,15 +198,11 @@ def clean_query_for_engine(q):
 
 # --- ARCHITECTURE HYBRIDE RESTAURÉE ---
 def build_context(query):
-    # --- MODIFICATION MAJEURE ICI : k=25 POUR VISION LARGE ---
     raw_docs = vectorstore.similarity_search(query, k=25)
     context_text = ""
     
     for d in raw_docs:
         raw_src = d.metadata.get('source', 'Source Inconnue')
-        
-        # 2. MAQUILLAGE PYTHON (Comme dans l'ancien code)
-        # On nettoie la source AVANT de la donner à l'IA
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
         
         if "REF" in clean_name: pretty_src = "Barème Officiel"
@@ -214,16 +210,13 @@ def build_context(query):
         elif "BOSS" in clean_name: pretty_src = "BOSS"
         else: pretty_src = clean_name
         
-        # On injecte le nom propre. L'IA n'a plus à deviner.
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
         
     return context_text
-    # NOTE : On ne renvoie PLUS la liste des sources à Python. C'est l'IA qui gère.
 
 def get_gemini_response_stream(query, context, user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     
-    # 3. PROMPT MODIFIÉ AVEC HIÉRARCHIE DES SOURCES
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro, un assistant juridique de haut niveau.
     
@@ -317,15 +310,21 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
         
-        # 1. MOTEUR DE RÈGLES (Prioritaire & Rapide)
+        # 1. MOTEUR DE RÈGLES (Priorité Absolue au YAML)
         verdict = {"found": False}
         if not user_doc_text:
+            # Essai 1 : Version nettoyée
             cleaned_q = clean_query_for_engine(query)
             verdict = engine.get_formatted_answer(keywords=cleaned_q)
+            
+            # Essai 2 (Sécurité) : Version brute si l'essai 1 a échoué
+            if not verdict["found"]:
+                verdict = engine.get_formatted_answer(keywords=query.lower())
         
-        # CAS 1 : Réponse Certifiée (Engine)
+        # CAS 1 : Réponse Certifiée (Engine / YAML)
         if verdict["found"]:
-            full_response = f"{verdict['text']}\n\n---\n**Sources utilisées :**\n* {verdict['source']}"
+            # On force le style gras pour la réponse directe
+            full_response = f"**{verdict['text']}**\n\n---\n* **Sources** : {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         
         # CAS 2 : Réponse IA (Analytique)
@@ -334,15 +333,12 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
                 context_text = build_context(query)
                 
                 full_response = ""
-                # Streaming (L'IA écrit le texte ET le footer elle-même)
                 for chunk in get_gemini_response_stream(query, context_text, user_doc_content=user_doc_text):
                     full_response += chunk
                     message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
                 
-                # Petite sécurité pour l'upload (si l'IA a oublié de citer le PDF perso)
                 if uploaded_file and "Document analysé" not in full_response:
                     full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
-                    message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
