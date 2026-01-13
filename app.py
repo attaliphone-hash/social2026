@@ -282,19 +282,25 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
-        is_conversational = ("?" in query or len(query.split()) > 7 or user_doc_text)
+        
+        # --- CORRECTIF MAJEUR ICI ---
+        # On tente le moteur de règles SAUF si un document utilisateur est présent.
+        # Plus de condition sur le point d'interrogation ou la longueur.
         verdict = {"found": False}
-        if not is_conversational and not user_doc_text:
+        if not user_doc_text:
             verdict = engine.get_formatted_answer(keywords=query)
         
+        # CAS 1 : MOTEUR DE RÈGLES (Réponse rapide certifiée)
         if verdict["found"]:
             full_response = f"{verdict['text']}\n\n---\n**Sources utilisées :**\n* {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
+        
+        # CAS 2 : IA (Analyse approfondie)
         else:
             with st.spinner("Analyse en cours..."):
                 context_text, sources_list = build_context(query)
                 
-                # ICI : ON AJOUTE LE FICHIER UPLOADÉ AUX SOURCES
+                # Ajout du fichier utilisateur aux sources si présent
                 if uploaded_file:
                     sources_list.append(f"📄 Document analysé : {uploaded_file.name}")
 
