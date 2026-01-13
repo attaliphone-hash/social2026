@@ -4,12 +4,13 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoa
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
+from pinecone import Pinecone # AJOUT NÉCESSAIRE POUR LE NETTOYAGE
 
 # --- CHARGEMENT DES CLÉS ---
 load_dotenv() 
 
 # --- CONFIGURATION ---
-DATA_PATH = "DATA_CLEAN"  # Votre dossier actuel
+DATA_PATH = "DATA_CLEAN"
 INDEX_NAME = "expert-social" 
 
 def run_ingestion():
@@ -50,6 +51,20 @@ def run_ingestion():
 
     # 3. Envoi vers Pinecone Cloud
     print("--- 🚀 Envoi vers PINECONE (Cloud) ---")
+    
+    # --- PARTIE AJOUTÉE : NETTOYAGE OBLIGATOIRE ---
+    print(f"🧹 VIDAGE de l'index '{INDEX_NAME}' pour éviter les doublons...")
+    try:
+        # On se connecte directement à Pinecone pour tout effacer
+        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+        index = pc.Index(INDEX_NAME)
+        index.delete(delete_all=True)
+        print("✅ Index vidé avec succès ! Prêt pour les nouvelles données.")
+    except Exception as e:
+        print(f"⚠️ Attention : Impossible de vider l'index (Erreur: {e})")
+        # On continue quand même, mais c'est risqué si l'index n'est pas vide
+    # -----------------------------------------------
+
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     
     try:
@@ -58,9 +73,9 @@ def run_ingestion():
             embeddings, 
             index_name=INDEX_NAME
         )
-        print(f"☀️ SUCCÈS : L'index '{INDEX_NAME}' est à jour !")
+        print(f"☀️ SUCCÈS : L'index '{INDEX_NAME}' est à jour avec les données 2026 !")
     except Exception as e:
-        print(f"❌ Erreur : {e}")
+        print(f"❌ Erreur lors de l'envoi : {e}")
 
 if __name__ == "__main__":
     run_ingestion()
