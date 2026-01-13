@@ -186,6 +186,11 @@ def load_ia_system():
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0, google_api_key=api_key)
     return vectorstore, llm
 
+# --- CORRECTION : INITIALISATION OBLIGATOIRE ---
+engine = load_engine()
+vectorstore, llm = load_ia_system()
+# -----------------------------------------------
+
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=20)
     context_text = ""
@@ -283,9 +288,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
         
-        # --- CORRECTIF MAJEUR ICI ---
         # On tente le moteur de règles SAUF si un document utilisateur est présent.
-        # Plus de condition sur le point d'interrogation ou la longueur.
         verdict = {"found": False}
         if not user_doc_text:
             verdict = engine.get_formatted_answer(keywords=query)
