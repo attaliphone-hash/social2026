@@ -198,8 +198,8 @@ def clean_query_for_engine(q):
 
 # --- ARCHITECTURE HYBRIDE RESTAURÉE ---
 def build_context(query):
-    # 1. On limite à 10 documents pour réduire le bruit (comme avant)
-    raw_docs = vectorstore.similarity_search(query, k=10)
+    # --- MODIFICATION MAJEURE ICI : k=25 POUR VISION LARGE ---
+    raw_docs = vectorstore.similarity_search(query, k=25)
     context_text = ""
     
     for d in raw_docs:
@@ -223,31 +223,30 @@ def build_context(query):
 def get_gemini_response_stream(query, context, user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     
-    # 3. PROMPT MODIFIÉ (Version Stricte : Fautes tolérées + Citations + Structure 1/2/3)
+    # 3. PROMPT MODIFIÉ AVEC HIÉRARCHIE DES SOURCES
     prompt = ChatPromptTemplate.from_template("""
-    Tu es un assistant juridique expert en droit du travail et sécurité sociale.
-    Tu dois répondre à la question de l'utilisateur en utilisant UNIQUEMENT les informations contenues dans le contexte fourni.
+    Tu es l'Expert Social Pro, un assistant juridique de haut niveau.
+    
+    MÉTHODOLOGIE DE RECHERCHE (HIÉRARCHIE DES NORMES) :
+    1. PRIORITÉ ABSOLUE AUX CHIFFRES : Pour toute question impliquant un montant, un taux ou un plafond (ex: PASS, SMIC), tu dois utiliser les valeurs contenues dans les documents "Barème Officiel" (fichiers REF_). Ce sont les seuls qui font foi pour 2026.
+    2. DOCTRINE : Utilise les documents "BOSS" pour expliquer les mécanismes et l'interprétation administrative.
+    3. LOI : Cite le "Code du Travail" ou "Code de la Sécurité Sociale" pour justifier la base légale.
 
-    RÈGLES STRICTES D'INTERPRÉTATION ET DE RÉPONSE :
-
-    1. TOLÉRANCE AUX ERREURS : L'utilisateur peut faire des fautes de frappe ou d'orthographe. Tu dois analyser le contexte pour comprendre l'intention juridique (ex: "licensiement" = "licenciement") et ne jamais bloquer pour une simple coquille.
-
-    2. OBLIGATION DE CITATION : Dès qu'une information provient d'un texte de loi (Code du travail, CSS, etc.), tu DOIS citer le numéro de l'article (ex: "Art. L.1234-1") dans ta réponse.
-
-    3. STRUCTURE DE LA RÉPONSE : Tu dois impérativement suivre ce plan en 3 parties :
+    CONSIGNES DE RÉDACTION :
+    1. Sois intelligent : Si l'utilisateur fait une faute (ex: "licensiement"), comprends l'intention.
+    2. Sois précis : Cite toujours les articles de loi (Art. L...) quand ils sont disponibles.
+    3. Sois structuré :
 
        ### 1/ La Réponse
-       Réponds directement à la question posée de manière claire et factuelle.
-
+       Donne la réponse directe. Si c'est un chiffre, donne le montant exact tiré du Barème.
+       
        ### 2/ Les Précisions
-       Indique ici les points de vigilance, les exceptions importantes, les conditions d'application (délais, ancienneté requise, etc.) ou toute information complémentaire utile pour nuancer la réponse.
+       C'est ta valeur ajoutée. Explique les conditions, les pièges à éviter, ou les détails techniques (ex: proratisation, exceptions). Ne dis "pas de précisions" que si le sujet est simplissime.
 
        ### 3/ Sources
-       Liste les documents utilisés et les articles de loi cités.
-
-    Si la réponse ne se trouve pas dans le contexte, dis-le simplement.
+       Liste les documents consultés.
     
-    CONTEXTE : {context}""" + user_doc_section + "\nQUESTION : {question}")
+    CONTEXTE DOCUMENTS : {context}""" + user_doc_section + "\nQUESTION : {question}")
     
     chain = prompt | llm | StrOutputParser()
     return chain.stream({"context": context, "question": query})
