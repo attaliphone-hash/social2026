@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# --- IMPORTS UI ---
-from ui.styles import apply_pro_design, show_legal_info, render_top_columns
+# --- IMPORTS UI (Ajout de render_subscription_cards) ---
+from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -51,18 +51,14 @@ def get_boss_status_html():
             latest_item = soup.find('item')
             
             if latest_item:
-                # 1. Extraction Titre
                 title_tag = latest_item.find('title')
                 title = title_tag.text.strip() if title_tag else "Actualité BOSS"
                 
-                # 2. Extraction Lien (Via REGEX pour robustesse)
                 link_match = re.search(r"<link>(.*?)</link>", str(latest_item))
                 link = link_match.group(1).strip() if link_match else "https://boss.gouv.fr"
                 
-                # 3. Extraction Date
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
-                # Styles CSS
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
                 style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
                 
@@ -75,17 +71,14 @@ def get_boss_status_html():
                         
                         html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
                         
-                        # ALERTE ROUGE (< 8 jours)
                         if days_old < 8:
                             return f"""<div style='{style_alert}'>🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
-                        # INFO VERTE (> 8 jours)
                         else:
                             return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
                             
                     except:
                         pass 
                 
-                # Fallback simple
                 return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>""", link
             
             return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
@@ -99,7 +92,6 @@ def show_boss_alert():
     if "news_closed" not in st.session_state:
         st.session_state.news_closed = False
 
-    # Si l'utilisateur a fermé la news pour cette session, on ne l'affiche plus
     if st.session_state.news_closed:
         return
 
@@ -110,7 +102,6 @@ def show_boss_alert():
         with col_text:
             st.markdown(html_content, unsafe_allow_html=True)
         with col_close:
-            # Le bouton pour fermer la notification
             if st.button("✖️", key="btn_close_news", help="Masquer"):
                 st.session_state.news_closed = True
                 st.rerun()
@@ -125,9 +116,7 @@ def check_password():
 
     st.markdown("<h2 style='text-align: center; color: #024c6f;'>Expert Social Pro - Accès</h2>", unsafe_allow_html=True)
     
-    # APPEL DE LA VEILLE BOSS (ROBUSTE)
-    show_boss_alert()
-    
+    # Rendu des colonnes de réassurance
     render_top_columns()
     st.markdown("---")
 
@@ -149,11 +138,13 @@ def check_password():
         
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
-        col_m, col_a = st.columns(2)
-        with col_m:
-            st.link_button("Abonnement Mensuel", "https://checkout.stripe.com/c/pay/cs_live_a1YuxowVQDoKMTBPa1aAK7S8XowoioMzray7z6oruWL2r1925Bz0NdVA6M#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl", use_container_width=True)
-        with col_a:
-            st.link_button("Abonnement Annuel", "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl", use_container_width=True)
+        
+        # --- APPEL PROPRE À LA FONCTION DE DESIGN ---
+        link_month = "https://checkout.stripe.com/c/pay/cs_live_a1YuxowVQDoKMTBPa1aAK7S8XowoioMzray7z6oruWL2r1925Bz0NdVA6M#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+        link_year = "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+        
+        render_subscription_cards(link_month, link_year)
+        # -----------------------------------------------
 
     with tab2:
         st.caption("Code d'accès personnel")
@@ -215,8 +206,9 @@ def get_gemini_response_stream(query, context, user_doc_content=None):
 # --- 4. INTERFACE DE CHAT ---
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# VEILLE BOSS AUSSI SUR LA PAGE PRINCIPALE
-show_boss_alert()
+# VEILLE BOSS : Uniquement si c'est l'ADMINISTRATEUR qui est connecté
+if st.session_state.get("user_email") == "ADMINISTRATEUR":
+    show_boss_alert()
 
 col_t, col_buttons = st.columns([3, 2]) 
 with col_t: 

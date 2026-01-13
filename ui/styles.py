@@ -146,3 +146,41 @@ def show_legal_info():
     <em>Conformité RGPD : Droit à l'oubli garanti par défaut (No-Log).</em>
 </div>
 """, unsafe_allow_html=True)
+
+def render_subscription_cards(link_month, link_year):
+    """
+    Affiche les deux cartes d'abonnement (Mensuel/Bleu et Annuel/Vert)
+    """
+    col_m, col_a = st.columns(2)
+    
+    # Carte Mensuelle (Bleue)
+    with col_m:
+        st.markdown(f"""
+        <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb; height: 100%;">
+            <h3 style="color: #0d47a1; margin-top: 0;">Mensuel</h3>
+            <h2 style="color: #1565c0; font-size: 24px; margin: 10px 0;">50 € HT <small style="font-size: 14px; color: #555;">/ mois</small></h2>
+            <p style="color: #0277bd; font-style: italic; font-size: 14px;">Sans engagement</p>
+            <br>
+            <a href="{link_month}" target="_blank" style="text-decoration: none;">
+                <button style="background-color: white; color: #1565c0; border: 1px solid #1565c0; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
+                    S'abonner (Mensuel)
+                </button>
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Carte Annuelle (Verte)
+    with col_a:
+        st.markdown(f"""
+        <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9; height: 100%;">
+            <h3 style="color: #1b5e20; margin-top: 0;">Annuel</h3>
+            <h2 style="color: #2e7d32; font-size: 24px; margin: 10px 0;">500 € HT <small style="font-size: 14px; color: #555;">/ an</small></h2>
+            <p style="color: #2e7d32; font-style: italic; font-size: 14px;">2 mois offerts</p>
+            <br>
+            <a href="{link_year}" target="_blank" style="text-decoration: none;">
+                <button style="background-color: white; color: #2e7d32; border: 1px solid #2e7d32; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
+                    S'abonner (Annuel)
+                </button>
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
