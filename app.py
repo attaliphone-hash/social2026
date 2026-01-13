@@ -186,9 +186,6 @@ def load_ia_system():
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0, google_api_key=api_key)
     return vectorstore, llm
 
-engine = load_engine()
-vectorstore, llm = load_ia_system()
-
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=20)
     context_text = ""
@@ -239,7 +236,6 @@ if user_email == "ADMINISTRATEUR":
 render_top_columns()
 st.markdown("<br>", unsafe_allow_html=True)
 
-# INIT CLE UPLOADER (Pour le reset)
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
@@ -250,7 +246,6 @@ with col_t:
 with col_buttons:
     c_up, c_new = st.columns([1.6, 1])
     with c_up:
-        # ICI : AJOUT DE LA CLÉ DYNAMIQUE key=...
         uploaded_file = st.file_uploader(
             "Upload", 
             type=["pdf", "txt"], 
@@ -260,7 +255,6 @@ with col_buttons:
     with c_new:
         if st.button("Nouvelle session"):
             st.session_state.messages = []
-            # ICI : ON CHANGE LA CLÉ POUR FORCER LE RESET DU FICHIER
             st.session_state.uploader_key += 1
             st.rerun()
 
@@ -299,6 +293,11 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
         else:
             with st.spinner("Analyse en cours..."):
                 context_text, sources_list = build_context(query)
+                
+                # ICI : ON AJOUTE LE FICHIER UPLOADÉ AUX SOURCES
+                if uploaded_file:
+                    sources_list.append(f"📄 Document analysé : {uploaded_file.name}")
+
                 full_response = ""
                 for chunk in get_gemini_response_stream(query, context_text, user_doc_content=user_doc_text):
                     full_response += chunk
