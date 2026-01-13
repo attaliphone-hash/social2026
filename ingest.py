@@ -1,10 +1,11 @@
 import os
-from dotenv import load_dotenv  # Pour lire votre fichier .env
+import time
+from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, CSVLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
-from pinecone import Pinecone # AJOUT NÉCESSAIRE POUR LE NETTOYAGE
+from pinecone import Pinecone
 
 # --- CHARGEMENT DES CLÉS ---
 load_dotenv() 
@@ -52,28 +53,42 @@ def run_ingestion():
     # 3. Envoi vers Pinecone Cloud
     print("--- 🚀 Envoi vers PINECONE (Cloud) ---")
     
-    # --- PARTIE AJOUTÉE : NETTOYAGE OBLIGATOIRE ---
-    print(f"🧹 VIDAGE de l'index '{INDEX_NAME}' pour éviter les doublons...")
+    # --- NETTOYAGE OBLIGATOIRE ---
+    print(f"🧹 VIDAGE de l'index '{INDEX_NAME}'...")
     try:
-        # On se connecte directement à Pinecone pour tout effacer
         pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         index = pc.Index(INDEX_NAME)
         index.delete(delete_all=True)
-        print("✅ Index vidé avec succès ! Prêt pour les nouvelles données.")
+        print("✅ Index vidé avec succès.")
     except Exception as e:
         print(f"⚠️ Attention : Impossible de vider l'index (Erreur: {e})")
-        # On continue quand même, mais c'est risqué si l'index n'est pas vide
-    # -----------------------------------------------
 
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     
+    # --- ENVOI PAR PAQUETS (BATCHING) POUR ÉVITER LES ERREURS 502 ---
+    batch_size = 100
+    print(f"📦 Envoi de {len(chunks)} fragments par paquets de {batch_size}...")
+    
     try:
-        PineconeVectorStore.from_documents(
-            chunks, 
+        # Initialisation avec le premier paquet
+        first_batch = chunks[:batch_size]
+        vectorstore = PineconeVectorStore.from_documents(
+            first_batch, 
             embeddings, 
             index_name=INDEX_NAME
         )
-        print(f"☀️ SUCCÈS : L'index '{INDEX_NAME}' est à jour avec les données 2026 !")
+        print(f"➡️ {min(batch_size, len(chunks))}/{len(chunks)} envoyés...")
+
+        # Envoi du reste
+        if len(chunks) > batch_size:
+            for i in range(batch_size, len(chunks), batch_size):
+                batch = chunks[i : i + batch_size]
+                vectorstore.add_documents(batch)
+                print(f"➡️ {min(i + batch_size, len(chunks))}/{len(chunks)} envoyés...")
+                # Petite pause pour laisser respirer l'API si nécessaire
+                time.sleep(1) 
+
+        print(f"☀️ SUCCÈS : L'index '{INDEX_NAME}' est à jour !")
     except Exception as e:
         print(f"❌ Erreur lors de l'envoi : {e}")
 
