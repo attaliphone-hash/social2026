@@ -1,126 +1,72 @@
 # ==============================================================================
-# RÈGLES MÉTIER PAIE & SOCIAL 2026 - EXPERT SOCIAL PRO (INTÉGRALITÉ)
+# RÈGLES MÉTIER PAIE & SOCIAL 2026 - OFFICIEL JANVIER 2026
 # ==============================================================================
 
 # -------------------------------------------------------------------------
-# 1. AVANTAGES EN NATURE & FRAIS PRO
+# 1. CHIFFRES CLÉS & PLAFONDS (SOURCES : JO / BOSS / URSSAF)
 # -------------------------------------------------------------------------
-- id: AVN_REPAS_2026
-  keywords: ["repas", "nourriture", "avantage en nature repas", "manger"]
-  valeurs:
-    un_repas: 5.50
-    deux_repas: 11.00
-  source: "Barème URSSAF 2026"
-  text: "Pour 2026, l'avantage en nature nourriture est fixé à 5,50 € par repas (soit 11,00 € par jour)."
-
-- id: FRAIS_REPAS_2026
-  keywords: ["panier", "repas deplacement", "restaurant", "petit deplacement", "panier btp"]
-  valeurs:
-    restaurant_deplacement: 20.70
-    hors_locaux: 10.20
-    panier_locaux: 7.50
-  source: "BOSS - Frais Professionnels 2026"
-  text: "Les limites d'exonération 2026 sont : 20,70 € pour un restaurant en déplacement, 10,20 € pour un repas hors locaux (panier), et 7,50 € pour le panier sur le lieu de travail."
-
-- id: AVN_VEHICULE_ELEC_2026
-  keywords: ["vehicule electrique", "voiture electrique", "avantage nature electrique"]
-  valeurs:
-    abattement_taux: "50%"
-    plafond_abattement: 1964.90
-  source: "Barème URSSAF 2026"
-  text: "L'abattement de 50% sur l'avantage en nature est reconduit en 2026 pour les véhicules électriques, plafonné à 1 964,90 € par an."
-
-- id: TICKET_RESTO_2026
-  keywords: ["ticket resto", "titre restaurant", "cheque dejeuner"]
-  valeurs:
-    plafond_exonération: 7.33
-    prise_en_charge_min: "50%"
-    prise_en_charge_max: "60%"
-  source: "Barème URSSAF 2026"
-  text: "En 2026, la contribution patronale aux titres-restaurant est exonérée entre 50% et 60% de la valeur du titre, sans dépasser 7,33 €."
-
-- id: IK_2026
-  keywords: ["ik", "indemnites kilometriques", "bareme km", "frais de route"]
-  source: "Administration Fiscale 2026"
-  text: "Le barème kilométrique 2026 (Ex: 0,636 €/km pour 5 CV) inclut une majoration de 20% pour les véhicules électriques."
-
-# -------------------------------------------------------------------------
-# 2. CHIFFRES CLÉS & PLAFONDS
-# -------------------------------------------------------------------------
-- id: SMIC_2026
-  keywords: ["smic", "smic horaire", "salaire minimum", "smic mensuel"]
-  valeurs:
-    horaire: 12.03
-    mensuel_35h: 1824.55
-    annuel: 21894.60
-  source: "Décret Officiel 2026"
-  text: "Au 1er janvier 2026, le SMIC est de 12,03 € brut/heure, soit 1 824,55 € brut mensuel (35h)."
-
 - id: PASS_2026
   keywords: ["pass", "pmss", "plafond securite sociale"]
   valeurs:
-    annuel: 47100
-    mensuel: 3925
-  source: "Arrêté PASS 2026"
-  text: "Le Plafond Mensuel de la Sécurité Sociale (PMSS) 2026 est de 3 925 € (soit 47 100 € annuel)."
+    annuel: 48060
+    mensuel: 4005
+    horaire: 30
+  source: "Arrêté du 22 décembre 2025 (JO du 23/12)"
+  text: "Le Plafond Mensuel de la Sécurité Sociale (PMSS) 2026 est officiellement de 4 005 € (48 060 € par an)."
+
+- id: SMIC_2026
+  keywords: ["smic", "smic horaire", "salaire minimum"]
+  valeurs:
+    horaire: 12.02
+    mensuel_35h: 1823.03
+  source: "Décret de revalorisation (1,18%) au 01/01/2026"
+  text: "Au 1er janvier 2026, le SMIC est de 12,02 € brut/heure, soit 1 823,03 € brut mensuel (35h)."
 
 - id: MG_2026
   keywords: ["mg", "minimum garanti"]
   valeurs:
-    montant: 4.22
+    montant: 4.25
   source: "Barème URSSAF 2026"
-  text: "Le Minimum Garanti (MG) est fixé à 4,22 € au 1er janvier 2026."
+  text: "Le Minimum Garanti (MG) est de 4,25 € au 1er janvier 2026."
 
 # -------------------------------------------------------------------------
-# 3. EXONÉRATIONS, PRIMES & RÉDUCTIONS
+# 2. AVANTAGES EN NATURE & FRAIS
 # -------------------------------------------------------------------------
-- id: PPV_2026
-  keywords: ["ppv", "prime macron", "partage de la valeur"]
+- id: AVN_REPAS_2026
+  keywords: ["repas", "nourriture", "avantage en nature repas"]
   valeurs:
-    cas_general: 3000
-    cas_derogatoire: 6000
-  source: "Loi Partage de la Valeur & BOSS"
-  text: "Le plafond d'exonération de la PPV est de 3 000 € par an (6 000 € avec accord d'intéressement). Exonération fiscale maintenue sous 3 SMIC pour les -50 salariés."
+    un_repas: 5.50
+    deux_repas: 11.00
+  source: "Barème URSSAF 2026"
+  text: "L'avantage en nature nourriture est maintenu à 5,50 € par repas en 2026 (sauf HCR : 4,25 €)."
 
-- id: FILLON_T_2026
-  keywords: ["fillon", "reduction generale", "allegement de charges", "paramètre t"]
+- id: TICKET_RESTO_2026
+  keywords: ["ticket resto", "titre restaurant"]
   valeurs:
-    t_moins_50: 0.3206
-    t_plus_50: 0.3246
-  source: "Décret Paramètres Fillon 2026"
-  text: "En 2026, le coefficient T est de 0,3206 (moins de 50 salariés) et 0,3246 (50 salariés et plus)."
+    plafond_exonération: 7.32
+  source: "Mise à jour URSSAF / BOSS Janvier 2026"
+  text: "La limite d'exonération de la part patronale des titres-restaurant est de 7,32 € en 2026."
 
-- id: SEUIL_TRANSPORT
-  keywords: ["versement mobilite", "seuil 11 salaries", "transport"]
-  source: "Code de la Sécurité Sociale"
-  text: "Le versement mobilité est dû par les employeurs atteignant le seuil de 11 salariés en zone de transport urbain."
-
-# -------------------------------------------------------------------------
-# 4. RUPTURE & SAISIES SUR SALAIRES
-# -------------------------------------------------------------------------
-- id: RUPTURE_LEGALE
-  keywords: ["indemnite licenciement", "calcul licenciement", "rupture legale"]
-  source: "Code du Travail - Art. R1234-2"
-  text: "L'indemnité légale est de 1/4 de mois de salaire par année d'ancienneté (jusqu'à 10 ans) et 1/3 de mois pour les années au-delà."
-
-- id: SBI_2026
-  keywords: ["sbi", "solde bancaire insaisissable", "saisie salaire"]
-  source: "Barème Saisie 2026"
-  text: "Le Solde Bancaire Insaisissable (SBI) est de 635,71 € en 2026. Ce montant doit obligatoirement être laissé au salarié."
+- id: AVN_VEHICULE_ELEC_2026
+  keywords: ["vehicule electrique", "abattement electrique"]
+  valeurs:
+    plafond_abattement: 2003.00
+  source: "URSSAF 2026 (Plafond indexé sur le PASS)"
+  text: "L'abattement de 50% sur l'AN véhicule électrique est plafonné à 2 003,00 € par an en 2026."
 
 # -------------------------------------------------------------------------
-# 5. APPRENTISSAGE & STAGE
+# 3. STAGES & SAISIES
 # -------------------------------------------------------------------------
 - id: GRATIFICATION_STAGE_2026
   keywords: ["stage", "stagiaire", "gratification minimale"]
   valeurs:
-    taux_horaire: 4.35
-  source: "Barème Stagiaires 2026"
-  text: "La gratification minimale des stagiaires est de 4,35 € par heure de présence réelle en 2026."
+    taux_horaire: 4.50
+  source: "Service-Public 2026 (15% du plafond horaire SS)"
+  text: "La gratification minimale des stagiaires passe à 4,50 € par heure au 1er janvier 2026."
 
-- id: REMU_APPRENTI_2026
-  keywords: ["apprentissage", "alternance", "salaire apprenti", "aide embauche"]
+- id: SBI_2026
+  keywords: ["sbi", "solde bancaire insaisissable"]
   valeurs:
-    aide_etat: 6000
-  source: "Ministère du Travail 2026"
-  text: "Rémunération 18-20 ans : 43% SMIC (an 1), 51% (an 2). L'aide à l'embauche est de 6 000 €."
+    montant: 645.50
+  source: "Barème Saisie 2026"
+  text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 645,50 € pour 2026."
