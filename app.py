@@ -237,14 +237,11 @@ def get_gemini_response_stream(query, context, user_doc_content=None):
     2. Sois précis : Cite toujours les articles de loi (Art. L...) quand ils sont disponibles.
     3. Sois structuré :
 
-       ### 1/ La Réponse
-       Donne la réponse directe. Si c'est un chiffre, donne le montant exact tiré du Barème.
+       **La réponse directe doit être écrite ici, entièrement en GRAS.** Si c'est un chiffre, donne le montant exact tiré du Barème.
        
-       ### 2/ Les Précisions
-       C'est ta valeur ajoutée. Explique les conditions, les pièges à éviter, ou les détails techniques (ex: proratisation, exceptions). Ne dis "pas de précisions" que si le sujet est simplissime.
+       * **Précisions** : C'est ta valeur ajoutée. Explique les conditions, les pièges à éviter, ou les détails techniques (ex: proratisation, exceptions). Ne dis "pas de précisions" que si le sujet est simplissime.
 
-       ### 3/ Sources
-       Liste les documents consultés.
+       * **Sources** : Liste les documents consultés.
     
     CONTEXTE DOCUMENTS : {context}""" + user_doc_section + "\nQUESTION : {question}")
     
