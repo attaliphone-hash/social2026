@@ -189,11 +189,10 @@ def load_ia_system():
 engine = load_engine()
 vectorstore, llm = load_ia_system()
 
-# --- MODIFICATION ICI : On renvoie aussi la liste des sources ! ---
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=20)
     context_text = ""
-    used_sources = set() # Set pour dédoublonner les sources
+    used_sources = set()
     
     for d in raw_docs:
         raw_src = d.metadata.get('source', 'Source Inconnue')
@@ -206,7 +205,7 @@ def build_context(query):
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
         used_sources.add(pretty_src)
         
-    return context_text, list(used_sources) # <-- On renvoie le texte ET les sources
+    return context_text, list(used_sources)
 
 def get_gemini_response_stream(query, context, user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
@@ -240,6 +239,10 @@ if user_email == "ADMINISTRATEUR":
 render_top_columns()
 st.markdown("<br>", unsafe_allow_html=True)
 
+# INIT CLE UPLOADER (Pour le reset)
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
+
 col_t, col_buttons = st.columns([3, 2]) 
 with col_t: 
     st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
@@ -247,10 +250,18 @@ with col_t:
 with col_buttons:
     c_up, c_new = st.columns([1.6, 1])
     with c_up:
-        uploaded_file = st.file_uploader("Upload", type=["pdf", "txt"], label_visibility="collapsed")
+        # ICI : AJOUT DE LA CLÉ DYNAMIQUE key=...
+        uploaded_file = st.file_uploader(
+            "Upload", 
+            type=["pdf", "txt"], 
+            label_visibility="collapsed",
+            key=f"uploader_{st.session_state.uploader_key}"
+        )
     with c_new:
         if st.button("Nouvelle session"):
             st.session_state.messages = []
+            # ICI : ON CHANGE LA CLÉ POUR FORCER LE RESET DU FICHIER
+            st.session_state.uploader_key += 1
             st.rerun()
 
 user_doc_text = None
@@ -287,16 +298,12 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         else:
             with st.spinner("Analyse en cours..."):
-                # 1. On récupère le texte ET les sources
                 context_text, sources_list = build_context(query)
-                
                 full_response = ""
-                # 2. On streame la réponse de l'IA
                 for chunk in get_gemini_response_stream(query, context_text, user_doc_content=user_doc_text):
                     full_response += chunk
                     message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
                 
-                # 3. À la fin, on ajoute le footer des sources
                 if sources_list:
                     footer = "\n\n---\n**📚 Sources analysées :**\n"
                     for src in sorted(sources_list):
