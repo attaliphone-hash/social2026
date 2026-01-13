@@ -1,109 +1,67 @@
 import yaml
 import os
-import re
 
 class SocialRuleEngine:
-    def __init__(self, rules_path="rules/social_rules.yaml"):
-        self.rules = []
-        if os.path.exists(rules_path):
-            with open(rules_path, "r", encoding="utf-8") as f:
-                self.rules = yaml.safe_load(f) or []
-        
-        # LISTE NOIRE : Les mots que le moteur doit ignorer absolument
-        self.STOP_WORDS = {
-            "le", "la", "les", "l", "d", "de", "du", "des", 
-            "un", "une", "et", "ou", "à", "en", "par", "pour", 
-            "dans", "sur", "avec", "sans", "sous",
-            "comment", "quel", "quelle", "quels", "quelles", 
-            "est", "sont", "c", "ce", "ça", "faut", "il"
-        }
-
-    def clean_query(self, query):
-        """Nettoie la question pour ne garder que les mots importants"""
-        # 1. Minuscules et suppression ponctuation simple
-        query = query.lower()
-        query = re.sub(r"[',\.!\?]", " ", query) # Remplace apostrophes et ponctuation par espace
-        
-        # 2. Découpage
-        words = query.split()
-        
-        # 3. Filtrage des mots vides
-        meaningful_words = [w for w in words if w not in self.STOP_WORDS and len(w) > 2]
-        
-        return meaningful_words
-
-    def find_rule(self, query):
-        """
-        Cherche une règle correspondante de manière plus stricte.
-        """
-        keywords = self.clean_query(query)
-        
-        # Si après nettoyage il ne reste rien (ex: "C'est quoi ?"), on laisse Gemini gérer
-        if not keywords:
-            return None
-        
-        # Score de pertinence pour chaque règle
-        best_rule = None
-        max_score = 0
-        
-        for rule in self.rules:
-            # On prépare le contenu de la règle (Nom + Tags + Description)
-            rule_content = (rule.get('nom', '') + " " + " ".join(rule.get('tags', []))).lower()
+    def __init__(self, yaml_path="rules/social_rules.yaml"):
+        # On remonte d'un niveau si besoin pour trouver le fichier
+        if not os.path.exists(yaml_path):
+            # Si on est exécuté depuis la racine, le chemin est direct
+            if os.path.exists(os.path.join("rules", "social_rules.yaml")):
+                 self.yaml_path = os.path.join("rules", "social_rules.yaml")
+            else:
+                 self.yaml_path = yaml_path
+        else:
+            self.yaml_path = yaml_path
             
-            # On compte combien de mots-clés matchent
+        self.rules = self._load_rules()
+
+    def _load_rules(self):
+        """Charge les règles depuis le fichier YAML"""
+        try:
+            with open(self.yaml_path, "r", encoding="utf-8") as f:
+                return yaml.safe_load(f)
+        except Exception as e:
+            print(f"Erreur chargement YAML: {e}")
+            return []
+
+    def get_formatted_answer(self, keywords):
+        """Cherche une réponse basée sur les mots-clés"""
+        if not keywords:
+            return {"found": False}
+
+        query_words = keywords.lower().split()
+        best_match = None
+        max_score = 0
+
+        for rule in self.rules:
+            # On compte combien de mots-clés de la règle sont présents dans la question
             score = 0
-            for k in keywords:
-                if k in rule_content:
+            rule_keywords = [k.lower() for k in rule.get("keywords", [])]
+            
+            for word in query_words:
+                if word in rule_keywords:
                     score += 1
             
-            # IL FAUT QU'AU MOINS UN MOT CLÉ MATCH (et on prend le meilleur score)
-            if score > 0 and score > max_score:
-                max_score = score
-                best_rule = rule
-                
-        # SEUIL DE SÉCURITÉ :
-        # Pour éviter les faux positifs, on peut exiger un certain niveau de confiance
-        # Pour l'instant on retourne le meilleur match simple
-        return best_rule
+            # Si on trouve le mot exact (ex: "smic"), gros bonus
+            if keywords.lower() in rule_keywords:
+                score += 10
 
-    def get_formatted_answer(self, keywords=None): # On garde la signature keywords pour compatibilité
-        """
-        Récupère la réponse 'parfaite' pré-rédigée pour l'IA.
-        Note : keywords est ici la phrase brute (query) qu'on va nettoyer
-        """
-        # Si on reçoit une liste (ancien code), on la rejoint, sinon on prend la string
-        query_str = " ".join(keywords) if isinstance(keywords, list) else keywords
-        
-        rule = self.find_rule(query_str)
+            if score > max_score and score > 0:
+                max_score = score
+                best_match = rule
+
+        if best_match and max_score >= 1:
+            # On formate la réponse trouvée
+            # Si c'est un tableau de valeurs (SMIC, etc.)
+            valeurs = best_match.get("valeurs", {})
+            text = best_match.get("text", "")
             
-        if rule and rule.get('type') == 'constante':
-            template = rule['message_template']
-            vals = rule['valeurs']
-            
-            formatted_msg = template
-            for k, v in vals.items():
-                formatted_msg = formatted_msg.replace(f"{{valeurs.{k}}}", str(v))
-                
+            # Si on a des valeurs, on peut les formater joliment si besoin, 
+            # mais ici on renvoie le texte pré-rédigé du YAML qui est plus parlant.
             return {
                 "found": True,
-                "text": formatted_msg,
-                "source": rule['source_officielle'],
-                "data": vals
+                "text": text,
+                "source": f"[{best_match.get('source', 'Règle Officielle')}]"
             }
-            
-        return {"found": False, "text": "Aucune règle spécifique trouvée."}
 
-# Test rapide intégré
-if __name__ == "__main__":
-    engine = SocialRuleEngine()
-    print("--- TEST MOTEUR V4.1 ---")
-    
-    # Test 1 : Doit trouver (Repas)
-    q1 = "Quel est le montant du repas ?"
-    res1 = engine.get_formatted_answer(keywords=q1.split())
-    print(f"Q: '{q1}' -> Trouvé: {res1['found']} ({res1.get('source')})")
-    
-    # Test 2 : Ne doit PAS trouver (Rupture -> Pas de règle YAML rupture pour l'instant)
-    q2 = "Comment calculer l'indemnité de rupture ?"
-    res2 = engine.get_formatted_answer(keywords=q2.split())
-    print(f"Q: '{q2}' -> Trouvé: {res2['found']} (Doit être False)")
+        return {"found": False}

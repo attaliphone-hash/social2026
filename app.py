@@ -186,41 +186,62 @@ def load_ia_system():
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0, google_api_key=api_key)
     return vectorstore, llm
 
-# --- CORRECTION : INITIALISATION OBLIGATOIRE ---
 engine = load_engine()
 vectorstore, llm = load_ia_system()
-# -----------------------------------------------
 
+# Fonction de nettoyage pour le Moteur de Règles (Gardée car très utile)
+def clean_query_for_engine(q):
+    stop_words = ["quel", "est", "le", "montant", "du", "de", "la", "les", "actuel", "en", "2026", "pour", "?", "l'"]
+    words = q.lower().split()
+    cleaned = [w for w in words if w not in stop_words]
+    return " ".join(cleaned)
+
+# --- ARCHITECTURE HYBRIDE RESTAURÉE ---
 def build_context(query):
-    raw_docs = vectorstore.similarity_search(query, k=20)
+    # 1. On limite à 10 documents pour réduire le bruit (comme avant)
+    raw_docs = vectorstore.similarity_search(query, k=10)
     context_text = ""
-    used_sources = set()
     
     for d in raw_docs:
         raw_src = d.metadata.get('source', 'Source Inconnue')
+        
+        # 2. MAQUILLAGE PYTHON (Comme dans l'ancien code)
+        # On nettoie la source AVANT de la donner à l'IA
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
         
         if "REF" in clean_name: pretty_src = "Barème Officiel"
         elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
-        else: pretty_src = f"BOSS : {clean_name}"
+        elif "BOSS" in clean_name: pretty_src = "BOSS"
+        else: pretty_src = clean_name
         
+        # On injecte le nom propre. L'IA n'a plus à deviner.
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
-        used_sources.add(pretty_src)
         
-    return context_text, list(used_sources)
+    return context_text
+    # NOTE : On ne renvoie PLUS la liste des sources à Python. C'est l'IA qui gère.
 
 def get_gemini_response_stream(query, context, user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
+    
+    # 3. PROMPT RESTAURÉ (Logique de l'ancien code)
     prompt = ChatPromptTemplate.from_template("""
-    Tu es l'Expert Social Pro 2026. Réponds EXCLUSIVEMENT avec les documents fournis.
-    Citations HTML <sub>*[Source]*</sub> obligatoires.
+    Tu es l'Expert Social Pro 2026.
+    
+    MISSION :
+    Réponds à la question en t'appuyant EXCLUSIVEMENT sur les documents fournis dans le CONTEXTE.
+    
+    CONSIGNES D'AFFICHAGE OBLIGATOIRES :
+    1. Dans le texte, utilise des citations discrètes : <sub>*[Source]*</sub>.
+    2. RAPPEL FINAL : À la fin de ta réponse, saute une ligne, ajoute le séparateur '---', puis écris "**Sources utilisées :**".
+    3. En dessous, fais une liste à puces des SEULS documents que tu as réellement utilisés pour ta réponse.
+    
     CONTEXTE : {context}""" + user_doc_section + "\nQUESTION : {question}")
+    
     chain = prompt | llm | StrOutputParser()
     return chain.stream({"context": context, "question": query})
 
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 
-# GESTION DU COMPTE
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
     with st.sidebar:
@@ -288,35 +309,32 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
         
-        # On tente le moteur de règles SAUF si un document utilisateur est présent.
+        # 1. MOTEUR DE RÈGLES (Prioritaire & Rapide)
         verdict = {"found": False}
         if not user_doc_text:
-            verdict = engine.get_formatted_answer(keywords=query)
+            cleaned_q = clean_query_for_engine(query)
+            verdict = engine.get_formatted_answer(keywords=cleaned_q)
         
-        # CAS 1 : MOTEUR DE RÈGLES (Réponse rapide certifiée)
+        # CAS 1 : Réponse Certifiée (Engine)
         if verdict["found"]:
             full_response = f"{verdict['text']}\n\n---\n**Sources utilisées :**\n* {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         
-        # CAS 2 : IA (Analyse approfondie)
+        # CAS 2 : Réponse IA (Analytique)
         else:
             with st.spinner("Analyse en cours..."):
-                context_text, sources_list = build_context(query)
+                context_text = build_context(query)
                 
-                # Ajout du fichier utilisateur aux sources si présent
-                if uploaded_file:
-                    sources_list.append(f"📄 Document analysé : {uploaded_file.name}")
-
                 full_response = ""
+                # Streaming (L'IA écrit le texte ET le footer elle-même)
                 for chunk in get_gemini_response_stream(query, context_text, user_doc_content=user_doc_text):
                     full_response += chunk
                     message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
                 
-                if sources_list:
-                    footer = "\n\n---\n**📚 Sources analysées :**\n"
-                    for src in sorted(sources_list):
-                        footer += f"* {src}\n"
-                    full_response += footer
+                # Petite sécurité pour l'upload (si l'IA a oublié de citer le PDF perso)
+                if uploaded_file and "Document analysé" not in full_response:
+                    full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
+                    message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
