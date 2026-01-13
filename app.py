@@ -2,10 +2,15 @@ import streamlit as st
 import os
 import pypdf
 import stripe
+import requests
+import re
+from bs4 import BeautifulSoup
+from email.utils import parsedate_to_datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# --- IMPORTS UI (DÉPLACÉS EN HAUT POUR CHARGER LE STYLE IMMÉDIATEMENT) ---
+# --- IMPORTS UI ---
 from ui.styles import apply_pro_design, show_legal_info, render_top_columns
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
@@ -17,7 +22,7 @@ from langchain_core.output_parsers import StrOutputParser
 load_dotenv()
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
 
-# --- APPLICATION DU DESIGN PRO (IMMÉDIATEMENT APRES LA CONFIG) ---
+# --- APPLICATION DU DESIGN PRO ---
 apply_pro_design()
 
 # Connexion Supabase
@@ -28,7 +33,89 @@ supabase: Client = create_client(url, key)
 # Configuration Stripe
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 
-# --- 2. AUTHENTIFICATION HYBRIDE (CLIENT / PROMO / ADMIN) ---
+# --- FONCTION ROBUSTE (Issue de boss_watcher.py) ---
+def get_boss_status_html():
+    """
+    Scrape le FLUX RSS avec extraction ROBUSTE (Regex) pour le lien.
+    Renvoie du HTML prêt à l'emploi.
+    """
+    try:
+        url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        
+        response = requests.get(url, headers=headers, timeout=5)
+        
+        if response.status_code == 200:
+            content = response.content.decode('utf-8')
+            soup = BeautifulSoup(content, 'html.parser')
+            latest_item = soup.find('item')
+            
+            if latest_item:
+                # 1. Extraction Titre
+                title_tag = latest_item.find('title')
+                title = title_tag.text.strip() if title_tag else "Actualité BOSS"
+                
+                # 2. Extraction Lien (Via REGEX pour robustesse)
+                link_match = re.search(r"<link>(.*?)</link>", str(latest_item))
+                link = link_match.group(1).strip() if link_match else "https://boss.gouv.fr"
+                
+                # 3. Extraction Date
+                date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
+                
+                # Styles CSS
+                style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
+                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
+                
+                if date_tag:
+                    try:
+                        pub_date_obj = parsedate_to_datetime(date_tag.text.strip())
+                        now = datetime.now(timezone.utc)
+                        days_old = (now - pub_date_obj).days
+                        date_str = pub_date_obj.strftime("%d/%m/%Y")
+                        
+                        html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
+                        
+                        # ALERTE ROUGE (< 8 jours)
+                        if days_old < 8:
+                            return f"""<div style='{style_alert}'>🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
+                        # INFO VERTE (> 8 jours)
+                        else:
+                            return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
+                            
+                    except:
+                        pass 
+                
+                # Fallback simple
+                return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>""", link
+            
+            return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
+            
+        return "", ""
+    except Exception:
+        return "", ""
+
+# --- FONCTION D'AFFICHAGE AVEC BOUTON "FERMER" ---
+def show_boss_alert():
+    if "news_closed" not in st.session_state:
+        st.session_state.news_closed = False
+
+    # Si l'utilisateur a fermé la news pour cette session, on ne l'affiche plus
+    if st.session_state.news_closed:
+        return
+
+    html_content, link = get_boss_status_html()
+    
+    if html_content:
+        col_text, col_close = st.columns([0.95, 0.05])
+        with col_text:
+            st.markdown(html_content, unsafe_allow_html=True)
+        with col_close:
+            # Le bouton pour fermer la notification
+            if st.button("✖️", key="btn_close_news", help="Masquer"):
+                st.session_state.news_closed = True
+                st.rerun()
+
+# --- 2. AUTHENTIFICATION ---
 def check_password():
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
@@ -36,13 +123,14 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    # ENTÊTE DE LA PAGE DE CONNEXION
     st.markdown("<h2 style='text-align: center; color: #024c6f;'>Expert Social Pro - Accès</h2>", unsafe_allow_html=True)
     
-    # AFFICHAGE DES ARGUMENTS (LES COLONNES)
+    # APPEL DE LA VEILLE BOSS (ROBUSTE)
+    show_boss_alert()
+    
     render_top_columns()
     st.markdown("---")
-    
+
     tab1, tab2 = st.tabs(["🔐 Espace Client Abonnés", "🎁 Accès Promotionnel / Admin"])
 
     with tab1:
@@ -52,7 +140,6 @@ def check_password():
         
         if st.button("Se connecter au compte", use_container_width=True):
             try:
-                # Connexion via Supabase Auth
                 res = supabase.auth.sign_in_with_password({"email": email, "password": pwd})
                 st.session_state.authenticated = True
                 st.session_state.user_email = email
@@ -69,7 +156,7 @@ def check_password():
             st.link_button("Abonnement Annuel", "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl", use_container_width=True)
 
     with tab2:
-        st.caption("Entrez votre code d'accès personnel (Admin ou Promo)")
+        st.caption("Code d'accès personnel")
         access_code = st.text_input("Code d'accès", type="password", key="pwd_codes")
         if st.button("Valider le code", use_container_width=True):
             if access_code == os.getenv("ADMIN_PASSWORD"):
@@ -128,12 +215,13 @@ def get_gemini_response_stream(query, context, user_doc_content=None):
 # --- 4. INTERFACE DE CHAT ---
 st.markdown("<hr>", unsafe_allow_html=True)
 
-# OPTIONNEL : Si tu veux les colonnes aussi sur la page principale, décommente la ligne ci-dessous :
-# render_top_columns() 
+# VEILLE BOSS AUSSI SUR LA PAGE PRINCIPALE
+show_boss_alert()
 
 col_t, col_buttons = st.columns([3, 2]) 
 with col_t: 
     st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
+
 with col_buttons:
     c_up, c_new = st.columns([1.6, 1])
     with c_up:
@@ -179,7 +267,6 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             with st.spinner("Analyse en cours..."):
                 context = build_context(query)
                 full_response = ""
-                # Utilisation du mode Streaming pour l'affichage fluide
                 for chunk in get_gemini_response_stream(query, context, user_doc_content=user_doc_text):
                     full_response += chunk
                     message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
