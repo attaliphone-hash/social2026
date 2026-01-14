@@ -44,7 +44,7 @@ def manage_subscription_link(email):
             customer_id = customers.data[0].id
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                return_url="https://socialexpertfrance.fr"
+                return_url="https://socialexpertfrance.fr" 
             )
             return session.url
     except Exception as e:
@@ -56,47 +56,47 @@ def get_boss_status_html():
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
         headers = {"User-Agent": "Mozilla/5.0"}
-
+        
         response = requests.get(url, headers=headers, timeout=5)
-
+        
         if response.status_code == 200:
             content = response.content.decode('utf-8')
             soup = BeautifulSoup(content, 'html.parser')
             latest_item = soup.find('item')
-
+            
             if latest_item:
                 title_tag = latest_item.find('title')
                 title = title_tag.text.strip() if title_tag else "Actualité BOSS"
-
+                
                 link_match = re.search(r"<link>(.*?)</link>", str(latest_item))
                 link = link_match.group(1).strip() if link_match else "https://boss.gouv.fr"
-
+                
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
-
+                
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
                 style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
-
+                
                 if date_tag:
                     try:
                         pub_date_obj = parsedate_to_datetime(date_tag.text.strip())
                         now = datetime.now(timezone.utc)
                         days_old = (now - pub_date_obj).days
                         date_str = pub_date_obj.strftime("%d/%m/%Y")
-
+                        
                         html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
-
+                        
                         if days_old < 8:
                             return f"""<div style='{style_alert}'>🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
                         else:
                             return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
-
+                            
                     except:
-                        pass
-
+                        pass 
+                
                 return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>""", link
-
+            
             return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
-
+            
         return "", ""
     except Exception:
         return "", ""
@@ -109,7 +109,7 @@ def show_boss_alert():
         return
 
     html_content, link = get_boss_status_html()
-
+    
     if html_content:
         col_text, col_close = st.columns([0.95, 0.05])
         with col_text:
@@ -128,7 +128,7 @@ def check_password():
         return True
 
     st.markdown("<h2 style='text-align: center; color: #024c6f;'>Expert Social Pro - Accès</h2>", unsafe_allow_html=True)
-
+    
     render_top_columns()
     st.markdown("---")
 
@@ -138,7 +138,7 @@ def check_password():
         st.caption("Connectez-vous pour accéder à votre espace abonné.")
         email = st.text_input("Email client", key="email_client")
         pwd = st.text_input("Mot de passe", type="password", key="pwd_client")
-
+        
         if st.button("Se connecter au compte", use_container_width=True):
             try:
                 supabase.auth.sign_in_with_password({"email": email, "password": pwd})
@@ -147,13 +147,13 @@ def check_password():
                 st.rerun()
             except Exception:
                 st.error("Identifiants incorrects ou compte non activé.")
-
+        
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
-
+        
         # Affiche les cartes + crée les 2 boutons Streamlit (keys: btn_sub_month / btn_sub_year)
         render_subscription_cards()
-
+        
         # ✅ Connexion des boutons à Stripe (sinon rien ne se passe au clic)
         # Note : st.button écrit dans st.session_state la valeur True le run du clic.
         if st.session_state.get("btn_sub_month"):
@@ -217,34 +217,35 @@ def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=25)
     context_text = ""
     sources_seen = []
-
+    
     for d in raw_docs:
         raw_src = d.metadata.get('source', 'Source Inconnue')
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
-
-        if "REF" in clean_name:
+        
+        if "REF" in clean_name: 
             pretty_src = "Barème Officiel"
-        elif "LEGAL" in clean_name:
+        elif "LEGAL" in clean_name: 
             pretty_src = "Code du Travail"
-        elif "BOSS" in clean_name:
+        elif "BOSS" in clean_name: 
             pretty_src = "BOSS"
-        else:
+        else: 
             pretty_src = clean_name
-
+        
         sources_seen.append(pretty_src)
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
-
+        
     uniq_sources = []
     for s in sources_seen:
         if s and s not in uniq_sources:
             uniq_sources.append(s)
-
+            
     return context_text, uniq_sources
 
 def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
-
+    
+    # AJOUT DE LA SÉCURITÉ MATHÉMATIQUE DANS LE PROMPT
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro, assistant juridique de haut niveau en paie et droit social.
 
@@ -264,6 +265,11 @@ MÉTHODOLOGIE (HIÉRARCHIE) :
 3) Loi : Code du travail / Code de la sécurité sociale pour la base légale.
 4) Si une info manque dans les sources fournies, dis-le clairement au lieu d’inventer.
 
+SÉCURITÉ MATHÉMATIQUE (CRITIQUE) :
+- Les LLM sont mauvais en calcul mental. Si tu dois faire un calcul complexe (indemnités, proratas), POSE L'OPÉRATION mais sois extrêmement prudent sur le résultat final.
+- Si tu n'es pas sûr du calcul exact à 100%, donne la FORMULE détaillée (ex: "[(10 x 1/4) + (2,66 x 1/3)]") plutôt qu'un chiffre faux.
+- Vérifie toujours que ton résultat en gras correspond à la somme de tes précisions.
+
 LISTE DES SOURCES DISPONIBLES (documents récupérés) :
 {sources_list}
 
@@ -273,7 +279,7 @@ CONTEXTE DOCUMENTS :
 QUESTION :
 {question}
 """)
-
+    
     chain = prompt | llm | StrOutputParser()
     return chain.stream({
         "context": context,
@@ -305,16 +311,16 @@ st.markdown("<br>", unsafe_allow_html=True)
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-col_t, col_buttons = st.columns([3, 2])
-with col_t:
+col_t, col_buttons = st.columns([3, 2]) 
+with col_t: 
     st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
 
 with col_buttons:
     c_up, c_new = st.columns([1.6, 1])
     with c_up:
         uploaded_file = st.file_uploader(
-            "Upload",
-            type=["pdf", "txt"],
+            "Upload", 
+            type=["pdf", "txt"], 
             label_visibility="collapsed",
             key=f"uploader_{st.session_state.uploader_key}"
         )
@@ -336,44 +342,44 @@ if uploaded_file:
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
 
-if "messages" not in st.session_state:
+if "messages" not in st.session_state: 
     st.session_state.messages = []
 
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
+    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)
 
 if query := st.chat_input("Votre question juridique ou chiffrée..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
-
+    
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
-
+        
         cleaned_q = clean_query_for_engine(query)
         matched = engine.match_rules(cleaned_q if cleaned_q else query, top_k=5, min_score=2)
         certified_facts = engine.format_certified_facts(matched)
-
+        
         with st.spinner("Analyse en cours..."):
             context_text, sources_list = build_context(query)
-
+            
             full_response = ""
             for chunk in get_gemini_response_stream(
-                query=query,
-                context=context_text,
+                query=query, 
+                context=context_text, 
                 sources_list=sources_list,
                 certified_facts=certified_facts,
                 user_doc_content=user_doc_text
             ):
                 full_response += chunk
                 message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
-
+            
             if uploaded_file and "Document analysé" not in full_response:
                 full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
-
+            
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
-
+                
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 show_legal_info()
