@@ -5,18 +5,23 @@ from dotenv import load_dotenv
 
 def _get_stripe_key():
     """
-    Stripe nécessite une clé secrète.
-    Pour compatibilité, on accepte :
-    - STRIPE_SECRET_KEY (recommandé)
-    - STRIPE_API_KEY (si c'est ce que tu as déjà dans ton .env)
+    Priorité à STRIPE_SECRET_KEY (recommandé).
+    Fallback sur STRIPE_API_KEY pour éviter de casser un environnement existant.
     """
     load_dotenv()
     return os.getenv("STRIPE_SECRET_KEY") or os.getenv("STRIPE_API_KEY")
 
-def create_checkout_session(plan_type: str):
-    """Crée une session Stripe Checkout pour un abonnement (Mensuel / Annuel)."""
-    stripe.api_key = _get_stripe_key()
+def create_checkout_session(plan_type):
+    """Crée une session de paiement Stripe pour l'abonnement"""
 
+    stripe_key = _get_stripe_key()
+    if not stripe_key:
+        st.error("Erreur Stripe : clé API manquante (STRIPE_SECRET_KEY).")
+        return None
+
+    stripe.api_key = stripe_key
+
+    # IDs Stripe
     price_id = "price_1SnaTDQZ5ivv0RayXfKqvJ6I" if plan_type == "Mensuel" else "price_1SnaUOQZ5ivv0RayFnols3TI"
 
     try:
@@ -32,12 +37,15 @@ def create_checkout_session(plan_type: str):
         st.error(f"Erreur Stripe : {e}")
         return None
 
-def manage_subscription_link(email: str):
+def manage_subscription_link(email):
     """
-    Retourne l'URL du portail client Stripe (factures, carte, résiliation),
-    ou None si introuvable.
+    Crée un lien vers le portail Stripe (factures, carte, désabonnement).
     """
-    stripe.api_key = _get_stripe_key()
+    stripe_key = _get_stripe_key()
+    if not stripe_key:
+        return None
+
+    stripe.api_key = stripe_key
 
     try:
         customers = stripe.Customer.list(email=email, limit=1)
@@ -45,11 +53,10 @@ def manage_subscription_link(email: str):
             customer_id = customers.data[0].id
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                return_url="https://socialexpertfrance.fr",
+                return_url="https://socialexpertfrance.fr"
             )
             return session.url
     except Exception as e:
-        # On évite de casser l'app : on retourne None et on log
-        print(f"Erreur Stripe Portal : {e}")
+        print(f"Erreur Stripe Portal: {e}")
 
     return None
