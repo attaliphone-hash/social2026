@@ -100,26 +100,6 @@ def apply_pro_design():
 
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
-
-        /* --- STYLE DES BOUTONS D'ABONNEMENT (POUR GARDER TON LAYOUT) --- */
-        div[data-testid="stVerticalBlock"] .sub-btn-month button {
-            background-color: white !important;
-            color: #1565c0 !important;
-            border: 1px solid #1565c0 !important;
-            padding: 8px 16px !important;
-            border-radius: 5px !important;
-            font-weight: bold !important;
-            width: 100% !important;
-        }
-        div[data-testid="stVerticalBlock"] .sub-btn-year button {
-            background-color: white !important;
-            color: #2e7d32 !important;
-            border: 1px solid #2e7d32 !important;
-            padding: 8px 16px !important;
-            border-radius: 5px !important;
-            font-weight: bold !important;
-            width: 100% !important;
-        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -176,48 +156,16 @@ def show_legal_info():
 </div>
 """, unsafe_allow_html=True)
 
-def render_subscription_cards(link_month, link_year):
+# ==============================================================================
+# ABONNEMENTS : version compatible app.py (retourne "Mensuel"/"Annuel")
+# ==============================================================================
+def render_subscription_cards():
     """
-    Affiche les deux cartes d'abonnement (Mensuel/Bleu et Annuel/Vert) via liens externes.
-    (Conservé pour compatibilité, mais déconseillé car les sessions Stripe expirent.)
+    Affiche les deux cartes d'abonnement.
+    IMPORTANT : retourne "Mensuel" ou "Annuel" si l'utilisateur clique.
+    (app.py utilise ce retour pour appeler create_checkout_session()).
     """
-    col_m, col_a = st.columns(2)
-
-    with col_m:
-        st.markdown(f"""
-        <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb; height: 100%;">
-            <h3 style="color: #0d47a1; margin-top: 0;">Mensuel</h3>
-            <h2 style="color: #1565c0; font-size: 24px; margin: 10px 0;">50 € HT <small style="font-size: 14px; color: #555;">/ mois</small></h2>
-            <p style="color: #0277bd; font-style: italic; font-size: 14px;">Sans engagement</p>
-            <br>
-            <a href="{link_month}" target="_blank" style="text-decoration: none;">
-                <button style="background-color: white; color: #1565c0; border: 1px solid #1565c0; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
-                    S'abonner (Mensuel)
-                </button>
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col_a:
-        st.markdown(f"""
-        <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9; height: 100%;">
-            <h3 style="color: #1b5e20; margin-top: 0;">Annuel</h3>
-            <h2 style="color: #2e7d32; font-size: 24px; margin: 10px 0;">500 € HT <small style="font-size: 14px; color: #555;">/ an</small></h2>
-            <p style="color: #2e7d32; font-style: italic; font-size: 14px;">2 mois offerts</p>
-            <br>
-            <a href="{link_year}" target="_blank" style="text-decoration: none;">
-                <button style="background-color: white; color: #2e7d32; border: 1px solid #2e7d32; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
-                    S'abonner (Annuel)
-                </button>
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
-
-def render_subscription_cards_actions(on_month_click, on_year_click):
-    """
-    Même rendu visuel que render_subscription_cards, mais avec VRAIS boutons Streamlit
-    (permet de créer une session Stripe dynamique, donc pas de lien expiré).
-    """
+    clicked = None
     col_m, col_a = st.columns(2)
 
     with col_m:
@@ -228,10 +176,8 @@ def render_subscription_cards_actions(on_month_click, on_year_click):
             <p style="color: #0277bd; font-style: italic; font-size: 14px;">Sans engagement</p>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown('<div class="sub-btn-month">', unsafe_allow_html=True)
-        if st.button("S'abonner (Mensuel)", use_container_width=True, key="sub_month_action"):
-            on_month_click()
-        st.markdown('</div>', unsafe_allow_html=True)
+        if st.button("S'abonner (Mensuel)", key="btn_sub_month", use_container_width=True):
+            clicked = "Mensuel"
 
     with col_a:
         st.markdown("""
@@ -241,7 +187,7 @@ def render_subscription_cards_actions(on_month_click, on_year_click):
             <p style="color: #2e7d32; font-style: italic; font-size: 14px;">2 mois offerts</p>
         </div>
         """, unsafe_allow_html=True)
-        st.markdown('<div class="sub-btn-year">', unsafe_allow_html=True)
-        if st.button("S'abonner (Annuel)", use_container_width=True, key="sub_year_action"):
-            on_year_click()
-        st.markdown('</div>', unsafe_allow_html=True)
+        if st.button("S'abonner (Annuel)", key="btn_sub_year", use_container_width=True):
+            clicked = "Annuel"
+
+    return clicked
