@@ -258,7 +258,7 @@ STRUCTURE DE RÉPONSE (Règles strictes) :
    - CAS 2 : Si la réponse nécessite un CALCUL complexe (ex: indemnité de licenciement avec ancienneté, calcul de congés), NE DONNE PAS DE CHIFFRE dans la première phrase. Énonce seulement la règle ou la formule (ex: "L'indemnité est de 1/4 de mois par an..."). Le chiffre final ne doit apparaître que dans les précisions après le calcul détaillé.
 
 2. LES DÉTAILS :
-   - **Précisions** : C'est ici que tu poses les calculs étape par étape (obligatoire pour les cas complexes) et que tu expliques les conditions.
+   - **Précisions** : explique conditions, exceptions, calculs, seuils, points d’attention, et les éléments de contexte utiles.
    - **Sources** : Liste les documents utilisés.
 
 MÉTHODOLOGIE (HIÉRARCHIE) :
