@@ -19,7 +19,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # --- SERVICES ---
-from services.stripe_service import create_checkout_session  # ✅ MODIF : abonnement dynamique
+from services.stripe_service import create_checkout_session  # abonnement dynamique
 
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
@@ -33,13 +33,21 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
-# Configuration Stripe (clé API côté serveur)
-# ✅ On conserve ceci pour le portail client (Stripe Billing Portal)
-stripe.api_key = os.getenv("STRIPE_API_KEY")
+# -------------------------------------------------------------------
+# STRIPE : CLÉ UNIQUE ROBUSTE (même logique que stripe_service.py)
+# -------------------------------------------------------------------
+def get_stripe_secret_key() -> str:
+    return (os.getenv("STRIPE_API_KEY") or os.getenv("STRIPE_SECRET_KEY") or "").strip()
+
+stripe.api_key = get_stripe_secret_key()
 
 # --- FONCTION PORTAIL CLIENT STRIPE ---
 def manage_subscription_link(email):
     try:
+        if not stripe.api_key:
+            st.error("Erreur Stripe : clé API manquante (STRIPE_API_KEY ou STRIPE_SECRET_KEY).")
+            return None
+
         customers = stripe.Customer.list(email=email, limit=1)
         if customers and len(customers.data) > 0:
             customer_id = customers.data[0].id
@@ -75,7 +83,7 @@ def get_boss_status_html():
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
 
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
-                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
+                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
 
                 if date_tag:
                     try:
@@ -152,9 +160,6 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
 
-        # ✅ MODIF : on n'utilise plus de liens Stripe statiques expirables.
-        # render_subscription_cards() doit maintenant afficher des boutons Streamlit
-        # et retourner "Mensuel"/"Annuel" selon le clic (selon ton dernier styles.py).
         clicked_plan = render_subscription_cards()
 
         if clicked_plan in ("Mensuel", "Annuel"):
@@ -327,7 +332,6 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
 
-        # 1. MOTEUR DE RÈGLES (Priorité Absolue au YAML)
         verdict = {"found": False}
         if not user_doc_text:
             cleaned_q = clean_query_for_engine(query)
@@ -336,12 +340,9 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             if not verdict["found"]:
                 verdict = engine.get_formatted_answer(keywords=query.lower())
 
-        # CAS 1 : Réponse Certifiée (Engine / YAML)
         if verdict["found"]:
             full_response = f"**{verdict['text']}**\n\n---\n* **Sources** : {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
-
-        # CAS 2 : Réponse IA (Analytique)
         else:
             with st.spinner("Analyse en cours..."):
                 context_text = build_context(query)
