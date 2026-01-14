@@ -148,13 +148,15 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
 
-        # On garde ces variables (au cas où tu les utilises ailleurs),
-        # mais on n'envoie plus en paramètres à render_subscription_cards()
         link_month = "https://checkout.stripe.com/c/pay/cs_live_a1YuxowVQDoKMTBPa1aAK7S8XowoioMzray7z6oruWL2r1925Bz0NdVA6M#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
         link_year = "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
 
-        # ✅ Correction : ton ui/styles.py actuel attend 0 argument
-        render_subscription_cards()
+        # ✅ Correction robuste : compatible avec render_subscription_cards(link_month, link_year)
+        #    OU render_subscription_cards() selon ta version de ui/styles.py
+        try:
+            render_subscription_cards(link_month, link_year)
+        except TypeError:
+            render_subscription_cards()
 
     with tab2:
         st.caption("Code d'accès personnel")
