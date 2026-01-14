@@ -259,7 +259,7 @@ STRUCTURE DE RÉPONSE (Règles strictes) :
 
 2. LES DÉTAILS :
    - **Précisions** : explique conditions, exceptions, calculs, seuils, points d’attention, et les éléments de contexte utiles.
-   - **Sources** : Liste les documents utilisés.
+   - **Sources** : liste les sources utilisées (documents + faits certifiés si utilisés). Ne cite que des sources présentes dans le contexte ou dans les faits certifiés.
 
 MÉTHODOLOGIE (HIÉRARCHIE) :
 1) Chiffres / plafonds : si un fait certifié 2026 existe et est pertinent, utilise-le en priorité.
