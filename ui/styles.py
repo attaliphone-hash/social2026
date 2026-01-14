@@ -2,8 +2,6 @@ import streamlit as st
 import os
 import base64
 
-from services.stripe_service import create_checkout_session
-
 # ==============================================================================
 # DONNÉES DE RÉASSURANCE
 # ==============================================================================
@@ -24,6 +22,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
+    # CSS EXACT + CSS UPLOAD DISCRET + TRADUCTION BOUTON
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -51,17 +50,19 @@ def apply_pro_design():
             margin: 0 !important;
         }
 
-        /* REECRITURE DU TEXTE DU BOUTON */
+        /* REECRITURE DU TEXTE DU BOUTON (HACK CSS) */
         .stFileUploader button {
             border: 1px solid #ccc !important;
             background-color: white !important;
-            color: transparent !important;
+            color: transparent !important; /* On cache le texte 'Browse files' */
             padding: 0.25rem 0.75rem !important;
             font-size: 14px !important;
             margin-top: 3px !important;
             position: relative;
-            width: 250px !important;
+            width: 250px !important; /* Largeur fixe pour accueillir le texte français */
         }
+
+        /* On écrit le nouveau texte par-dessus */
         .stFileUploader button::after {
             content: "Charger un document pour analyse";
             color: #333 !important;
@@ -74,7 +75,7 @@ def apply_pro_design():
             font-weight: 500;
         }
 
-        /* CITATIONS */
+        /* CITATIONS (sub) - Style Expert Social */
         sub {
             font-size: 0.75em !important;
             color: #666 !important;
@@ -99,26 +100,6 @@ def apply_pro_design():
 
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
-
-        /* --- CARTES ABONNEMENT --- */
-        .sub-card {
-            border-radius: 10px;
-            padding: 18px;
-            border: 1px solid rgba(0,0,0,0.08);
-            height: 100%;
-        }
-        .sub-blue { background-color: #e3f2fd; border-color: #bbdefb; }
-        .sub-green { background-color: #e8f5e9; border-color: #c8e6c9; }
-
-        .sub-title-blue { color: #0d47a1; margin: 0; text-align:center; }
-        .sub-title-green { color: #1b5e20; margin: 0; text-align:center; }
-
-        .sub-price-blue { color: #1565c0; font-size: 24px; margin: 10px 0; text-align:center; font-weight: 700; }
-        .sub-price-green { color: #2e7d32; font-size: 24px; margin: 10px 0; text-align:center; font-weight: 700; }
-
-        .sub-note-blue { color: #0277bd; font-style: italic; font-size: 14px; text-align:center; margin-bottom: 10px; }
-        .sub-note-green { color: #2e7d32; font-style: italic; font-size: 14px; text-align:center; margin-bottom: 10px; }
-
         </style>
     """, unsafe_allow_html=True)
 
@@ -175,47 +156,41 @@ def show_legal_info():
 </div>
 """, unsafe_allow_html=True)
 
-def render_subscription_cards(link_month=None, link_year=None):
+# ==============================================================================
+# CARTES D'ABONNEMENT (SANS ARGUMENTS)
+# ==============================================================================
+def render_subscription_cards():
     """
-    Affiche les deux cartes d'abonnement.
+    Affiche les deux cartes d'abonnement (Mensuel/Bleu et Annuel/Vert)
+    Version SANS ARGUMENTS pour éviter toute régression de signature.
 
     IMPORTANT :
-    - Si link_month / link_year sont fournis : on affiche des liens (mode ancien).
-    - Sinon : on crée une session Stripe à chaque clic (mode recommandé, évite les sessions expirées).
+    - Les URL de paiement doivent être créées côté app.py via Stripe (sessions dynamiques).
+    - Ici, on ne met aucun lien Stripe "cs_live_..." statique.
+    - On déclenche simplement des boutons Streamlit avec des keys stables.
     """
-
     col_m, col_a = st.columns(2)
 
     with col_m:
         st.markdown("""
-        <div class="sub-card sub-blue">
-            <h3 class="sub-title-blue">Mensuel</h3>
-            <div class="sub-price-blue">50 € HT <span style="font-size:14px; color:#555;">/ mois</span></div>
-            <div class="sub-note-blue">Sans engagement</div>
+        <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb; height: 100%;">
+            <h3 style="color: #0d47a1; margin-top: 0;">Mensuel</h3>
+            <h2 style="color: #1565c0; font-size: 24px; margin: 10px 0;">50 € HT <small style="font-size: 14px; color: #555;">/ mois</small></h2>
+            <p style="color: #0277bd; font-style: italic; font-size: 14px;">Sans engagement</p>
         </div>
         """, unsafe_allow_html=True)
 
-        if link_month:
-            st.link_button("S'abonner (Mensuel)", link_month, use_container_width=True)
-        else:
-            if st.button("S'abonner (Mensuel)", use_container_width=True, key="sub_month"):
-                url = create_checkout_session("Mensuel")
-                if url:
-                    st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.button("S'abonner (Mensuel)", key="btn_sub_month", use_container_width=True)
 
     with col_a:
         st.markdown("""
-        <div class="sub-card sub-green">
-            <h3 class="sub-title-green">Annuel</h3>
-            <div class="sub-price-green">500 € HT <span style="font-size:14px; color:#555;">/ an</span></div>
-            <div class="sub-note-green">2 mois offerts</div>
+        <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9; height: 100%;">
+            <h3 style="color: #1b5e20; margin-top: 0;">Annuel</h3>
+            <h2 style="color: #2e7d32; font-size: 24px; margin: 10px 0;">500 € HT <small style="font-size: 14px; color: #555;">/ an</small></h2>
+            <p style="color: #2e7d32; font-style: italic; font-size: 14px;">2 mois offerts</p>
         </div>
         """, unsafe_allow_html=True)
 
-        if link_year:
-            st.link_button("S'abonner (Annuel)", link_year, use_container_width=True)
-        else:
-            if st.button("S'abonner (Annuel)", use_container_width=True, key="sub_year"):
-                url = create_checkout_session("Annuel")
-                if url:
-                    st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.button("S'abonner (Annuel)", key="btn_sub_year", use_container_width=True)
