@@ -211,3 +211,184 @@ def clean_query_for_engine(q):
     words = q.lower().split()
     cleaned = [w for w in words if w not in stop_words]
     return " ".join(cleaned)
+
+# --- CONTEXTE PINECONE ---
+def build_context(query):
+    raw_docs = vectorstore.similarity_search(query, k=25)
+    context_text = ""
+    sources_seen = []
+    
+    for d in raw_docs:
+        raw_src = d.metadata.get('source', 'Source Inconnue')
+        clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
+        
+        if "REF" in clean_name: 
+            pretty_src = "Barème Officiel"
+        elif "LEGAL" in clean_name: 
+            pretty_src = "Code du Travail"
+        elif "BOSS" in clean_name: 
+            pretty_src = "BOSS"
+        else: 
+            pretty_src = clean_name
+        
+        sources_seen.append(pretty_src)
+        context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
+        
+    uniq_sources = []
+    for s in sources_seen:
+        if s and s not in uniq_sources:
+            uniq_sources.append(s)
+            
+    return context_text, uniq_sources
+
+def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
+    user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
+    facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
+    
+# ==================================================================================
+    # PROMPT EXPERT SOCIAL 2026 - VERSION "EXECUTIVE & JURIDIQUE"
+    # ==================================================================================
+    prompt = ChatPromptTemplate.from_template("""
+Tu es l'Expert Social Pro 2026, consultant senior pour DRH et Experts-Comptables.
+Tes clients exigent une réponse immédiate, chiffrée, juridiquement sourcée et sans "blabla".
+
+RÈGLES D'OR (STYLE & TON) :
+1. **RÉPONSE DIRECTE D'ABORD** : Commence impérativement par le chiffre, la décision (Oui/Non) ou la règle clé. Bannis les phrases introductives scolaires ("Pour calculer cela, il faut...").
+2. **MISE EN VALEUR** : Mets les montants clés et les conclusions en **gras**. Utilise des arrondis "métier" (ex: "3,39 mois" et non "3,3889").
+3. **TON DÉCISIONNEL** : Ne suggère pas, affirme. Indique clairement les exclusions (ex: "Le plafond SS est sans incidence ici").
+
+STRUCTURE OBLIGATOIRE DE LA RÉPONSE :
+1. **LA CONCLUSION (Immédiate)**
+   - Donne le montant chiffré final ou la réponse juridique tranchée dès la première ligne.
+
+2. **ANALYSE EXPERT & VIGILANCE**
+   - Précise les seuils, les conditions d'attribution ou les exclusions spécifiques.
+   - Confirme l'application ou non des plafonds (PASS, SMIC) en vigueur en 2026.
+
+3. **DÉTAIL DU CALCUL (Preuve)**
+   - Pose le calcul étape par étape de manière irréfutable pour justifier ta conclusion.
+
+4. **RÉFÉRENCES JURIDIQUES PRÉCISES**
+   - Cite explicitement les **articles de loi** applicables (ex: "Code du Travail - Art. L.1234-9", "Code de la Sécurité Sociale - Art. L.242-1") et les références BOSS.
+   - Base-toi sur le contexte fourni, mais utilise ta connaissance juridique pour nommer les articles standards si la règle est identifiée.
+
+---
+DONNÉES CERTIFIÉES 2026 (YAML - PRIORITAIRE) :
+{facts_section}
+
+DOCUMENTS RETROUVÉS (PINECONE) :
+{context}
+
+QUESTION DU CLIENT :
+{question}
+
+---
+SOURCES INTERNES (FICHIERS CONSULTÉS) :
+{sources_list}
+""")
+    
+    chain = prompt | llm | StrOutputParser()
+    return chain.stream({
+        "context": context,
+        "question": query,
+        "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
+        "facts_section": facts_section
+    })
+
+# --- 4. INTERFACE DE CHAT ET SIDEBAR ---
+user_email = st.session_state.get("user_email", "")
+if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
+    with st.sidebar:
+        st.markdown("### 👤 Mon Compte")
+        st.write(f"Connecté : {user_email}")
+        if st.button("💳 Gérer mon abonnement", help="Factures, changement de carte, désabonnement"):
+            portal_url = manage_subscription_link(user_email)
+            if portal_url:
+                st.link_button("👉 Accéder au portail Stripe", portal_url)
+            else:
+                st.info("Aucun abonnement actif trouvé.")
+
+st.markdown("<hr>", unsafe_allow_html=True)
+
+if user_email == "ADMINISTRATEUR":
+    show_boss_alert()
+
+render_top_columns()
+st.markdown("<br>", unsafe_allow_html=True)
+
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
+
+col_t, col_buttons = st.columns([3, 2]) 
+with col_t: 
+    st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
+
+with col_buttons:
+    c_up, c_new = st.columns([1.6, 1])
+    with c_up:
+        uploaded_file = st.file_uploader(
+            "Upload", 
+            type=["pdf", "txt"], 
+            label_visibility="collapsed",
+            key=f"uploader_{st.session_state.uploader_key}"
+        )
+    with c_new:
+        if st.button("Nouvelle session"):
+            st.session_state.messages = []
+            st.session_state.uploader_key += 1
+            st.rerun()
+
+user_doc_text = None
+if uploaded_file:
+    try:
+        if uploaded_file.type == "application/pdf":
+            reader = pypdf.PdfReader(uploaded_file)
+            user_doc_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+        else:
+            user_doc_text = uploaded_file.read().decode("utf-8")
+        st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
+    except Exception as e:
+        st.error(f"Erreur lecture fichier: {e}")
+
+if "messages" not in st.session_state: 
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
+        st.markdown(msg["content"], unsafe_allow_html=True)
+
+if query := st.chat_input("Votre question juridique ou chiffrée..."):
+    st.session_state.messages.append({"role": "user", "content": query})
+    with st.chat_message("user"):
+        st.markdown(query)
+    
+    with st.chat_message("assistant", avatar="avatar-logo.png"):
+        message_placeholder = st.empty()
+        
+        cleaned_q = clean_query_for_engine(query)
+        matched = engine.match_rules(cleaned_q if cleaned_q else query, top_k=5, min_score=2)
+        certified_facts = engine.format_certified_facts(matched)
+        
+        with st.spinner("Analyse en cours..."):
+            context_text, sources_list = build_context(query)
+            
+            full_response = ""
+            for chunk in get_gemini_response_stream(
+                query=query, 
+                context=context_text, 
+                sources_list=sources_list,
+                certified_facts=certified_facts,
+                user_doc_content=user_doc_text
+            ):
+                full_response += chunk
+                message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
+            
+            if uploaded_file and "Document analysé" not in full_response:
+                full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
+            
+            message_placeholder.markdown(full_response, unsafe_allow_html=True)
+                
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+show_legal_info()
+st.markdown("<div style='text-align:center; color:#888; font-size:11px; margin-top:30px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
