@@ -1,19 +1,25 @@
 import streamlit as st
 import os
 import pypdf
+import stripe
+import requests
+import re
+from bs4 import BeautifulSoup
+from email.utils import parsedate_to_datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # --- IMPORTS UI ---
-from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
+from ui.styles import apply_pro_design, show_legal_info, render_top_columns
 from rules.engine import SocialRuleEngine
-from services.stripe_service import manage_subscription_link
-from services.boss_watcher import check_boss_updates
-
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+
+# --- SERVICES ---
+from services.stripe_service import create_checkout_session, manage_subscription_link
 
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
@@ -27,27 +33,64 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
-# --- 1B. VEILLE BOSS (CACHÉE) ---
-@st.cache_data(ttl=3600, show_spinner=False)
-def get_boss_status_cached():
-    """
-    Cache 1 heure : évite de retaper le flux RSS à chaque rerun Streamlit.
-    Renvoie (html, link).
-    """
-    return check_boss_updates()
+# --- FONCTION ROBUSTE (Veille BOSS) ---
+def get_boss_status_html():
+    try:
+        url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
+        headers = {"User-Agent": "Mozilla/5.0"}
+
+        response = requests.get(url, headers=headers, timeout=5)
+
+        if response.status_code == 200:
+            content = response.content.decode('utf-8')
+            soup = BeautifulSoup(content, 'html.parser')
+            latest_item = soup.find('item')
+
+            if latest_item:
+                title_tag = latest_item.find('title')
+                title = title_tag.text.strip() if title_tag else "Actualité BOSS"
+
+                link_match = re.search(r"<link>(.*?)</link>", str(latest_item))
+                link = link_match.group(1).strip() if link_match else "https://boss.gouv.fr"
+
+                date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
+
+                style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
+                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
+
+                if date_tag:
+                    try:
+                        pub_date_obj = parsedate_to_datetime(date_tag.text.strip())
+                        now = datetime.now(timezone.utc)
+                        days_old = (now - pub_date_obj).days
+                        date_str = pub_date_obj.strftime("%d/%m/%Y")
+
+                        html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
+
+                        if days_old < 8:
+                            return f"""<div style='{style_alert}'>🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
+                        else:
+                            return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
+
+                    except:
+                        pass
+
+                return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>""", link
+
+            return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
+
+        return "", ""
+    except Exception:
+        return "", ""
 
 def show_boss_alert():
-    """
-    Affiche l'alerte BOSS dans l'interface Admin uniquement.
-    Le flux RSS est lu via cache pour éviter latence/timeout à répétition.
-    """
     if "news_closed" not in st.session_state:
         st.session_state.news_closed = False
 
     if st.session_state.news_closed:
         return
 
-    html_content, _link = get_boss_status_cached()
+    html_content, link = get_boss_status_html()
 
     if html_content:
         col_text, col_close = st.columns([0.95, 0.05])
@@ -90,10 +133,22 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
 
-        link_month = "https://checkout.stripe.com/c/pay/cs_live_a1YuxowVQDoKMTBPa1aAK7S8XowoioMzray7z6oruWL2r1925Bz0NdVA6M#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
-        link_year = "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+        # ✅ CORRECTION : plus de liens Stripe “cs_live” en dur (ils expirent).
+        # On génère une nouvelle session Checkout à chaque clic.
+        col_m, col_a = st.columns(2)
+        with col_m:
+            st.info("**Mensuel**\n\n50 € HT / mois\n\n*Sans engagement*")
+            if st.button("S'abonner (Mensuel)", use_container_width=True, key="btn_sub_month"):
+                url_checkout = create_checkout_session("Mensuel")
+                if url_checkout:
+                    st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
 
-        render_subscription_cards(link_month, link_year)
+        with col_a:
+            st.success("**Annuel**\n\n500 € HT / an\n\n*2 mois offerts*")
+            if st.button("S'abonner (Annuel)", use_container_width=True, key="btn_sub_year"):
+                url_checkout = create_checkout_session("Annuel")
+                if url_checkout:
+                    st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
 
     with tab2:
         st.caption("Code d'accès personnel")
@@ -131,12 +186,14 @@ def load_ia_system():
 engine = load_engine()
 vectorstore, llm = load_ia_system()
 
+# Fonction de nettoyage pour le Moteur de Règles
 def clean_query_for_engine(q):
     stop_words = ["quel", "est", "le", "montant", "du", "de", "la", "les", "actuel", "en", "2026", "pour", "?", "l'"]
     words = q.lower().split()
     cleaned = [w for w in words if w not in stop_words]
     return " ".join(cleaned)
 
+# --- ARCHITECTURE HYBRIDE RESTAURÉE ---
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=25)
     context_text = ""
@@ -243,7 +300,6 @@ if uploaded_file:
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)

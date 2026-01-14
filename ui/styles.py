@@ -30,11 +30,11 @@ def apply_pro_design():
         footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1.5rem !important; }
-        
+
         /* Design des bulles de chat */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
-        
+
         /* --- CSS UPLOAD DISCRET & TRADUIT --- */
         .stFileUploader section {
             background-color: transparent !important;
@@ -49,7 +49,7 @@ def apply_pro_design():
             padding: 0 !important;
             margin: 0 !important;
         }
-        
+
         /* REECRITURE DU TEXTE DU BOUTON (HACK CSS) */
         .stFileUploader button {
             border: 1px solid #ccc !important;
@@ -61,7 +61,7 @@ def apply_pro_design():
             position: relative;
             width: 250px !important; /* Largeur fixe pour accueillir le texte français */
         }
-        
+
         /* On écrit le nouveau texte par-dessus */
         .stFileUploader button::after {
             content: "Charger un document pour analyse";
@@ -74,7 +74,7 @@ def apply_pro_design():
             align-items: center;
             font-weight: 500;
         }
-        
+
         /* CITATIONS (sub) - Style Expert Social */
         sub {
             font-size: 0.75em !important;
@@ -83,13 +83,13 @@ def apply_pro_design():
             position: relative;
             top: -0.3em;
         }
-        
+
         .assurance-text { font-size: 11px !important; color: #024c6f !important; text-align: left; display: block; line-height: 1.3; margin-bottom: 20px; }
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
-        
+
         h1 { font-family: 'Helvetica Neue', sans-serif; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
-        
+
         /* --- OPTIMISATION MOBILE --- */
         @media (max-width: 768px) {
             .block-container { padding-top: 0.2rem !important; }
@@ -97,29 +97,58 @@ def apply_pro_design():
             .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
             h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
         }
-        
+
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
+
+        /* --- STYLE DES BOUTONS D'ABONNEMENT (POUR GARDER TON LAYOUT) --- */
+        div[data-testid="stVerticalBlock"] .sub-btn-month button {
+            background-color: white !important;
+            color: #1565c0 !important;
+            border: 1px solid #1565c0 !important;
+            padding: 8px 16px !important;
+            border-radius: 5px !important;
+            font-weight: bold !important;
+            width: 100% !important;
+        }
+        div[data-testid="stVerticalBlock"] .sub-btn-year button {
+            background-color: white !important;
+            color: #2e7d32 !important;
+            border: 1px solid #2e7d32 !important;
+            padding: 8px 16px !important;
+            border-radius: 5px !important;
+            font-weight: bold !important;
+            width: 100% !important;
+        }
         </style>
     """, unsafe_allow_html=True)
-    
+
     # CHARGEMENT FOND D'ECRAN
     bg_data = get_base64('background.webp')
     if bg_data:
-        st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
+        st.markdown(
+            f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>',
+            unsafe_allow_html=True
+        )
     else:
-        st.markdown("""<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""", unsafe_allow_html=True)
+        st.markdown(
+            """<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""",
+            unsafe_allow_html=True
+        )
 
 def render_top_columns():
     cols = st.columns(5)
     for i, col in enumerate(cols):
         title, desc = ARGUMENTS_UNIFIES[i]
-        col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
+        col.markdown(
+            f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>',
+            unsafe_allow_html=True
+        )
 
 def show_legal_info():
     st.markdown("<br><br>", unsafe_allow_html=True)
     _, col_l, col_r, _ = st.columns([1, 2, 2, 1])
-    
+
     with col_l:
         with st.expander("Mentions Légales"):
             st.markdown("""
@@ -134,7 +163,7 @@ def show_legal_info():
     Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique. L'utilisateur de l'application doit en toute circonstance vérifier les réponses de l'IA qui n'engagent pas l'éditeur de l'application
 </div>
 """, unsafe_allow_html=True)
-            
+
     with col_r:
         with st.expander("Politique de Confidentialité & Cookies (RGPD)"):
             st.markdown("""
@@ -149,11 +178,11 @@ def show_legal_info():
 
 def render_subscription_cards(link_month, link_year):
     """
-    Affiche les deux cartes d'abonnement (Mensuel/Bleu et Annuel/Vert)
+    Affiche les deux cartes d'abonnement (Mensuel/Bleu et Annuel/Vert) via liens externes.
+    (Conservé pour compatibilité, mais déconseillé car les sessions Stripe expirent.)
     """
     col_m, col_a = st.columns(2)
-    
-    # Carte Mensuelle (Bleue)
+
     with col_m:
         st.markdown(f"""
         <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb; height: 100%;">
@@ -169,7 +198,6 @@ def render_subscription_cards(link_month, link_year):
         </div>
         """, unsafe_allow_html=True)
 
-    # Carte Annuelle (Verte)
     with col_a:
         st.markdown(f"""
         <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9; height: 100%;">
@@ -184,3 +212,36 @@ def render_subscription_cards(link_month, link_year):
             </a>
         </div>
         """, unsafe_allow_html=True)
+
+def render_subscription_cards_actions(on_month_click, on_year_click):
+    """
+    Même rendu visuel que render_subscription_cards, mais avec VRAIS boutons Streamlit
+    (permet de créer une session Stripe dynamique, donc pas de lien expiré).
+    """
+    col_m, col_a = st.columns(2)
+
+    with col_m:
+        st.markdown("""
+        <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb; height: 100%;">
+            <h3 style="color: #0d47a1; margin-top: 0;">Mensuel</h3>
+            <h2 style="color: #1565c0; font-size: 24px; margin: 10px 0;">50 € HT <small style="font-size: 14px; color: #555;">/ mois</small></h2>
+            <p style="color: #0277bd; font-style: italic; font-size: 14px;">Sans engagement</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="sub-btn-month">', unsafe_allow_html=True)
+        if st.button("S'abonner (Mensuel)", use_container_width=True, key="sub_month_action"):
+            on_month_click()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with col_a:
+        st.markdown("""
+        <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9; height: 100%;">
+            <h3 style="color: #1b5e20; margin-top: 0;">Annuel</h3>
+            <h2 style="color: #2e7d32; font-size: 24px; margin: 10px 0;">500 € HT <small style="font-size: 14px; color: #555;">/ an</small></h2>
+            <p style="color: #2e7d32; font-style: italic; font-size: 14px;">2 mois offerts</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown('<div class="sub-btn-year">', unsafe_allow_html=True)
+        if st.button("S'abonner (Annuel)", use_container_width=True, key="sub_year_action"):
+            on_year_click()
+        st.markdown('</div>', unsafe_allow_html=True)
