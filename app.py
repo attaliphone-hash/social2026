@@ -138,7 +138,7 @@ def check_password():
 
         if st.button("Se connecter au compte", use_container_width=True):
             try:
-                res = supabase.auth.sign_in_with_password({"email": email, "password": pwd})
+                supabase.auth.sign_in_with_password({"email": email, "password": pwd})
                 st.session_state.authenticated = True
                 st.session_state.user_email = email
                 st.rerun()
@@ -148,10 +148,13 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
 
+        # On garde ces variables (au cas où tu les utilises ailleurs),
+        # mais on n'envoie plus en paramètres à render_subscription_cards()
         link_month = "https://checkout.stripe.com/c/pay/cs_live_a1YuxowVQDoKMTBPa1aAK7S8XowoioMzray7z6oruWL2r1925Bz0NdVA6M#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
         link_year = "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
 
-        render_subscription_cards(link_month, link_year)
+        # ✅ Correction : ton ui/styles.py actuel attend 0 argument
+        render_subscription_cards()
 
     with tab2:
         st.caption("Code d'accès personnel")
@@ -217,7 +220,6 @@ def build_context(query):
         sources_seen.append(pretty_src)
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
 
-    # dédoublonnage tout en gardant l’ordre
     uniq_sources = []
     for s in sources_seen:
         if s and s not in uniq_sources:
@@ -335,12 +337,10 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
 
-        # 1) Faits certifiés YAML (sans court-circuit)
         cleaned_q = clean_query_for_engine(query)
         matched = engine.match_rules(cleaned_q if cleaned_q else query, top_k=5, min_score=2)
         certified_facts = engine.format_certified_facts(matched)
 
-        # 2) Contexte Pinecone
         with st.spinner("Analyse en cours..."):
             context_text, sources_list = build_context(query)
 
