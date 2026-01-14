@@ -2,6 +2,8 @@ import streamlit as st
 import os
 import base64
 
+from services.stripe_service import create_checkout_session
+
 # ==============================================================================
 # DONNÉES DE RÉASSURANCE
 # ==============================================================================
@@ -16,10 +18,9 @@ ARGUMENTS_UNIFIES = [
 # ==============================================================================
 # FONCTIONS UTILITAIRES DE DESIGN
 # ==============================================================================
-def get_base64(bin_file: str) -> str:
+def get_base64(bin_file):
     if os.path.exists(bin_file):
-        with open(bin_file, "rb") as f:
-            return base64.b64encode(f.read()).decode()
+        return base64.b64encode(open(bin_file, "rb").read()).decode()
     return ""
 
 def apply_pro_design():
@@ -31,20 +32,26 @@ def apply_pro_design():
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1.5rem !important; }
 
-        /* Bulles de chat */
+        /* Design des bulles de chat */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
 
-        /* Upload discret + traduction bouton */
+        /* --- CSS UPLOAD DISCRET & TRADUIT --- */
         .stFileUploader section {
             background-color: transparent !important;
             border: none !important;
             padding: 0 !important;
             min-height: 0 !important;
         }
-        .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
-        .stFileUploader div[data-testid="stFileUploaderInterface"] { padding: 0 !important; margin: 0 !important; }
+        .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] {
+            display: none !important;
+        }
+        .stFileUploader div[data-testid="stFileUploaderInterface"] {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
 
+        /* REECRITURE DU TEXTE DU BOUTON */
         .stFileUploader button {
             border: 1px solid #ccc !important;
             background-color: white !important;
@@ -67,7 +74,7 @@ def apply_pro_design():
             font-weight: 500;
         }
 
-        /* Citations */
+        /* CITATIONS */
         sub {
             font-size: 0.75em !important;
             color: #666 !important;
@@ -82,7 +89,7 @@ def apply_pro_design():
 
         h1 { font-family: 'Helvetica Neue', sans-serif; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
 
-        /* Mobile */
+        /* --- OPTIMISATION MOBILE --- */
         @media (max-width: 768px) {
             .block-container { padding-top: 0.2rem !important; }
             iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
@@ -92,9 +99,30 @@ def apply_pro_design():
 
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
+
+        /* --- CARTES ABONNEMENT --- */
+        .sub-card {
+            border-radius: 10px;
+            padding: 18px;
+            border: 1px solid rgba(0,0,0,0.08);
+            height: 100%;
+        }
+        .sub-blue { background-color: #e3f2fd; border-color: #bbdefb; }
+        .sub-green { background-color: #e8f5e9; border-color: #c8e6c9; }
+
+        .sub-title-blue { color: #0d47a1; margin: 0; text-align:center; }
+        .sub-title-green { color: #1b5e20; margin: 0; text-align:center; }
+
+        .sub-price-blue { color: #1565c0; font-size: 24px; margin: 10px 0; text-align:center; font-weight: 700; }
+        .sub-price-green { color: #2e7d32; font-size: 24px; margin: 10px 0; text-align:center; font-weight: 700; }
+
+        .sub-note-blue { color: #0277bd; font-style: italic; font-size: 14px; text-align:center; margin-bottom: 10px; }
+        .sub-note-green { color: #2e7d32; font-style: italic; font-size: 14px; text-align:center; margin-bottom: 10px; }
+
         </style>
     """, unsafe_allow_html=True)
 
+    # CHARGEMENT FOND D'ECRAN
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(
@@ -147,28 +175,47 @@ def show_legal_info():
 </div>
 """, unsafe_allow_html=True)
 
-def render_subscription_cards(link_month: str, link_year: str):
+def render_subscription_cards(link_month=None, link_year=None):
     """
-    Affiche les deux cartes d'abonnement (Mensuel / Annuel) avec des boutons cliquables fiables.
+    Affiche les deux cartes d'abonnement.
+
+    IMPORTANT :
+    - Si link_month / link_year sont fournis : on affiche des liens (mode ancien).
+    - Sinon : on crée une session Stripe à chaque clic (mode recommandé, évite les sessions expirées).
     """
+
     col_m, col_a = st.columns(2)
 
     with col_m:
         st.markdown("""
-        <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb;">
-            <h3 style="color: #0d47a1; margin-top: 0;">Mensuel</h3>
-            <h2 style="color: #1565c0; font-size: 24px; margin: 10px 0;">50 € HT <small style="font-size: 14px; color: #555;">/ mois</small></h2>
-            <p style="color: #0277bd; font-style: italic; font-size: 14px;">Sans engagement</p>
+        <div class="sub-card sub-blue">
+            <h3 class="sub-title-blue">Mensuel</h3>
+            <div class="sub-price-blue">50 € HT <span style="font-size:14px; color:#555;">/ mois</span></div>
+            <div class="sub-note-blue">Sans engagement</div>
         </div>
         """, unsafe_allow_html=True)
-        st.link_button("S'abonner (Mensuel)", link_month, use_container_width=True)
+
+        if link_month:
+            st.link_button("S'abonner (Mensuel)", link_month, use_container_width=True)
+        else:
+            if st.button("S'abonner (Mensuel)", use_container_width=True, key="sub_month"):
+                url = create_checkout_session("Mensuel")
+                if url:
+                    st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
 
     with col_a:
         st.markdown("""
-        <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9;">
-            <h3 style="color: #1b5e20; margin-top: 0;">Annuel</h3>
-            <h2 style="color: #2e7d32; font-size: 24px; margin: 10px 0;">500 € HT <small style="font-size: 14px; color: #555;">/ an</small></h2>
-            <p style="color: #2e7d32; font-style: italic; font-size: 14px;">2 mois offerts</p>
+        <div class="sub-card sub-green">
+            <h3 class="sub-title-green">Annuel</h3>
+            <div class="sub-price-green">500 € HT <span style="font-size:14px; color:#555;">/ an</span></div>
+            <div class="sub-note-green">2 mois offerts</div>
         </div>
         """, unsafe_allow_html=True)
-        st.link_button("S'abonner (Annuel)", link_year, use_container_width=True)
+
+        if link_year:
+            st.link_button("S'abonner (Annuel)", link_year, use_container_width=True)
+        else:
+            if st.button("S'abonner (Annuel)", use_container_width=True, key="sub_year"):
+                url = create_checkout_session("Annuel")
+                if url:
+                    st.markdown(f'<meta http-equiv="refresh" content="0;URL={url}">', unsafe_allow_html=True)
