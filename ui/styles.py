@@ -16,13 +16,13 @@ ARGUMENTS_UNIFIES = [
 # ==============================================================================
 # FONCTIONS UTILITAIRES DE DESIGN
 # ==============================================================================
-def get_base64(bin_file):
+def get_base64(bin_file: str) -> str:
     if os.path.exists(bin_file):
-        return base64.b64encode(open(bin_file, "rb").read()).decode()
+        with open(bin_file, "rb") as f:
+            return base64.b64encode(f.read()).decode()
     return ""
 
 def apply_pro_design():
-    # CSS EXACT + CSS UPLOAD DISCRET + TRADUCTION BOUTON
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
@@ -31,38 +31,30 @@ def apply_pro_design():
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1.5rem !important; }
 
-        /* Design des bulles de chat */
+        /* Bulles de chat */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
         .stChatMessage p, .stChatMessage li { color: black !important; line-height: 1.6 !important; }
 
-        /* --- CSS UPLOAD DISCRET & TRADUIT --- */
+        /* Upload discret + traduction bouton */
         .stFileUploader section {
             background-color: transparent !important;
             border: none !important;
             padding: 0 !important;
             min-height: 0 !important;
         }
-        .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] {
-            display: none !important;
-        }
-        .stFileUploader div[data-testid="stFileUploaderInterface"] {
-            padding: 0 !important;
-            margin: 0 !important;
-        }
+        .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
+        .stFileUploader div[data-testid="stFileUploaderInterface"] { padding: 0 !important; margin: 0 !important; }
 
-        /* REECRITURE DU TEXTE DU BOUTON (HACK CSS) */
         .stFileUploader button {
             border: 1px solid #ccc !important;
             background-color: white !important;
-            color: transparent !important; /* On cache le texte 'Browse files' */
+            color: transparent !important;
             padding: 0.25rem 0.75rem !important;
             font-size: 14px !important;
             margin-top: 3px !important;
             position: relative;
-            width: 250px !important; /* Largeur fixe pour accueillir le texte français */
+            width: 250px !important;
         }
-
-        /* On écrit le nouveau texte par-dessus */
         .stFileUploader button::after {
             content: "Charger un document pour analyse";
             color: #333 !important;
@@ -75,7 +67,7 @@ def apply_pro_design():
             font-weight: 500;
         }
 
-        /* CITATIONS (sub) - Style Expert Social */
+        /* Citations */
         sub {
             font-size: 0.75em !important;
             color: #666 !important;
@@ -90,7 +82,7 @@ def apply_pro_design():
 
         h1 { font-family: 'Helvetica Neue', sans-serif; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
 
-        /* --- OPTIMISATION MOBILE --- */
+        /* Mobile */
         @media (max-width: 768px) {
             .block-container { padding-top: 0.2rem !important; }
             iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
@@ -103,7 +95,6 @@ def apply_pro_design():
         </style>
     """, unsafe_allow_html=True)
 
-    # CHARGEMENT FOND D'ECRAN
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(
@@ -156,48 +147,28 @@ def show_legal_info():
 </div>
 """, unsafe_allow_html=True)
 
-def render_subscription_cards(link_month=None, link_year=None):
+def render_subscription_cards(link_month: str, link_year: str):
     """
-    Affiche les deux cartes d'abonnement.
-
-    Compatibilité :
-    - Ancien usage : render_subscription_cards(link_month, link_year)
-    - Nouveau usage : render_subscription_cards() (si l'appel est déplacé ailleurs)
+    Affiche les deux cartes d'abonnement (Mensuel / Annuel) avec des boutons cliquables fiables.
     """
-    # Si on n'a pas de liens, on n'affiche rien (évite l'erreur et évite un bloc incomplet)
-    if not link_month or not link_year:
-        return
-
     col_m, col_a = st.columns(2)
 
-    # Carte Mensuelle (Bleue)
     with col_m:
-        st.markdown(f"""
-        <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb; height: 100%;">
+        st.markdown("""
+        <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb;">
             <h3 style="color: #0d47a1; margin-top: 0;">Mensuel</h3>
             <h2 style="color: #1565c0; font-size: 24px; margin: 10px 0;">50 € HT <small style="font-size: 14px; color: #555;">/ mois</small></h2>
             <p style="color: #0277bd; font-style: italic; font-size: 14px;">Sans engagement</p>
-            <br>
-            <a href="{link_month}" target="_blank" style="text-decoration: none;">
-                <button style="background-color: white; color: #1565c0; border: 1px solid #1565c0; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
-                    S'abonner (Mensuel)
-                </button>
-            </a>
         </div>
         """, unsafe_allow_html=True)
+        st.link_button("S'abonner (Mensuel)", link_month, use_container_width=True)
 
-    # Carte Annuelle (Verte)
     with col_a:
-        st.markdown(f"""
-        <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9; height: 100%;">
+        st.markdown("""
+        <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9;">
             <h3 style="color: #1b5e20; margin-top: 0;">Annuel</h3>
             <h2 style="color: #2e7d32; font-size: 24px; margin: 10px 0;">500 € HT <small style="font-size: 14px; color: #555;">/ an</small></h2>
             <p style="color: #2e7d32; font-style: italic; font-size: 14px;">2 mois offerts</p>
-            <br>
-            <a href="{link_year}" target="_blank" style="text-decoration: none;">
-                <button style="background-color: white; color: #2e7d32; border: 1px solid #2e7d32; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
-                    S'abonner (Annuel)
-                </button>
-            </a>
         </div>
         """, unsafe_allow_html=True)
+        st.link_button("S'abonner (Annuel)", link_year, use_container_width=True)
