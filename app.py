@@ -198,13 +198,28 @@ def load_engine():
 @st.cache_resource
 def load_ia_system():
     api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise ValueError("La clé GOOGLE_API_KEY est introuvable dans le fichier .env")
+        
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
-    vectorstore = PineconeVectorStore.from_existing_index(index_name="expert-social", embedding=embeddings)
+    
+    try:
+        vectorstore = PineconeVectorStore.from_existing_index(index_name="expert-social", embedding=embeddings)
+    except Exception as e:
+        raise ConnectionError(f"Impossible de se connecter à Pinecone ('expert-social') : {e}")
+        
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0, google_api_key=api_key)
     return vectorstore, llm
 
-engine = load_engine()
-vectorstore, llm = load_ia_system()
+# --- BLOC DE CHARGEMENT SÉCURISÉ ---
+try:
+    with st.spinner("Chargement du cerveau de l'IA..."):
+        engine = load_engine()
+        vectorstore, llm = load_ia_system()
+except Exception as e:
+    st.error(f"🔴 ERREUR CRITIQUE DE CHARGEMENT : {e}")
+    st.info("Vérifiez vos clés API dans le fichier .env et votre connexion internet.")
+    st.stop()
 
 def clean_query_for_engine(q):
     stop_words = ["quel", "est", "le", "montant", "du", "de", "la", "les", "actuel", "en", "2026", "pour", "?", "l'"]
@@ -246,31 +261,32 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
 # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - VERSION "EXECUTIVE & JURIDIQUE"
+    # PROMPT DE SÉCURITÉ (ROLLBACK) : CALCUL D'ABORD, CONCLUSION ENSUITE
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
-Tu es l'Expert Social Pro 2026, consultant senior pour DRH et Experts-Comptables.
-Tes clients exigent une réponse immédiate, chiffrée, juridiquement sourcée et sans "blabla".
+Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue.
 
-RÈGLES D'OR (STYLE & TON) :
-1. **RÉPONSE DIRECTE D'ABORD** : Commence impérativement par le chiffre, la décision (Oui/Non) ou la règle clé. Bannis les phrases introductives scolaires ("Pour calculer cela, il faut...").
-2. **MISE EN VALEUR** : Mets les montants clés et les conclusions en **gras**. Utilise des arrondis "métier" (ex: "3,39 mois" et non "3,3889").
-3. **TON DÉCISIONNEL** : Ne suggère pas, affirme. Indique clairement les exclusions (ex: "Le plafond SS est sans incidence ici").
+MÉTHODOLOGIE OBLIGATOIRE :
+1. ANALYSE : Identifie les règles applicables dans le contexte et les faits certifiés (YAML).
+2. CALCUL DÉTAILLÉ : Pose le calcul étape par étape AVANT de donner le résultat final. C'est la seule façon d'éviter les erreurs.
+3. CONCLUSION : Donne la réponse finale claire et le montant exact à la fin.
+4. SOURCES : Cite les articles de loi (Code du Travail, CSS) et les fichiers utilisés.
 
-STRUCTURE OBLIGATOIRE DE LA RÉPONSE :
-1. **LA CONCLUSION (Immédiate)**
-   - Donne le montant chiffré final ou la réponse juridique tranchée dès la première ligne.
+STRUCTURE DE LA RÉPONSE :
+**1. Analyse & Règles Applicables**
+Explique brièvement la règle (ex: "L'indemnité est de 1/4 de mois par année..."). Précise si des plafonds ou exclusions s'appliquent.
 
-2. **ANALYSE EXPERT & VIGILANCE**
-   - Précise les seuils, les conditions d'attribution ou les exclusions spécifiques.
-   - Confirme l'application ou non des plafonds (PASS, SMIC) en vigueur en 2026.
+**2. Détail du Calcul (Pas à Pas)**
+Pose l'opération mathématique complète.
+Exemple : "10 ans x 1/4 = 2,5 mois"
+"2 ans x 1/3 = 0,66 mois"
+"Total = ..."
 
-3. **DÉTAIL DU CALCUL (Preuve)**
-   - Pose le calcul étape par étape de manière irréfutable pour justifier ta conclusion.
+**3. CONCLUSION DÉFINITIVE**
+"Le montant de l'indemnité est estimé à : **[Montant Calculé]**"
 
-4. **RÉFÉRENCES JURIDIQUES PRÉCISES**
-   - Cite explicitement les **articles de loi** applicables (ex: "Code du Travail - Art. L.1234-9", "Code de la Sécurité Sociale - Art. L.242-1") et les références BOSS.
-   - Base-toi sur le contexte fourni, mais utilise ta connaissance juridique pour nommer les articles standards si la règle est identifiée.
+**4. Références Juridiques**
+Cite les articles de loi précis et les sources.
 
 ---
 DONNÉES CERTIFIÉES 2026 (YAML - PRIORITAIRE) :
@@ -283,7 +299,7 @@ QUESTION DU CLIENT :
 {question}
 
 ---
-SOURCES INTERNES (FICHIERS CONSULTÉS) :
+SOURCES INTERNES :
 {sources_list}
 """)
     
