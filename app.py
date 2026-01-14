@@ -31,7 +31,7 @@ key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
 # Configuration Stripe
-stripe.api_key = os.getenv("STRIPE_API_KEY")
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 # --- FONCTION PORTAIL CLIENT STRIPE ---
 def manage_subscription_link(email):
