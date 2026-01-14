@@ -8,7 +8,6 @@ from supabase import create_client, Client
 from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from services.stripe_service import manage_subscription_link
-from services.boss_watcher import check_boss_updates
 
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -26,25 +25,6 @@ apply_pro_design()
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
-
-# --- 1bis. VEILLE BOSS (via service unique) ---
-def show_boss_alert():
-    if "news_closed" not in st.session_state:
-        st.session_state.news_closed = False
-
-    if st.session_state.news_closed:
-        return
-
-    html_content = check_boss_updates()
-
-    if html_content:
-        col_text, col_close = st.columns([0.95, 0.05])
-        with col_text:
-            st.markdown(html_content, unsafe_allow_html=True)
-        with col_close:
-            if st.button("✖️", key="btn_close_news", help="Masquer"):
-                st.session_state.news_closed = True
-                st.rerun()
 
 # --- 2. AUTHENTIFICATION ---
 def check_password():
@@ -119,14 +99,12 @@ def load_ia_system():
 engine = load_engine()
 vectorstore, llm = load_ia_system()
 
-# Fonction de nettoyage pour le Moteur de Règles
 def clean_query_for_engine(q):
     stop_words = ["quel", "est", "le", "montant", "du", "de", "la", "les", "actuel", "en", "2026", "pour", "?", "l'"]
     words = q.lower().split()
     cleaned = [w for w in words if w not in stop_words]
     return " ".join(cleaned)
 
-# --- ARCHITECTURE HYBRIDE RESTAURÉE ---
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=25)
     context_text = ""
@@ -135,10 +113,14 @@ def build_context(query):
         raw_src = d.metadata.get('source', 'Source Inconnue')
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
 
-        if "REF" in clean_name: pretty_src = "Barème Officiel"
-        elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
-        elif "BOSS" in clean_name: pretty_src = "BOSS"
-        else: pretty_src = clean_name
+        if "REF" in clean_name:
+            pretty_src = "Barème Officiel"
+        elif "LEGAL" in clean_name:
+            pretty_src = "Code du Travail"
+        elif "BOSS" in clean_name:
+            pretty_src = "BOSS"
+        else:
+            pretty_src = clean_name
 
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
 
@@ -187,9 +169,6 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
-if user_email == "ADMINISTRATEUR":
-    show_boss_alert()
-
 render_top_columns()
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -227,9 +206,11 @@ if uploaded_file:
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
 
-if "messages" not in st.session_state: st.session_state.messages = []
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
+    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)
 
 if query := st.chat_input("Votre question juridique ou chiffrée..."):
@@ -251,7 +232,6 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
         if verdict["found"]:
             full_response = f"**{verdict['text']}**\n\n---\n* **Sources** : {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
-
         else:
             with st.spinner("Analyse en cours..."):
                 context_text = build_context(query)
