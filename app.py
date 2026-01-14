@@ -292,7 +292,6 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
 
-        # 1. MOTEUR DE RÈGLES (Priorité Absolue au YAML)
         verdict = {"found": False}
         if not user_doc_text:
             cleaned_q = clean_query_for_engine(query)
@@ -301,12 +300,10 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             if not verdict["found"]:
                 verdict = engine.get_formatted_answer(keywords=query.lower())
 
-        # CAS 1 : Réponse Certifiée (Engine / YAML)
         if verdict["found"]:
             full_response = f"**{verdict['text']}**\n\n---\n* **Sources** : {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
-        # CAS 2 : Réponse IA (Analytique)
         else:
             with st.spinner("Analyse en cours..."):
                 context_text = build_context(query)
