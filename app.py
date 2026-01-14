@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import pypdf
+import time
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -27,11 +28,19 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
-# --- 1B. VEILLE BOSS (UI) ---
+# --- 1B. VEILLE BOSS (CACHÉE) ---
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_boss_status_cached():
+    """
+    Cache 1 heure : évite de retaper le flux RSS à chaque rerun Streamlit.
+    Renvoie (html, link).
+    """
+    return check_boss_updates()
+
 def show_boss_alert():
     """
     Affiche l'alerte BOSS dans l'interface Admin uniquement.
-    L'extraction RSS est externalisée dans services/boss_watcher.py
+    Le flux RSS est lu via cache pour éviter latence/timeout à répétition.
     """
     if "news_closed" not in st.session_state:
         st.session_state.news_closed = False
@@ -39,7 +48,7 @@ def show_boss_alert():
     if st.session_state.news_closed:
         return
 
-    html_content, _link = check_boss_updates()
+    html_content, _link = get_boss_status_cached()
 
     if html_content:
         col_text, col_close = st.columns([0.95, 0.05])
