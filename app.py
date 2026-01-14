@@ -36,7 +36,7 @@ def check_password():
         return True
 
     st.markdown("<h2 style='text-align: center; color: #024c6f;'>Expert Social Pro - Accès</h2>", unsafe_allow_html=True)
-    
+
     render_top_columns()
     st.markdown("---")
 
@@ -46,22 +46,22 @@ def check_password():
         st.caption("Connectez-vous pour accéder à votre espace abonné.")
         email = st.text_input("Email client", key="email_client")
         pwd = st.text_input("Mot de passe", type="password", key="pwd_client")
-        
+
         if st.button("Se connecter au compte", use_container_width=True):
             try:
-                res = supabase.auth.sign_in_with_password({"email": email, "password": pwd})
+                supabase.auth.sign_in_with_password({"email": email, "password": pwd})
                 st.session_state.authenticated = True
                 st.session_state.user_email = email
                 st.rerun()
             except Exception:
                 st.error("Identifiants incorrects ou compte non activé.")
-        
+
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
-        
+
         link_month = "https://checkout.stripe.com/c/pay/cs_live_a1YuxowVQDoKMTBPa1aAK7S8XowoioMzray7z6oruWL2r1925Bz0NdVA6M#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
         link_year = "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
-        
+
         render_subscription_cards(link_month, link_year)
 
     with tab2:
@@ -111,26 +111,30 @@ def clean_query_for_engine(q):
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=25)
     context_text = ""
-    
+
     for d in raw_docs:
         raw_src = d.metadata.get('source', 'Source Inconnue')
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
-        
-        if "REF" in clean_name: pretty_src = "Barème Officiel"
-        elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
-        elif "BOSS" in clean_name: pretty_src = "BOSS"
-        else: pretty_src = clean_name
-        
+
+        if "REF" in clean_name:
+            pretty_src = "Barème Officiel"
+        elif "LEGAL" in clean_name:
+            pretty_src = "Code du Travail"
+        elif "BOSS" in clean_name:
+            pretty_src = "BOSS"
+        else:
+            pretty_src = clean_name
+
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
-        
+
     return context_text
 
 def get_gemini_response_stream(query, context, user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
-    
+
     prompt = ChatPromptTemplate.from_template("""
     Tu es l'Expert Social Pro, un assistant juridique de haut niveau.
-    
+
     MÉTHODOLOGIE DE RECHERCHE (HIÉRARCHIE DES NORMES) :
     1. PRIORITÉ ABSOLUE AUX CHIFFRES : Pour toute question impliquant un montant, un taux ou un plafond (ex: PASS, SMIC), tu dois utiliser les valeurs contenues dans les documents "Barème Officiel" (fichiers REF_). Ce sont les seuls qui font foi pour 2026.
     2. DOCTRINE : Utilise les documents "BOSS" pour expliquer les mécanismes et l'interprétation administrative.
@@ -142,13 +146,13 @@ def get_gemini_response_stream(query, context, user_doc_content=None):
     3. Sois structuré :
 
        **La réponse directe doit être écrite ici, entièrement en GRAS.** Si c'est un chiffre, donne le montant exact tiré du Barème.
-       
+
        * **Précisions** : C'est ta valeur ajoutée. Explique les conditions, les pièges à éviter, ou les détails techniques (ex: proratisation, exceptions). Ne dis "pas de précisions" que si le sujet est simplissime.
 
        * **Sources** : Liste les documents consultés.
-    
+
     CONTEXTE DOCUMENTS : {context}""" + user_doc_section + "\nQUESTION : {question}")
-    
+
     chain = prompt | llm | StrOutputParser()
     return chain.stream({"context": context, "question": query})
 
@@ -177,16 +181,16 @@ st.markdown("<br>", unsafe_allow_html=True)
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-col_t, col_buttons = st.columns([3, 2]) 
-with col_t: 
+col_t, col_buttons = st.columns([3, 2])
+with col_t:
     st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
 
 with col_buttons:
     c_up, c_new = st.columns([1.6, 1])
     with c_up:
         uploaded_file = st.file_uploader(
-            "Upload", 
-            type=["pdf", "txt"], 
+            "Upload",
+            type=["pdf", "txt"],
             label_visibility="collapsed",
             key=f"uploader_{st.session_state.uploader_key}"
         )
@@ -208,51 +212,50 @@ if uploaded_file:
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
 
-if "messages" not in st.session_state: st.session_state.messages = []
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
+    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)
 
 if query := st.chat_input("Votre question juridique ou chiffrée..."):
     st.session_state.messages.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
-    
+
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
-        
+
         # 1. MOTEUR DE RÈGLES (Priorité Absolue au YAML)
         verdict = {"found": False}
         if not user_doc_text:
-            # Essai 1 : Version nettoyée
             cleaned_q = clean_query_for_engine(query)
             verdict = engine.get_formatted_answer(keywords=cleaned_q)
-            
-            # Essai 2 (Sécurité) : Version brute si l'essai 1 a échoué
+
             if not verdict["found"]:
                 verdict = engine.get_formatted_answer(keywords=query.lower())
-        
+
         # CAS 1 : Réponse Certifiée (Engine / YAML)
         if verdict["found"]:
-            # On force le style gras pour la réponse directe
             full_response = f"**{verdict['text']}**\n\n---\n* **Sources** : {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
-        
+
         # CAS 2 : Réponse IA (Analytique)
         else:
             with st.spinner("Analyse en cours..."):
                 context_text = build_context(query)
-                
+
                 full_response = ""
                 for chunk in get_gemini_response_stream(query, context_text, user_doc_content=user_doc_text):
                     full_response += chunk
                     message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
-                
+
                 if uploaded_file and "Document analysé" not in full_response:
                     full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
-                
+
                 message_placeholder.markdown(full_response, unsafe_allow_html=True)
-                
+
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 show_legal_info()
