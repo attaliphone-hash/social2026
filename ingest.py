@@ -10,7 +10,7 @@ from pinecone import Pinecone
 # --- 1. CHARGEMENT CONFIGURATION ---
 load_dotenv()
 
-DATA_PATH = "DATA_CLEAN"
+DATA_PATH = "data_clean"   # ✅ normalisé (minuscule)
 INDEX_NAME = "expert-social"
 
 def run_ingestion():
@@ -32,8 +32,10 @@ def run_ingestion():
                 loader = TextLoader(file_path, encoding="utf-8")
                 documents.extend(loader.load())
             elif filename.endswith(".csv"):
-                loader = CSVLoader(file_path, csv_args={'delimiter': ';'}, encoding="latin-1")
+                loader = CSVLoader(file_path, csv_args={"delimiter": ";"}, encoding="latin-1")
                 documents.extend(loader.load())
+            else:
+                continue
             print(f"✅ Chargé : {filename}")
         except Exception as e:
             print(f"❌ Erreur sur {filename}: {e}")
@@ -59,24 +61,19 @@ def run_ingestion():
         print("⏳ Attente de la confirmation de suppression par Pinecone...")
         while True:
             stats = index.describe_index_stats()
-            count = stats['total_vector_count']
+            count = stats.get("total_vector_count", 0)
             if count == 0:
                 break
-            print(f"   ... encore {count} vecteurs en cache, on patiente...")
+            print(f"   ... encore {count} vecteurs, on patiente...")
             time.sleep(5)
 
-        print("✨ Index totalement vide. Prêt pour l'ingestion 2026.")
+        print("✨ Index totalement vide. Prêt pour l'ingestion.")
     except Exception as e:
         print(f"⚠️ Erreur lors du nettoyage : {e}")
 
     # --- 4. ENVOI PAR PAQUETS (BATCHING) ---
     print("--- 🚀 Envoi vers PINECONE (Cloud) ---")
-
-    google_api_key = os.getenv("GOOGLE_API_KEY")
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/text-embedding-004",
-        google_api_key=google_api_key
-    )
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
 
     batch_size = 100
     try:
@@ -90,7 +87,7 @@ def run_ingestion():
 
         if len(chunks) > batch_size:
             for i in range(batch_size, len(chunks), batch_size):
-                batch = chunks[i : i + batch_size]
+                batch = chunks[i:i + batch_size]
                 vectorstore.add_documents(batch)
                 print(f"➡️ {min(i + batch_size, len(chunks))}/{len(chunks)} fragments envoyés...")
                 time.sleep(1)
