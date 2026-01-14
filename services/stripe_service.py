@@ -1,33 +1,26 @@
 import os
-import stripe
 import streamlit as st
+import stripe
 from dotenv import load_dotenv
 
-# IDs Stripe
-PRICE_ID_MONTHLY = "price_1SnaTDQZ5ivv0RayXfKqvJ6I"
-PRICE_ID_ANNUAL = "price_1SnaUOQZ5ivv0RayFnols3TI"
-
-def _get_stripe_secret_key() -> str:
-    """
-    Rend le code robuste : accepte STRIPE_API_KEY (souvent utilisé) ou STRIPE_SECRET_KEY.
-    """
-    load_dotenv()
-    return (
-        os.getenv("STRIPE_API_KEY")  # si tu utilises déjà ce nom dans Cloud Run
-        or os.getenv("STRIPE_SECRET_KEY")  # compatibilité avec l'ancien nom
-        or ""
-    )
-
 def create_checkout_session(plan_type: str):
-    """Crée une session de paiement Stripe pour l'abonnement (Mensuel/Annuel)."""
-    stripe_key = _get_stripe_secret_key()
-    if not stripe_key:
-        st.error("Erreur Stripe : clé API manquante (STRIPE_API_KEY ou STRIPE_SECRET_KEY).")
+    """Crée une session de paiement Stripe pour l'abonnement (Checkout)."""
+
+    # Chargement de sécurité
+    load_dotenv()
+
+    # Compatibilité : certains projets utilisent STRIPE_SECRET_KEY, d'autres STRIPE_API_KEY
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY") or os.getenv("STRIPE_API_KEY")
+
+    if not stripe.api_key:
+        st.error("Clé Stripe manquante (STRIPE_SECRET_KEY ou STRIPE_API_KEY).")
         return None
 
-    stripe.api_key = stripe_key
-
-    price_id = PRICE_ID_MONTHLY if plan_type == "Mensuel" else PRICE_ID_ANNUAL
+    # IDs Stripe (Price)
+    price_id = (
+        "price_1SnaTDQZ5ivv0RayXfKqvJ6I" if plan_type == "Mensuel"
+        else "price_1SnaUOQZ5ivv0RayFnols3TI"
+    )
 
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -38,6 +31,7 @@ def create_checkout_session(plan_type: str):
             cancel_url="https://socialexpertfrance.fr?payment=cancel",
         )
         return checkout_session.url
+
     except Exception as e:
         st.error(f"Erreur Stripe : {e}")
         return None
