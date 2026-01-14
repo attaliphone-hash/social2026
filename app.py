@@ -1,11 +1,6 @@
 import streamlit as st
 import os
 import pypdf
-import requests
-import re
-from bs4 import BeautifulSoup
-from email.utils import parsedate_to_datetime
-from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -13,6 +8,8 @@ from supabase import create_client, Client
 from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from services.stripe_service import manage_subscription_link
+from services.boss_watcher import check_boss_updates
+
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.prompts import ChatPromptTemplate
@@ -30,56 +27,7 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
-# --- FONCTION ROBUSTE (Veille BOSS) ---
-def get_boss_status_html():
-    try:
-        url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
-        headers = {"User-Agent": "Mozilla/5.0"}
-
-        response = requests.get(url, headers=headers, timeout=5)
-
-        if response.status_code == 200:
-            content = response.content.decode('utf-8')
-            soup = BeautifulSoup(content, 'html.parser')
-            latest_item = soup.find('item')
-
-            if latest_item:
-                title_tag = latest_item.find('title')
-                title = title_tag.text.strip() if title_tag else "Actualité BOSS"
-
-                link_match = re.search(r"<link>(.*?)</link>", str(latest_item))
-                link = link_match.group(1).strip() if link_match else "https://boss.gouv.fr"
-
-                date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
-
-                style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
-                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
-
-                if date_tag:
-                    try:
-                        pub_date_obj = parsedate_to_datetime(date_tag.text.strip())
-                        now = datetime.now(timezone.utc)
-                        days_old = (now - pub_date_obj).days
-                        date_str = pub_date_obj.strftime("%d/%m/%Y")
-
-                        html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
-
-                        if days_old < 8:
-                            return f"""<div style='{style_alert}'>🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
-                        else:
-                            return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
-
-                    except:
-                        pass
-
-                return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>""", link
-
-            return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
-
-        return "", ""
-    except Exception:
-        return "", ""
-
+# --- 1bis. VEILLE BOSS (via service unique) ---
 def show_boss_alert():
     if "news_closed" not in st.session_state:
         st.session_state.news_closed = False
@@ -87,7 +35,7 @@ def show_boss_alert():
     if st.session_state.news_closed:
         return
 
-    html_content, link = get_boss_status_html()
+    html_content = check_boss_updates()
 
     if html_content:
         col_text, col_close = st.columns([0.95, 0.05])
@@ -120,7 +68,7 @@ def check_password():
 
         if st.button("Se connecter au compte", use_container_width=True):
             try:
-                res = supabase.auth.sign_in_with_password({"email": email, "password": pwd})
+                supabase.auth.sign_in_with_password({"email": email, "password": pwd})
                 st.session_state.authenticated = True
                 st.session_state.user_email = email
                 st.rerun()
