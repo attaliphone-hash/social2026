@@ -156,38 +156,48 @@ def show_legal_info():
 </div>
 """, unsafe_allow_html=True)
 
-# ==============================================================================
-# ABONNEMENTS : version compatible app.py (retourne "Mensuel"/"Annuel")
-# ==============================================================================
-def render_subscription_cards():
+def render_subscription_cards(link_month=None, link_year=None):
     """
     Affiche les deux cartes d'abonnement.
-    IMPORTANT : retourne "Mensuel" ou "Annuel" si l'utilisateur clique.
-    (app.py utilise ce retour pour appeler create_checkout_session()).
+
+    Compatibilité :
+    - Ancien usage : render_subscription_cards(link_month, link_year)
+    - Nouveau usage : render_subscription_cards() (si l'appel est déplacé ailleurs)
     """
-    clicked = None
+    # Si on n'a pas de liens, on n'affiche rien (évite l'erreur et évite un bloc incomplet)
+    if not link_month or not link_year:
+        return
+
     col_m, col_a = st.columns(2)
 
+    # Carte Mensuelle (Bleue)
     with col_m:
-        st.markdown("""
+        st.markdown(f"""
         <div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb; height: 100%;">
             <h3 style="color: #0d47a1; margin-top: 0;">Mensuel</h3>
             <h2 style="color: #1565c0; font-size: 24px; margin: 10px 0;">50 € HT <small style="font-size: 14px; color: #555;">/ mois</small></h2>
             <p style="color: #0277bd; font-style: italic; font-size: 14px;">Sans engagement</p>
+            <br>
+            <a href="{link_month}" target="_blank" style="text-decoration: none;">
+                <button style="background-color: white; color: #1565c0; border: 1px solid #1565c0; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
+                    S'abonner (Mensuel)
+                </button>
+            </a>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("S'abonner (Mensuel)", key="btn_sub_month", use_container_width=True):
-            clicked = "Mensuel"
 
+    # Carte Annuelle (Verte)
     with col_a:
-        st.markdown("""
+        st.markdown(f"""
         <div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9; height: 100%;">
             <h3 style="color: #1b5e20; margin-top: 0;">Annuel</h3>
             <h2 style="color: #2e7d32; font-size: 24px; margin: 10px 0;">500 € HT <small style="font-size: 14px; color: #555;">/ an</small></h2>
             <p style="color: #2e7d32; font-style: italic; font-size: 14px;">2 mois offerts</p>
+            <br>
+            <a href="{link_year}" target="_blank" style="text-decoration: none;">
+                <button style="background-color: white; color: #2e7d32; border: 1px solid #2e7d32; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;">
+                    S'abonner (Annuel)
+                </button>
+            </a>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("S'abonner (Annuel)", key="btn_sub_year", use_container_width=True):
-            clicked = "Annuel"
-
-    return clicked
