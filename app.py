@@ -8,6 +8,7 @@ from supabase import create_client, Client
 from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from services.stripe_service import manage_subscription_link
+from services.boss_watcher import check_boss_updates
 
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -25,6 +26,29 @@ apply_pro_design()
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
+
+# --- 1B. VEILLE BOSS (UI) ---
+def show_boss_alert():
+    """
+    Affiche l'alerte BOSS dans l'interface Admin uniquement.
+    L'extraction RSS est externalisée dans services/boss_watcher.py
+    """
+    if "news_closed" not in st.session_state:
+        st.session_state.news_closed = False
+
+    if st.session_state.news_closed:
+        return
+
+    html_content, _link = check_boss_updates()
+
+    if html_content:
+        col_text, col_close = st.columns([0.95, 0.05])
+        with col_text:
+            st.markdown(html_content, unsafe_allow_html=True)
+        with col_close:
+            if st.button("✖️", key="btn_close_news", help="Masquer"):
+                st.session_state.news_closed = True
+                st.rerun()
 
 # --- 2. AUTHENTIFICATION ---
 def check_password():
@@ -168,6 +192,9 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
                 st.info("Aucun abonnement actif trouvé.")
 
 st.markdown("<hr>", unsafe_allow_html=True)
+
+if user_email == "ADMINISTRATEUR":
+    show_boss_alert()
 
 render_top_columns()
 st.markdown("<br>", unsafe_allow_html=True)
