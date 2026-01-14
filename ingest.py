@@ -10,22 +10,11 @@ from pinecone import Pinecone
 # --- 1. CHARGEMENT CONFIGURATION ---
 load_dotenv()
 
-# Homogénéité : dossier en minuscules (comme dans le projet / gcloudignore)
-DATA_PATH = os.getenv("DATA_PATH", "data_clean")
-INDEX_NAME = os.getenv("PINECONE_INDEX_NAME", "expert-social")
-
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+DATA_PATH = "DATA_CLEAN"
+INDEX_NAME = "expert-social"
 
 def run_ingestion():
-    # Vérifications de base
-    if not GOOGLE_API_KEY:
-        print("❌ Erreur : GOOGLE_API_KEY manquant dans l'environnement.")
-        return
-    if not PINECONE_API_KEY:
-        print("❌ Erreur : PINECONE_API_KEY manquant dans l'environnement.")
-        return
-
+    # Vérification du dossier source
     if not os.path.exists(DATA_PATH):
         print(f"❌ Erreur : Le dossier '{DATA_PATH}' est introuvable.")
         return
@@ -36,18 +25,15 @@ def run_ingestion():
     for filename in os.listdir(DATA_PATH):
         file_path = os.path.join(DATA_PATH, filename)
         try:
-            if filename.lower().endswith(".pdf"):
+            if filename.endswith(".pdf"):
                 loader = PyPDFLoader(file_path)
                 documents.extend(loader.load())
-            elif filename.lower().endswith(".txt"):
+            elif filename.endswith(".txt"):
                 loader = TextLoader(file_path, encoding="utf-8")
                 documents.extend(loader.load())
-            elif filename.lower().endswith(".csv"):
+            elif filename.endswith(".csv"):
                 loader = CSVLoader(file_path, csv_args={'delimiter': ';'}, encoding="latin-1")
                 documents.extend(loader.load())
-            else:
-                continue
-
             print(f"✅ Chargé : {filename}")
         except Exception as e:
             print(f"❌ Erreur sur {filename}: {e}")
@@ -65,7 +51,7 @@ def run_ingestion():
     # --- 3. NETTOYAGE CRITIQUE DE L'INDEX ---
     print(f"--- 🧹 Nettoyage de l'index '{INDEX_NAME}' ---")
     try:
-        pc = Pinecone(api_key=PINECONE_API_KEY)
+        pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         index = pc.Index(INDEX_NAME)
 
         index.delete(delete_all=True)
@@ -73,22 +59,23 @@ def run_ingestion():
         print("⏳ Attente de la confirmation de suppression par Pinecone...")
         while True:
             stats = index.describe_index_stats()
-            count = stats.get('total_vector_count', 0)
+            count = stats['total_vector_count']
             if count == 0:
                 break
             print(f"   ... encore {count} vecteurs en cache, on patiente...")
             time.sleep(5)
 
-        print("✨ Index totalement vide. Prêt pour l'ingestion.")
+        print("✨ Index totalement vide. Prêt pour l'ingestion 2026.")
     except Exception as e:
         print(f"⚠️ Erreur lors du nettoyage : {e}")
-        return
 
     # --- 4. ENVOI PAR PAQUETS (BATCHING) ---
     print("--- 🚀 Envoi vers PINECONE (Cloud) ---")
+
+    google_api_key = os.getenv("GOOGLE_API_KEY")
     embeddings = GoogleGenerativeAIEmbeddings(
         model="models/text-embedding-004",
-        google_api_key=GOOGLE_API_KEY
+        google_api_key=google_api_key
     )
 
     batch_size = 100
@@ -103,7 +90,7 @@ def run_ingestion():
 
         if len(chunks) > batch_size:
             for i in range(batch_size, len(chunks), batch_size):
-                batch = chunks[i:i + batch_size]
+                batch = chunks[i : i + batch_size]
                 vectorstore.add_documents(batch)
                 print(f"➡️ {min(i + batch_size, len(chunks))}/{len(chunks)} fragments envoyés...")
                 time.sleep(1)
