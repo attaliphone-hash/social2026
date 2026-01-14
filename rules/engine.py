@@ -1,7 +1,6 @@
 import yaml
 import os
 import re
-import unicodedata
 
 class SocialRuleEngine:
     def __init__(self, yaml_path="rules/social_rules.yaml"):
@@ -26,69 +25,70 @@ class SocialRuleEngine:
             print(f"Erreur chargement YAML: {e}")
             return []
 
-    def _normalize(self, s: str) -> str:
-        """Normalise une chaîne : minuscules, suppression accents, ponctuation simplifiée."""
-        if not s:
-            return ""
-        s = s.lower().strip()
-        s = unicodedata.normalize("NFD", s)
-        s = "".join(ch for ch in s if unicodedata.category(ch) != "Mn")  # retire accents
-        s = re.sub(r"[-_/]", " ", s)  # tirets/underscores -> espace
-        s = re.sub(r"[^\w\s]", " ", s)  # ponctuation -> espace
-        s = re.sub(r"\s+", " ", s).strip()
-        return s
+    def _tokenize(self, text: str):
+        """Tokenisation simple, robuste au français (accents inclus)"""
+        if not text:
+            return []
+        text = text.lower()
+        # on garde lettres/chiffres/accents, on remplace le reste par espace
+        text = re.sub(r"[^0-9a-zàâäçéèêëîïôöùûüÿñæœ'\s-]", " ", text)
+        text = text.replace("-", " ")
+        words = [w.strip("'") for w in text.split() if w.strip("'")]
+        return words
 
-    def get_formatted_answer(self, keywords: str):
-        """Cherche une réponse basée sur les mots-clés / expressions."""
-        if not keywords:
-            return {"found": False}
+    def match_rules(self, query: str, top_k: int = 5, min_score: int = 2):
+        """
+        Renvoie les meilleures règles correspondant à la requête.
+        - min_score=2 évite les déclenchements “au hasard” (1 seul mot).
+        """
+        if not query:
+            return []
 
-        query_norm = self._normalize(keywords)
-        if not query_norm:
-            return {"found": False}
+        query_words = self._tokenize(query)
+        if not query_words:
+            return []
 
-        query_words = query_norm.split()
-
-        best_match = None
-        max_score = 0
+        results = []
 
         for rule in self.rules:
+            rule_keywords = [k.lower() for k in rule.get("keywords", []) if isinstance(k, str)]
+            if not rule_keywords:
+                continue
+
+            # Score = nombre de mots présents + bonus si un mot-clé exact est présent
             score = 0
-            rule_keywords_raw = rule.get("keywords", []) or []
-            rule_keywords = [self._normalize(k) for k in rule_keywords_raw if isinstance(k, str) and k.strip()]
+            rule_kw_set = set(rule_keywords)
 
-            # 1) Bonus si une expression complète est trouvée dans la question
-            for rk in rule_keywords:
-                if rk and len(rk.split()) >= 2 and rk in query_norm:
-                    score += 12
-
-            # 2) Matching mot à mot sur keywords simples
             for w in query_words:
-                if w in rule_keywords:
-                    score += 3
+                if w in rule_kw_set:
+                    score += 1
 
-            # 3) Bonus léger si un mot de la question est contenu dans une expression keyword
-            # (utile pour "securite sociale", "plafond mensuel", etc.)
-            for rk in rule_keywords:
-                if len(rk.split()) >= 2:
-                    for w in query_words:
-                        if w and w in rk.split():
-                            score += 1
+            # Bonus si la requête contient exactement un mot-clé fort (ex: "smic")
+            # (utile pour les requêtes courtes)
+            if len(query_words) <= 3:
+                for kw in rule_keywords:
+                    if kw in query.lower():
+                        score += 2
 
-            # 4) Gros bonus si la requête normalisée correspond exactement à un keyword
-            if query_norm in rule_keywords:
-                score += 15
+            if score >= min_score:
+                results.append((score, rule))
 
-            if score > max_score:
-                max_score = score
-                best_match = rule
+        results.sort(key=lambda x: x[0], reverse=True)
+        return [r for _, r in results[:top_k]]
 
-        if best_match and max_score >= 3:
-            text = best_match.get("text", "")
-            return {
-                "found": True,
-                "text": text,
-                "source": f"[{best_match.get('source', 'Règle Officielle')}]"
-            }
+    def format_certified_facts(self, matched_rules):
+        """
+        Formate une section “faits certifiés” à injecter dans le prompt.
+        """
+        if not matched_rules:
+            return ""
 
-        return {"found": False}
+        lines = []
+        for r in matched_rules:
+            text = (r.get("text") or "").strip()
+            src = (r.get("source") or "Règle Officielle").strip()
+            if text:
+                # Format volontairement compact, lisible, et “copiable” par le modèle
+                lines.append(f"- {text} (Source : {src})")
+
+        return "\n".join(lines).strip()

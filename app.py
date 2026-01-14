@@ -18,9 +18,6 @@ from langchain_pinecone import PineconeVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# --- SERVICES ---
-from services.stripe_service import create_checkout_session  # abonnement dynamique
-
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
@@ -33,21 +30,12 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
-# -------------------------------------------------------------------
-# STRIPE : CLÉ UNIQUE ROBUSTE (même logique que stripe_service.py)
-# -------------------------------------------------------------------
-def get_stripe_secret_key() -> str:
-    return (os.getenv("STRIPE_API_KEY") or os.getenv("STRIPE_SECRET_KEY") or "").strip()
-
-stripe.api_key = get_stripe_secret_key()
+# Configuration Stripe
+stripe.api_key = os.getenv("STRIPE_API_KEY")
 
 # --- FONCTION PORTAIL CLIENT STRIPE ---
 def manage_subscription_link(email):
     try:
-        if not stripe.api_key:
-            st.error("Erreur Stripe : clé API manquante (STRIPE_API_KEY ou STRIPE_SECRET_KEY).")
-            return None
-
         customers = stripe.Customer.list(email=email, limit=1)
         if customers and len(customers.data) > 0:
             customer_id = customers.data[0].id
@@ -150,7 +138,7 @@ def check_password():
 
         if st.button("Se connecter au compte", use_container_width=True):
             try:
-                supabase.auth.sign_in_with_password({"email": email, "password": pwd})
+                res = supabase.auth.sign_in_with_password({"email": email, "password": pwd})
                 st.session_state.authenticated = True
                 st.session_state.user_email = email
                 st.rerun()
@@ -160,15 +148,10 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
 
-        clicked_plan = render_subscription_cards()
+        link_month = "https://checkout.stripe.com/c/pay/cs_live_a1YuxowVQDoKMTBPa1aAK7S8XowoioMzray7z6oruWL2r1925Bz0NdVA6M#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+        link_year = "https://checkout.stripe.com/c/pay/cs_live_a1w1GIf4a2MlJejzhlwMZzoIo5OfbSdDzcl2bnur6Ev3wCLUYhZJwbD4si#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSd2cGd2ZndsdXFsamtQa2x0cGBrYHZ2QGtkZ2lgYSc%2FY2RpdmApJ2R1bE5gfCc%2FJ3VuWmlsc2BaMDRWN11TVFRfMGxzczVXZHxETGNqMn19dU1LNVRtQl9Gf1Z9c2wzQXxoa29MUnI9Rn91YTBiV1xjZ1x2cWtqN2lAUXxvZDRKN0tmTk9PRmFGPH12Z3B3azI1NX08XFNuU0pwJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
 
-        if clicked_plan in ("Mensuel", "Annuel"):
-            checkout_url = create_checkout_session(clicked_plan)
-            if checkout_url:
-                st.markdown(
-                    f'<meta http-equiv="refresh" content="0;URL={checkout_url}">',
-                    unsafe_allow_html=True
-                )
+        render_subscription_cards(link_month, link_year)
 
     with tab2:
         st.caption("Code d'accès personnel")
@@ -188,10 +171,9 @@ def check_password():
     return False
 
 if not check_password():
-    show_legal_info()
     st.stop()
 
-# --- 3. CHARGEMENT MOTEUR IA ---
+# --- 3. CHARGEMENT MOTEUR & SYSTÈME IA ---
 @st.cache_resource
 def load_engine():
     return SocialRuleEngine()
@@ -207,17 +189,17 @@ def load_ia_system():
 engine = load_engine()
 vectorstore, llm = load_ia_system()
 
-# Fonction de nettoyage pour le Moteur de Règles
 def clean_query_for_engine(q):
     stop_words = ["quel", "est", "le", "montant", "du", "de", "la", "les", "actuel", "en", "2026", "pour", "?", "l'"]
     words = q.lower().split()
     cleaned = [w for w in words if w not in stop_words]
     return " ".join(cleaned)
 
-# --- ARCHITECTURE HYBRIDE RESTAURÉE ---
+# --- CONTEXTE PINECONE ---
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=25)
     context_text = ""
+    sources_seen = []
 
     for d in raw_docs:
         raw_src = d.metadata.get('source', 'Source Inconnue')
@@ -232,36 +214,56 @@ def build_context(query):
         else:
             pretty_src = clean_name
 
+        sources_seen.append(pretty_src)
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
 
-    return context_text
+    # dédoublonnage tout en gardant l’ordre
+    uniq_sources = []
+    for s in sources_seen:
+        if s and s not in uniq_sources:
+            uniq_sources.append(s)
 
-def get_gemini_response_stream(query, context, user_doc_content=None):
+    return context_text, uniq_sources
+
+def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
+    facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
 
     prompt = ChatPromptTemplate.from_template("""
-    Tu es l'Expert Social Pro, un assistant juridique de haut niveau.
+Tu es l'Expert Social Pro, assistant juridique de haut niveau en paie et droit social.
 
-    MÉTHODOLOGIE DE RECHERCHE (HIÉRARCHIE DES NORMES) :
-    1. PRIORITÉ ABSOLUE AUX CHIFFRES : Pour toute question impliquant un montant, un taux ou un plafond (ex: PASS, SMIC), tu dois utiliser les valeurs contenues dans les documents "Barème Officiel" (fichiers REF_). Ce sont les seuls qui font foi pour 2026.
-    2. DOCTRINE : Utilise les documents "BOSS" pour expliquer les mécanismes et l'interprétation administrative.
-    3. LOI : Cite le "Code du Travail" ou "Code de la Sécurité Sociale" pour justifier la base légale.
+OBJECTIF :
+Répondre de manière complète, utile et actionnable, sans jamais ignorer une partie de la question.
 
-    CONSIGNES DE RÉDACTION :
-    1. Sois intelligent : Si l'utilisateur fait une faute (ex: "licensiement"), comprends l'intention.
-    2. Sois précis : Cite toujours les articles de loi (Art. L...) quand ils sont disponibles.
-    3. Sois structuré :
+STRUCTURE OBLIGATOIRE (sans numérotation) :
+- Commence par une réponse directe, courte.
+- Si tu donnes un montant / taux / plafond principal, mets ce chiffre principal en **gras** (pas forcément tout le paragraphe).
+- Puis ajoute :
+  * **Précisions** : explique conditions, exceptions, calculs, seuils, points d’attention, et les éléments de contexte utiles.
+  * **Sources** : liste les sources utilisées (documents + faits certifiés si utilisés). Ne cite que des sources présentes dans le contexte ou dans les faits certifiés.
 
-       **La réponse directe doit être écrite ici, entièrement en GRAS.** Si c'est un chiffre, donne le montant exact tiré du Barème.
+MÉTHODOLOGIE (HIÉRARCHIE) :
+1) Chiffres / plafonds : si un fait certifié 2026 existe et est pertinent, utilise-le.
+2) Doctrine : BOSS pour l’interprétation et les mécanismes.
+3) Loi : Code du travail / Code de la sécurité sociale pour la base légale.
+4) Si une info manque dans les sources fournies, dis-le clairement au lieu d’inventer.
 
-       * **Précisions** : C'est ta valeur ajoutée. Explique les conditions, les pièges à éviter, ou les détails techniques (ex: proratisation, exceptions). Ne dis "pas de précisions" que si le sujet est simplissime.
+LISTE DES SOURCES DISPONIBLES (documents récupérés) :
+{sources_list}
 
-       * **Sources** : Liste les documents consultés.
-
-    CONTEXTE DOCUMENTS : {context}""" + user_doc_section + "\nQUESTION : {question}")
+CONTEXTE DOCUMENTS :
+{context}
+""" + facts_section + user_doc_section + """
+QUESTION :
+{question}
+""")
 
     chain = prompt | llm | StrOutputParser()
-    return chain.stream({"context": context, "question": query})
+    return chain.stream({
+        "context": context,
+        "question": query,
+        "sources_list": ", ".join(sources_list) if sources_list else "Aucune"
+    })
 
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 user_email = st.session_state.get("user_email", "")
@@ -320,6 +322,7 @@ if uploaded_file:
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)
@@ -332,30 +335,30 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
 
-        verdict = {"found": False}
-        if not user_doc_text:
-            cleaned_q = clean_query_for_engine(query)
-            verdict = engine.get_formatted_answer(keywords=cleaned_q)
+        # 1) Faits certifiés YAML (sans court-circuit)
+        cleaned_q = clean_query_for_engine(query)
+        matched = engine.match_rules(cleaned_q if cleaned_q else query, top_k=5, min_score=2)
+        certified_facts = engine.format_certified_facts(matched)
 
-            if not verdict["found"]:
-                verdict = engine.get_formatted_answer(keywords=query.lower())
+        # 2) Contexte Pinecone
+        with st.spinner("Analyse en cours..."):
+            context_text, sources_list = build_context(query)
 
-        if verdict["found"]:
-            full_response = f"**{verdict['text']}**\n\n---\n* **Sources** : {verdict['source']}"
+            full_response = ""
+            for chunk in get_gemini_response_stream(
+                query=query,
+                context=context_text,
+                sources_list=sources_list,
+                certified_facts=certified_facts,
+                user_doc_content=user_doc_text
+            ):
+                full_response += chunk
+                message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
+
+            if uploaded_file and "Document analysé" not in full_response:
+                full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
+
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
-        else:
-            with st.spinner("Analyse en cours..."):
-                context_text = build_context(query)
-
-                full_response = ""
-                for chunk in get_gemini_response_stream(query, context_text, user_doc_content=user_doc_text):
-                    full_response += chunk
-                    message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
-
-                if uploaded_file and "Document analysé" not in full_response:
-                    full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
-
-                message_placeholder.markdown(full_response, unsafe_allow_html=True)
 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
