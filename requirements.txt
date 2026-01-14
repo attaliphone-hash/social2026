@@ -5,7 +5,8 @@ requests
 python-dotenv
 langchain-google-genai
 langchain-pinecone
-pinecone-client
 langchain-core
+langchain-community
+pinecone-client
 pypdf
 supabase
