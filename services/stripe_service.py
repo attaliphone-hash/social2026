@@ -9,28 +9,32 @@ PRICE_ID_ANNUAL = "price_1SnaUOQZ5ivv0RayFnols3TI"
 
 SUCCESS_URL = "https://socialexpertfrance.fr?payment=success"
 CANCEL_URL = "https://socialexpertfrance.fr?payment=cancel"
-RETURN_URL_PORTAL = "https://socialexpertfrance.fr"
+PORTAL_RETURN_URL = "https://socialexpertfrance.fr"
 
-def _ensure_stripe_key():
+def _configure_stripe():
     """
-    Garantit que Stripe a bien une clé secrète chargée.
-    On accepte STRIPE_SECRET_KEY en priorité, sinon fallback sur STRIPE_API_KEY
-    (au cas où tu aurais déjà ce nom dans ton environnement).
+    Configure Stripe avec UNE SEULE variable standard.
+    On choisit STRIPE_SECRET_KEY (clé secrète) et on n'utilise plus STRIPE_API_KEY.
     """
     load_dotenv()
-
-    secret = os.getenv("STRIPE_SECRET_KEY") or os.getenv("STRIPE_API_KEY")
-    if not secret:
-        raise ValueError("Clé Stripe manquante : STRIPE_SECRET_KEY (ou STRIPE_API_KEY).")
-
-    stripe.api_key = secret
+    secret_key = os.getenv("STRIPE_SECRET_KEY")
+    if not secret_key:
+        raise RuntimeError("Variable d'environnement manquante : STRIPE_SECRET_KEY")
+    stripe.api_key = secret_key
 
 def create_checkout_session(plan_type: str):
-    """Crée une session de paiement Stripe pour l'abonnement."""
+    """Crée une session de paiement Stripe pour l'abonnement (Mensuel / Annuel)"""
     try:
-        _ensure_stripe_key()
+        _configure_stripe()
 
-        price_id = PRICE_ID_MONTHLY if plan_type == "Mensuel" else PRICE_ID_ANNUAL
+        plan_type_norm = (plan_type or "").strip().lower()
+        if plan_type_norm == "mensuel":
+            price_id = PRICE_ID_MONTHLY
+        elif plan_type_norm == "annuel":
+            price_id = PRICE_ID_ANNUAL
+        else:
+            st.error("Formule inconnue. Utilisez 'Mensuel' ou 'Annuel'.")
+            return None
 
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
@@ -47,23 +51,28 @@ def create_checkout_session(plan_type: str):
 
 def manage_subscription_link(email: str):
     """
-    Crée un lien vers le portail client Stripe (factures, changement carte, résiliation).
-    Retourne l'URL ou None.
+    Crée un lien vers le portail client Stripe pour :
+    factures, changement de carte, résiliation, etc.
     """
     try:
-        _ensure_stripe_key()
+        _configure_stripe()
+
+        email = (email or "").strip()
+        if not email:
+            return None
 
         customers = stripe.Customer.list(email=email, limit=1)
         if customers and len(customers.data) > 0:
             customer_id = customers.data[0].id
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                return_url=RETURN_URL_PORTAL
+                return_url=PORTAL_RETURN_URL
             )
             return session.url
 
-    except Exception as e:
-        # On log, mais sans casser l'interface.
-        print(f"Erreur Stripe Portal: {e}")
+        return None
 
-    return None
+    except Exception as e:
+        # Pas de st.error ici : c'est appelé depuis la sidebar, on évite les effets de bord.
+        print(f"Erreur Stripe Portal: {e}")
+        return None
