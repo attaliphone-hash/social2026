@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # --- IMPORTS UI ---
-from ui.styles import apply_pro_design, show_legal_info, render_top_columns
+from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -19,7 +19,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # --- SERVICES ---
-from services.stripe_service import create_checkout_session, manage_subscription_link
+from services.stripe_service import create_checkout_session  # ✅ MODIF : abonnement dynamique
 
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
@@ -32,6 +32,25 @@ apply_pro_design()
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
+
+# Configuration Stripe (clé API côté serveur)
+# ✅ On conserve ceci pour le portail client (Stripe Billing Portal)
+stripe.api_key = os.getenv("STRIPE_API_KEY")
+
+# --- FONCTION PORTAIL CLIENT STRIPE ---
+def manage_subscription_link(email):
+    try:
+        customers = stripe.Customer.list(email=email, limit=1)
+        if customers and len(customers.data) > 0:
+            customer_id = customers.data[0].id
+            session = stripe.billing_portal.Session.create(
+                customer=customer_id,
+                return_url="https://socialexpertfrance.fr"
+            )
+            return session.url
+    except Exception as e:
+        print(f"Erreur Stripe Portal: {e}")
+    return None
 
 # --- FONCTION ROBUSTE (Veille BOSS) ---
 def get_boss_status_html():
@@ -56,7 +75,7 @@ def get_boss_status_html():
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
 
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
-                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
+                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
 
                 if date_tag:
                     try:
@@ -133,22 +152,18 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
 
-        # ✅ CORRECTION : plus de liens Stripe “cs_live” en dur (ils expirent).
-        # On génère une nouvelle session Checkout à chaque clic.
-        col_m, col_a = st.columns(2)
-        with col_m:
-            st.info("**Mensuel**\n\n50 € HT / mois\n\n*Sans engagement*")
-            if st.button("S'abonner (Mensuel)", use_container_width=True, key="btn_sub_month"):
-                url_checkout = create_checkout_session("Mensuel")
-                if url_checkout:
-                    st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
+        # ✅ MODIF : on n'utilise plus de liens Stripe statiques expirables.
+        # render_subscription_cards() doit maintenant afficher des boutons Streamlit
+        # et retourner "Mensuel"/"Annuel" selon le clic (selon ton dernier styles.py).
+        clicked_plan = render_subscription_cards()
 
-        with col_a:
-            st.success("**Annuel**\n\n500 € HT / an\n\n*2 mois offerts*")
-            if st.button("S'abonner (Annuel)", use_container_width=True, key="btn_sub_year"):
-                url_checkout = create_checkout_session("Annuel")
-                if url_checkout:
-                    st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
+        if clicked_plan in ("Mensuel", "Annuel"):
+            checkout_url = create_checkout_session(clicked_plan)
+            if checkout_url:
+                st.markdown(
+                    f'<meta http-equiv="refresh" content="0;URL={checkout_url}">',
+                    unsafe_allow_html=True
+                )
 
     with tab2:
         st.caption("Code d'accès personnel")
@@ -168,6 +183,7 @@ def check_password():
     return False
 
 if not check_password():
+    show_legal_info()
     st.stop()
 
 # --- 3. CHARGEMENT MOTEUR IA ---
@@ -243,7 +259,6 @@ def get_gemini_response_stream(query, context, user_doc_content=None):
     return chain.stream({"context": context, "question": query})
 
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
-
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
     with st.sidebar:
@@ -312,6 +327,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         message_placeholder = st.empty()
 
+        # 1. MOTEUR DE RÈGLES (Priorité Absolue au YAML)
         verdict = {"found": False}
         if not user_doc_text:
             cleaned_q = clean_query_for_engine(query)
@@ -320,9 +336,12 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             if not verdict["found"]:
                 verdict = engine.get_formatted_answer(keywords=query.lower())
 
+        # CAS 1 : Réponse Certifiée (Engine / YAML)
         if verdict["found"]:
             full_response = f"**{verdict['text']}**\n\n---\n* **Sources** : {verdict['source']}"
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
+
+        # CAS 2 : Réponse IA (Analytique)
         else:
             with st.spinner("Analyse en cours..."):
                 context_text = build_context(query)
