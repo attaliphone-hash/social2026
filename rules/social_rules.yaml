@@ -47,6 +47,14 @@
   source: "Mise à jour URSSAF / BOSS Janvier 2026"
   text: "La limite d'exonération de la part patronale des titres-restaurant est de 7,32 € en 2026."
 
+- id: FRAIS_TELETRAVAIL_2026
+  keywords: ["teletravail", "télétravail", "indemnité télétravail", "frais télétravail", "allocation télétravail"]
+  valeurs:
+    par_jour: 2.80
+    limite_mensuelle: 61.60
+  source: "Barème URSSAF 2026 (Revalorisation 1,18%)"
+  text: "L'indemnité forfaitaire de télétravail est exonérée dans la limite de 2,80 € par jour (soit 61,60 € par mois pour 1 jour/semaine) en 2026." 
+
 - id: AVN_VEHICULE_ELEC_2026
   keywords: ["vehicule electrique", "véhicule électrique", "abattement electrique", "voiture electrique"]
   valeurs:
