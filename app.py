@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import pypdf
-import stripe
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
@@ -9,6 +8,7 @@ from supabase import create_client, Client
 from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from services.boss_watcher import check_boss_updates
+from services.stripe_service import manage_subscription_link
 
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -26,24 +26,6 @@ apply_pro_design()
 url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
-
-# Configuration Stripe
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-
-# --- FONCTION PORTAIL CLIENT STRIPE ---
-def manage_subscription_link(email):
-    try:
-        customers = stripe.Customer.list(email=email, limit=1)
-        if customers and len(customers.data) > 0:
-            customer_id = customers.data[0].id
-            session = stripe.billing_portal.Session.create(
-                customer=customer_id,
-                return_url="https://socialexpertfrance.fr" 
-            )
-            return session.url
-    except Exception as e:
-        print(f"Erreur Stripe Portal: {e}")
-    return None
 
 # --- 2. AUTHENTIFICATION ---
 def check_password():
