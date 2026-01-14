@@ -18,6 +18,9 @@ from langchain_pinecone import PineconeVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
+# ✅ Stripe checkout (service)
+from services.stripe_service import create_checkout_session
+
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
 st.set_page_config(page_title="Expert Social Pro France", layout="wide")
@@ -30,7 +33,7 @@ url = os.getenv("SUPABASE_URL")
 key = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(url, key)
 
-# Configuration Stripe
+# Configuration Stripe (Portal)
 stripe.api_key = os.getenv("STRIPE_API_KEY")
 
 # --- FONCTION PORTAIL CLIENT STRIPE ---
@@ -148,9 +151,24 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
 
-        # ✅ IMPORTANT : on n'utilise PLUS de liens Stripe statiques (cs_live_...),
-        # car ils expirent. Les cartes créent une session Checkout à chaque clic.
+        # Affiche les cartes + crée les 2 boutons Streamlit (keys: btn_sub_month / btn_sub_year)
         render_subscription_cards()
+
+        # ✅ Connexion des boutons à Stripe (sinon rien ne se passe au clic)
+        # Note : st.button écrit dans st.session_state la valeur True le run du clic.
+        if st.session_state.get("btn_sub_month"):
+            url_checkout = create_checkout_session("Mensuel")
+            if url_checkout:
+                st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
+            else:
+                st.error("Impossible d'ouvrir le paiement mensuel (Stripe).")
+
+        if st.session_state.get("btn_sub_year"):
+            url_checkout = create_checkout_session("Annuel")
+            if url_checkout:
+                st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
+            else:
+                st.error("Impossible d'ouvrir le paiement annuel (Stripe).")
 
     with tab2:
         st.caption("Code d'accès personnel")
