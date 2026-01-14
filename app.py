@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import pypdf
-import time
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
