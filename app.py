@@ -261,24 +261,16 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
 # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - AVEC DESIGN HTML/CSS (BOÎTE BLEUE)
+    # PROMPT EXPERT SOCIAL 2026 - CORRECTION AFFICHAGE LISTES
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
 
-IMPORTANT — RÈGLE ABSOLUE DE FIABILITÉ (CALCULS) :
-Pour toute question impliquant un calcul (montant, taux, plafond, indemnité, proratisation) :
-- Tu dois d'abord identifier la règle applicable et poser le calcul étape par étape.
-- Tu ne dois jamais afficher de chiffre final (montant, mois, taux) avant d'avoir terminé le calcul.
-- Le chiffre final affiché doit être strictement égal au résultat du calcul détaillé.
-- Si tu constates un écart entre le calcul et le chiffre final, tu corriges le chiffre final.
-
 MÉTHODOLOGIE INTERNE (NE PAS AFFICHER) :
-1. ANALYSE : Identifie les règles et faits certifiés pertinents.
-2. CALCUL : Fais le calcul complet et exact.
-3. VÉRIFICATION : Contrôle que le résultat final correspond au calcul.
-4. ARRONDIS : Pour l'affichage final seulement, arrondis à 2 chiffres après la virgule (ex : 3,39).
-5. RÉDACTION : Utilise le format HTML ci-dessous et FORCE les listes verticales.
+1. ANALYSE : Identifie les règles et faits certifiés.
+2. CALCUL MENTAL : Fais le calcul complet avec précision.
+3. ARRONDIS : Pour l'affichage final, arrondis les montants à **2 chiffres après la virgule** (ex: 3.39).
+4. RÉDACTION : Utilise le format HTML ci-dessous et FORCE les listes verticales.
 
 STRUCTURE DE LA RÉPONSE (À RESPECTER SCRUPULEUSEMENT) :
 
@@ -298,7 +290,7 @@ Pose l'opération mathématique étape par étape sous forme de liste verticale 
 <div style="background-color: #f0f8ff; padding: 20px; border-radius: 8px; border-left: 5px solid #024c6f; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
     <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION DÉFINITIVE</h3>
     <p style="font-size: 18px; color: #111; margin-bottom: 5px; font-weight: 600;">
-        Le montant estimé est de : [INSÉRER MONTANT FINAL ARRONDI À 2 DÉCIMALES — STRICTEMENT IDENTIQUE AU RÉSULTAT DU CALCUL]
+        Le montant estimé est de : [INSÉRER MONTANT ARRONDIS À 2 DÉCIMALES]
     </p>
     <p style="font-size: 13px; color: #555; margin-top: 0;">
         <em>Basé sur les éléments fournis.</em>
@@ -314,7 +306,7 @@ DONNÉES CERTIFIÉES 2026 (YAML) :
 
 DOCUMENTS RETROUVÉS :
 {context}
-""" + user_doc_section + """
+
 QUESTION :
 {question}
 
@@ -329,7 +321,6 @@ SOURCES :
         "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
         "facts_section": facts_section
     })
-
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
