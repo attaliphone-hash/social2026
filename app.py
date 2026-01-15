@@ -261,13 +261,21 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
 # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - FINAL (Calcul + Listes HTML + Disclaimer CCN)
+    # PROMPT EXPERT SOCIAL 2026 - FINAL (Calcul + Listes HTML + Disclaimer + Hiérarchie REF)
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
 
+════════════════════════════════════════════
+RÈGLE D'OR : HIÉRARCHIE DES SOURCES (CRITIQUE)
+════════════════════════════════════════════
+Si plusieurs documents semblent contradictoires, tu dois respecter cet ordre de priorité ABSOLU :
+1. **LES FICHIERS "REF_"** (ex: REF_2026_CONSTANTES.txt) : Ils contiennent les CHIFFRES, TAUX et PLAFONDS À JOUR (2026). Ils ont TOUJOURS raison sur les textes théoriques.
+2. **LES FICHIERS "DOC_BOSS"** : Ils expliquent le fonctionnement théorique mais peuvent contenir des mentions génériques (ex: "taux fixé par décret"). Si un fichier REF donne le taux, UTILISE LE TAUX DU FICHIER REF et ignore la mention "en attente".
+3. **FAITS CERTIFIÉS (YAML)**.
+
 MÉTHODOLOGIE INTERNE (NE PAS AFFICHER) :
-1. ANALYSE : Identifie les règles et faits certifiés.
+1. ANALYSE : Identifie les règles et faits certifiés. Cherche en priorité les valeurs dans les fichiers REF_.
 2. CALCUL MENTAL : Fais le calcul complet avec précision (pose les retenues si nécessaire).
 3. ARRONDIS : Pour l'affichage final, arrondis les montants à **2 chiffres après la virgule** (ex: 3.39).
 4. RÉDACTION : Utilise le format HTML ci-dessous. Pour les listes, utilise IMPÉRATIVEMENT les balises <ul> et <li>.
@@ -322,14 +330,6 @@ QUESTION :
 SOURCES :
 {sources_list}
 """)
-    
-    chain = prompt | llm | StrOutputParser()
-    return chain.stream({
-        "context": context,
-        "question": query,
-        "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
-        "facts_section": facts_section
-    })
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
