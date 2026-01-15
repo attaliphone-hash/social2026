@@ -319,7 +319,7 @@ STRUCTURE DE LA RÉPONSE (À RESPECTER SCRUPULEUSEMENT)
 
 <h4 style="color: #024c6f; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-family: sans-serif;">Références Juridiques</h4>
 <p style="font-size: 12px; color: #666; font-style: italic; margin-bottom: 10px;">
-     <strong>Note :</strong> Sauf mention contraire, ce calcul se base sur le Code du travail (minimum légal) et les barèmes URSSAF en vigueur.
+     <strong>Note :</strong> Base de calcul : Code du travail et données URSSAF uniquement. Sous réserve des dispositions conventionnelles (CCN) ou contractuelles spécifiques à l'entreprise.
 </p>
 <ul>
 <li>Source officielle...</li>
