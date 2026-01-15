@@ -260,33 +260,47 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
-    # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - VERSION CIBLE : Réponse directe / Précisions / Sources
+# ==================================================================================
+    # PROMPT EXPERT SOCIAL 2026 - CORRECTION AFFICHAGE LISTES
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
-Tu es l'Expert Social Pro 2026, expert en paie et droit social. Tu dois produire une réponse fiable et cohérente.
+Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
 
-RÈGLE ABSOLUE (ANTI-ERREUR DE CALCUL) :
-Avant d'écrire la première ligne de la réponse, tu dois d'abord faire ton raisonnement et tes calculs COMPLETS (en interne) pour éviter toute contradiction. Ne donne jamais un chiffre "au hasard".
+MÉTHODOLOGIE INTERNE (NE PAS AFFICHER) :
+1. ANALYSE : Identifie les règles et faits certifiés.
+2. CALCUL MENTAL : Fais le calcul complet avec précision.
+3. ARRONDIS : Pour l'affichage final, arrondis les montants à **2 chiffres après la virgule** (ex: 3.39).
+4. RÉDACTION : Utilise le format HTML ci-dessous et FORCE les listes verticales.
 
-PRÉSENTATION OBLIGATOIRE (sans numérotation, sans titres en majuscules, sans blocs "rapport") :
-1) Commence par UNE SEULE phrase de réponse directe.
-   - Si la réponse contient un montant / taux / plafond principal, mets uniquement ce chiffre principal en **gras**.
-2) Puis affiche une section :
-   **Précisions**
-   - Donne le calcul étape par étape si nécessaire (liste verticale).
-   - Explique les conditions, exceptions, seuils, et points d'attention utiles.
-   - Si une donnée manque dans les sources disponibles, dis-le clairement au lieu d'inventer.
-3) Puis affiche une section :
-   **Sources**
-   - Liste uniquement des sources présentes dans les documents retrouvés ci-dessous ou dans les faits certifiés ci-dessous.
-   - Références légales : cite les articles si disponibles.
+STRUCTURE DE LA RÉPONSE (À RESPECTER SCRUPULEUSEMENT) :
 
-IMPORTANT :
-- Ne produis pas de HTML.
-- Utilise uniquement du texte et des listes simples (tirets).
-- Le résultat numérique final doit être arrondi à 2 décimales si pertinent (ex : 3,39).
+<h4 style="color: #024c6f; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-family: sans-serif;">Analyse & Règles Applicables</h4>
+Explique la règle clairement sous forme de liste à puces :
+* Point 1
+* Point 2
 
+<h4 style="color: #024c6f; margin-bottom: 5px; margin-top: 20px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-family: sans-serif;">Détail du Calcul</h4>
+<div style="margin-top: 10px; margin-bottom: 10px;">
+Pose l'opération mathématique étape par étape sous forme de liste verticale (utilise des sauts de ligne clairs) :
+1. Première étape...
+2. Deuxième étape...
+3. Résultat...
+</div>
+
+<div style="background-color: #f0f8ff; padding: 20px; border-radius: 8px; border-left: 5px solid #024c6f; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+    <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION DÉFINITIVE</h3>
+    <p style="font-size: 18px; color: #111; margin-bottom: 5px; font-weight: 600;">
+        Le montant estimé est de : [INSÉRER MONTANT ARRONDIS À 2 DÉCIMALES]
+    </p>
+    <p style="font-size: 13px; color: #555; margin-top: 0;">
+        <em>Basé sur les éléments fournis.</em>
+    </p>
+</div>
+
+<h4 style="color: #024c6f; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-family: sans-serif;">Références Juridiques</h4>
+Cite les articles de loi précis sous forme de liste.
+
+---
 DONNÉES CERTIFIÉES 2026 (YAML) :
 {facts_section}
 
@@ -296,7 +310,7 @@ DOCUMENTS RETROUVÉS :
 QUESTION :
 {question}
 
-SOURCES DISPONIBLES (noms des documents retrouvés) :
+SOURCES :
 {sources_list}
 """)
     
