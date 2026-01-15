@@ -330,6 +330,15 @@ QUESTION :
 SOURCES :
 {sources_list}
 """)
+
+    # 👇 CES DEUX LIGNES SONT CRUCIALES 👇
+    chain = prompt | llm | StrOutputParser()
+    return chain.stream({
+        "context": context,
+        "question": query,
+        "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
+        "facts_section": facts_section
+    })
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
