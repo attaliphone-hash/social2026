@@ -420,9 +420,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             
             if uploaded_file and "Document analysé" not in full_response:
                 full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
-            
-            # 👇 CORRECTION ICI : Sorti du 'if' pour avoir le padding tout le temps
-            full_response += "<br><br>"
+                full_response += "<br><br>"
             
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
