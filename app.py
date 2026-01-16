@@ -51,7 +51,7 @@ def manage_subscription_link(email):
         print(f"Erreur Stripe Portal: {e}")
     return None
 
-# --- FONCTION ROBUSTE (Veille BOSS) ---
+# --- FONCTION ROBUSTE (Veille BOSS) - VERSION CSS NETTOYÉE ---
 def get_boss_status_html():
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
@@ -73,8 +73,8 @@ def get_boss_status_html():
                 
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
-                style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
-                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
+                # Construction du lien avec la classe CSS 'boss-link' (voir styles.py)
+                html_link = f'<a href="{link}" target="_blank" class="boss-link">{title}</a>'
                 
                 if date_tag:
                     try:
@@ -83,19 +83,20 @@ def get_boss_status_html():
                         days_old = (now - pub_date_obj).days
                         date_str = pub_date_obj.strftime("%d/%m/%Y")
                         
-                        html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
-                        
                         if days_old < 8:
-                            return f"""<div style='{style_alert}'>🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
+                            # Utilisation de la classe CSS 'boss-red'
+                            return f"""<div class="boss-alert-box boss-red">🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
                         else:
-                            return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
+                            # Utilisation de la classe CSS 'boss-green'
+                            return f"""<div class="boss-alert-box boss-green">✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
                             
                     except:
                         pass 
                 
-                return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>""", link
+                # Fallback générique
+                return f"""<div class="boss-alert-box boss-red">📢 ALERTE BOSS : {html_link}</div>""", link
             
-            return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
+            return "<div class='boss-alert-box' style='background-color:#f0f2f6;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
             
         return "", ""
     except Exception:
@@ -127,7 +128,8 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
+    # Utilisation de H2 pour le login (plus élégant que le gros H1)
+    st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
     
     render_top_columns()
     st.markdown("---")
@@ -155,7 +157,6 @@ def check_password():
         render_subscription_cards()
         
         # ✅ Connexion des boutons à Stripe (sinon rien ne se passe au clic)
-        # Note : st.button écrit dans st.session_state la valeur True le run du clic.
         if st.session_state.get("btn_sub_month"):
             url_checkout = create_checkout_session("Mensuel")
             if url_checkout:
@@ -373,6 +374,8 @@ if "uploader_key" not in st.session_state:
 
 col_t, col_buttons = st.columns([3, 2]) 
 with col_t: 
+    # Titre "Propre" (H1) sans style inline. 
+    # J'ai gardé ton texte "EXPERT SOCIAL PRO ABONNÉS"
     st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
 with col_buttons:
@@ -446,4 +449,5 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 show_legal_info()
-st.markdown("<div style='text-align:center; color:#888; font-size:11px; margin-top:30px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
+# Footer avec classe CSS propre (géré dans styles.py)
+st.markdown("<div class='footer-copyright'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
