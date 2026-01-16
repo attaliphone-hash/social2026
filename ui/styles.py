@@ -3,14 +3,14 @@ import os
 import base64
 
 # ==============================================================================
-# DONNÉES DE RÉASSURANCE
+# DONNÉES DE RÉASSURANCE (VERSION LONGUE REMISE EN PLACE)
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes."),
-    ("Sources officielles :", " Analyse simultanée BOSS, Code du Travail, URSSAF."),
-    ("Mise à Jour Agile :", " Base actualisée en temps réel dès publication."),
-    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée."),
-    ("Confidentialité :", " Aucun cookie pub. Données traitées en RAM uniquement.")
+    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
+    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
+    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
+    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
+    ("Confidentialité Garantie :", " Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.")
 ]
 
 def get_base64(bin_file):
@@ -34,7 +34,7 @@ def apply_pro_design():
         h1 {
             font-family: 'Baskerville', 'Libre Baskerville', 'Georgia', serif !important;
             color: #253E92 !important;
-            font-size: 35px !important; /* VOUS POUVEZ MODIFIER ICI */
+            font-size: 35px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important; 
             margin-top: 10px !important;
@@ -44,12 +44,13 @@ def apply_pro_design():
             text-align: left !important;
         }
 
-        /* --- 2. BOUTONS (Open Sans - Aligné Gauche) --- */
+        /* --- 2. BOUTONS (Nouvelle Session & Upload) --- */
         
-        /* Style commun pour les deux boutons */
+        /* Style de base commun */
         button[data-testid="stBaseButton-secondary"], 
         [data-testid="stFileUploader"] button {
             font-family: 'Open Sans', sans-serif !important;
+            font-size: 12px !important;
             height: 40px !important;
             min-height: 40px !important;
             background-color: rgba(255, 255, 255, 0.9) !important;
@@ -60,60 +61,58 @@ def apply_pro_design():
             margin: 0 !important;
             width: 100% !important;
             padding: 0 10px !important;
-        }
-
-        /* Survol */
-        button[data-testid="stBaseButton-secondary"]:hover, 
-        [data-testid="stFileUploader"] button:hover {
-            border-color: #253E92 !important;
-            color: #253E92 !important;
-            background-color: #fff !important;
-        }
-        
-        /* TAILLE DE POLICE DES BOUTONS (À MODIFIER ICI SI BESOIN) */
-        button[data-testid="stBaseButton-secondary"] {
-            font-size: 12px !important; 
-        }
-
-        /* --- CORRECTION UPLOADER (Le fameux bouton) --- */
-        
-        /* On écrase le texte "Browse files" en le mettant à 0px */
-        [data-testid="stFileUploader"] button {
-            font-size: 0px !important; 
+            /* Flexbox pour centrage vertical parfait */
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             position: relative !important;
         }
 
-        /* On injecte le texte "Charger un document" avec la bonne taille */
+        /* Survol */
+        button[data-testid="stBaseButton-secondary"]:hover, 
+        [data-testid="stFileUploader"] button:hover {
+            border-color: #253E92 !important;
+            background-color: #fff !important;
+        }
+
+        /* --- CORRECTION UPLOADER (LA MÉTHODE 'TRANSPARENT TEXT') --- */
+        
+        /* 1. On rend le texte anglais "Browse files" TRANSPARENT mais présent */
+        /* Cela garde la forme du bouton intacte */
+        [data-testid="stFileUploader"] button {
+            color: transparent !important;
+        }
+        
+        /* 2. On ajoute le texte français par dessus, centré */
         [data-testid="stFileUploader"] button::after {
             content: "Charger un document";
-            font-size: 12px !important; /* REMETTRE LA TAILLE ICI */
             font-family: 'Open Sans', sans-serif !important;
-            color: #333 !important;
+            font-size: 12px !important;
+            color: #333 !important; /* Couleur du texte visible */
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             white-space: nowrap;
+            pointer-events: none; /* Le clic traverse vers le bouton */
         }
-        
-        /* On s'assure que le texte change de couleur au survol aussi */
+
+        /* Changement de couleur du texte français au survol */
         [data-testid="stFileUploader"] button:hover::after {
             color: #253E92 !important;
         }
 
-        /* Nettoyage interface Uploader */
-        [data-testid="stFileUploader"] section { padding: 0 !important; }
+        /* Suppression des icônes parasites ou instructions */
+        [data-testid="stFileUploader"] button svg { display: none !important; }
         [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
+        [data-testid="stFileUploader"] section { padding: 0 !important; min-height: 0 !important; }
         [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
 
 
         /* --- 3. BARRE DE LIENS (Sous les arguments) --- */
         .footer-text {
             font-family: 'Open Sans', sans-serif !important;
-            font-size: 11px !important; /* MODIFIER ICI */
+            font-size: 11px !important; 
             color: #7A7A7A !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -122,7 +121,7 @@ def apply_pro_design():
 
         button[data-testid="stBaseButton-tertiary"] {
             font-family: 'Open Sans', sans-serif !important;
-            font-size: 11px !important; /* MODIFIER ICI */
+            font-size: 11px !important; 
             color: #7A7A7A !important;
             background: transparent !important;
             border: none !important;
