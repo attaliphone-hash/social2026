@@ -73,7 +73,6 @@ def get_boss_status_html():
                 
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
-                # Styles inline conservés
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
                 style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
                 
@@ -120,6 +119,36 @@ def show_boss_alert():
                 st.session_state.news_closed = True
                 st.rerun()
 
+# --- DÉFINITION DES POPUPS (MODALES) - Déplacé ici pour être dispo partout ---
+@st.dialog("Mentions Légales")
+def modal_mentions():
+    st.markdown("""
+    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
+        <strong>ÉDITEUR :</strong><br>
+        Le site <em>socialexpertfrance.fr</em> est édité par la BUSINESS AGENT AI.<br>
+        Contact : sylvain.attal@businessagent-ai.com<br><br>
+        <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
+        L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
+        L'architecture, le code et le design sont la propriété exclusive de BUSINESS AGENT AI®. 
+        La réutilisation des réponses générées est autorisée dans le cadre de vos missions professionnelles.<br><br>
+        <strong>RESPONSABILITÉ :</strong><br>
+        Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique. 
+        L'utilisateur doit vérifier les réponses de l'IA qui n'engagent pas l'éditeur.
+    </div>
+    """, unsafe_allow_html=True)
+
+@st.dialog("Politique de Confidentialité (RGPD)")
+def modal_rgpd():
+    st.markdown("""
+    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
+        <strong>PROTECTION DES DONNÉES & COOKIES :</strong><br>
+        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé pour maintenir votre session active.<br>
+        2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire ou traceur tiers n'est utilisé.<br>
+        3. <strong>Données Volatiles :</strong> Le traitement est effectué en mémoire vive (RAM) et vos données ne servent jamais à entraîner les modèles d'IA.<br><br>
+        <em>Conformité RGPD : Droit à l'oubli garanti par défaut.</em>
+    </div>
+    """, unsafe_allow_html=True)
+
 # --- 2. AUTHENTIFICATION ---
 def check_password():
     if "authenticated" not in st.session_state:
@@ -128,9 +157,20 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
+    # 1. ARGUMENTS EN HAUT
     render_top_columns()
-    st.markdown("---")
     
+    # 2. LIGNE COPYRIGHT / MENTIONS (SOUS LES ARGUMENTS)
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+    c_line = st.columns([1, 1, 1, 3]) # Ajustement pour alignement gauche
+    with c_line[0]:
+        st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
+    with c_line[1]:
+        if st.button("Mentions Légales", key="login_mentions", type="tertiary"): modal_mentions()
+    with c_line[2]:
+        if st.button("RGPD & Cookies", key="login_rgpd", type="tertiary"): modal_rgpd()
+        
+    st.markdown("---")
     st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
     
     tab1, tab2 = st.tabs(["🔐 Espace Client Abonnés", "Accès Découverte / Admin"])
@@ -257,7 +297,6 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
-    # PROMPT IDENTIQUE AU BACKUP
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
 
@@ -334,7 +373,6 @@ SOURCES :
 {sources_list}
 """)
 
-    # 👇 EXÉCUTION
     chain = prompt | llm | StrOutputParser()
     return chain.stream({
         "context": context,
@@ -342,36 +380,6 @@ SOURCES :
         "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
         "facts_section": facts_section
     })
-
-# --- DÉFINITION DES POPUPS (MODALES) ---
-@st.dialog("Mentions Légales")
-def modal_mentions():
-    st.markdown("""
-    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
-        <strong>ÉDITEUR :</strong><br>
-        Le site <em>socialexpertfrance.fr</em> est édité par la BUSINESS AGENT AI.<br>
-        Contact : sylvain.attal@businessagent-ai.com<br><br>
-        <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
-        L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
-        L'architecture, le code et le design sont la propriété exclusive de BUSINESS AGENT AI®. 
-        La réutilisation des réponses générées est autorisée dans le cadre de vos missions professionnelles.<br><br>
-        <strong>RESPONSABILITÉ :</strong><br>
-        Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique. 
-        L'utilisateur doit vérifier les réponses de l'IA qui n'engagent pas l'éditeur.
-    </div>
-    """, unsafe_allow_html=True)
-
-@st.dialog("Politique de Confidentialité (RGPD)")
-def modal_rgpd():
-    st.markdown("""
-    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
-        <strong>PROTECTION DES DONNÉES & COOKIES :</strong><br>
-        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé pour maintenir votre session active.<br>
-        2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire ou traceur tiers n'est utilisé.<br>
-        3. <strong>Données Volatiles :</strong> Le traitement est effectué en mémoire vive (RAM) et vos données ne servent jamais à entraîner les modèles d'IA.<br><br>
-        <em>Conformité RGPD : Droit à l'oubli garanti par défaut.</em>
-    </div>
-    """, unsafe_allow_html=True)
 
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 user_email = st.session_state.get("user_email", "")
@@ -390,16 +398,29 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
 # 1. ARGUMENTS (En tout premier)
 render_top_columns()
 
-# 2. ALERTE ADMIN
-if st.session_state.user_email == "ADMINISTRATEUR":
-    show_boss_alert()
+# 2. LIGNE COPYRIGHT / LIENS (DIRECTEMENT SOUS LES ARGUMENTS)
+# --- Positionnement stratégique ---
+st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+# Colonnes pour alignement gauche : [Copyright] [Lien] [Lien] [Espace vide]
+c_foot1, c_foot2, c_foot3, _ = st.columns([1.2, 0.8, 0.8, 3], vertical_alignment="center")
+
+with c_foot1:
+    st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
+with c_foot2:
+    if st.button("Mentions Légales", key="main_mentions", type="tertiary"): modal_mentions()
+with c_foot3:
+    if st.button("RGPD & Cookies", key="main_rgpd", type="tertiary"): modal_rgpd()
 
 st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
+
+# 3. ALERTE ADMIN
+if st.session_state.user_email == "ADMINISTRATEUR":
+    show_boss_alert()
 
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-# 3. ZONE ACTIONS (ALIGNÉE GAUCHE : UPLOAD PUIS BOUTON)
+# 4. ZONE ACTIONS (ALIGNÉE GAUCHE)
 col_act1, col_act2, _ = st.columns([1.5, 1.5, 3], vertical_alignment="center", gap="small")
 
 with col_act1:
@@ -411,17 +432,15 @@ with col_act1:
     )
 
 with col_act2:
-    # Width auto pour que le bouton ne soit pas immense
     if st.button("Nouvelle session", use_container_width=True): 
         st.session_state.messages = []
         st.session_state.uploader_key += 1
         st.rerun()
 
-# 4. TITRE PRINCIPAL (EN DESSOUS - GAUCHE)
+# 5. TITRE PRINCIPAL
 st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
-# LOGIQUE CHAT & UPLOAD
-# ✅ INITIALISATION CORRECTE DE LA VARIABLE
+# LOGIQUE CHAT
 user_text = None
 if uploaded_file:
     try:
@@ -457,7 +476,6 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             context_text, sources_list = build_context(query)
             
             full_response = ""
-            # ✅ CORRECTION VARIABLE : user_text
             for chunk in get_gemini_response_stream(
                 query=query, 
                 context=context_text, 
@@ -476,20 +494,3 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
-
-# 5. FOOTER INTEGRÉ (Aligné en bas à droite)
-st.markdown("<br><br><br>", unsafe_allow_html=True)
-
-# Disposition : [Espace vide] [Copyright] [Lien 1] [Lien 2]
-_, c_copy, c_mentions, c_rgpd = st.columns([4, 1.5, 0.8, 0.8], vertical_alignment="center")
-
-with c_copy:
-    st.markdown("<p class='footer-text'>© 2026 socialexpertfrance.fr &nbsp;|</p>", unsafe_allow_html=True)
-
-with c_mentions:
-    if st.button("Mentions Légales", key="foot_mentions", type="tertiary"):
-        modal_mentions()
-
-with c_rgpd:
-    if st.button("RGPD & Cookies", key="foot_rgpd", type="tertiary"):
-        modal_rgpd()

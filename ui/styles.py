@@ -3,7 +3,7 @@ import os
 import base64
 
 # ==============================================================================
-# TEXTES DE RÉASSURANCE
+# DONNÉES DE RÉASSURANCE
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
@@ -19,7 +19,6 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    # On force le chargement de la police Open Sans
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
@@ -30,7 +29,7 @@ def apply_pro_design():
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
 
-        /* --- 1. TITRE H1 (Baskerville) --- */
+        /* --- 1. TITRE H1 --- */
         h1 {
             font-family: 'Baskerville', 'Libre Baskerville', 'Georgia', serif !important;
             color: #253E92 !important;
@@ -44,9 +43,7 @@ def apply_pro_design():
             text-align: left !important;
         }
 
-        /* --- 2. BOUTONS (Open Sans, 12px, 40px haut) --- */
-        
-        /* Cible les deux boutons : "Nouvelle Session" et "Upload" */
+        /* --- 2. BOUTONS D'ACTION (HAUT) --- */
         button[data-testid="stBaseButton-secondary"], 
         [data-testid="stFileUploader"] button {
             font-family: 'Open Sans', sans-serif !important;
@@ -60,13 +57,11 @@ def apply_pro_design():
             box-shadow: none !important;
             margin: 0 !important;
             width: 100% !important;
-            padding: 0 10px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
         }
 
-        /* Survol */
         button[data-testid="stBaseButton-secondary"]:hover, 
         [data-testid="stFileUploader"] button:hover {
             border-color: #253E92 !important;
@@ -74,14 +69,8 @@ def apply_pro_design():
             background-color: #fff !important;
         }
 
-        /* --- HACK UPLOADER (Le plus simple possible) --- */
-        
-        /* 1. On cache le texte "Browse files" original */
-        [data-testid="stFileUploader"] button small {
-            display: none !important;
-        }
-
-        /* 2. On injecte le nouveau texte "Charger un document" */
+        /* --- HACK UPLOADER (Simple & Stable) --- */
+        [data-testid="stFileUploader"] button small { display: none !important; }
         [data-testid="stFileUploader"] button::after {
             content: "Charger un document";
             font-family: 'Open Sans', sans-serif !important;
@@ -90,62 +79,42 @@ def apply_pro_design():
             display: block !important;
         }
         
-        /* Nettoyage autour de l'uploader pour éviter les décalages */
         [data-testid="stFileUploader"] section { padding: 0 !important; }
         [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
         [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
 
-
-        /* --- 3. FOOTER (Open Sans, 11px, #7A7A7A) --- */
-        
-        /* Conteneur global du footer pour forcer l'alignement */
-        .footer-container {
-            display: flex;
-            justify-content: flex-end; /* Tout à droite */
-            align-items: center;
-            gap: 15px; /* Espace entre les éléments */
-            width: 100%;
-            margin-top: 50px;
-        }
-
-        .footer-text {
+        /* --- 3. BARRE DE COPYRIGHT / LIENS (Nouvelle position) --- */
+        /* C'est ce style qui gère la ligne sous les arguments */
+        .legal-line {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 11px !important;
             color: #7A7A7A !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            white-space: nowrap;
-        }
-
-        /* Boutons "Lien" (Mentions/RGPD) */
-        button[data-testid="stBaseButton-tertiary"] {
-            font-family: 'Open Sans', sans-serif !important;
-            font-size: 11px !important;
-            color: #7A7A7A !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            text-decoration: none !important; 
-            padding: 0 !important;
-            margin: 0 !important;
-            height: auto !important;
-            min-height: 0 !important;
-            line-height: 1 !important;
+            text-align: center !important; /* Centré ou right selon préférence */
+            margin-top: 15px !important;
+            margin-bottom: 15px !important;
+            padding-bottom: 10px !important;
+            border-bottom: 1px solid #eee; /* Le petit filet de séparation */
         }
         
-        button[data-testid="stBaseButton-tertiary"]:hover {
+        .legal-link {
+            color: #7A7A7A !important;
+            text-decoration: none !important;
+            border-bottom: 1px dotted #7A7A7A;
+            cursor: pointer !important;
+            margin-left: 10px !important;
+            margin-right: 10px !important;
+        }
+        .legal-link:hover {
             color: #253E92 !important;
-            text-decoration: underline !important;
+            border-bottom: 1px solid #253E92;
         }
 
-        /* --- AUTRES STYLES --- */
+        /* --- AUTRES --- */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
-        
         .assurance-text { font-size: 10px !important; color: #024c6f !important; text-align: left; line-height: 1.3; margin-bottom: 5px; }
         .assurance-title { font-weight: bold; color: #024c6f; font-size: 10px !important; }
         .assurance-desc { font-weight: normal; color: #444; font-size: 10px !important; }
         
-        /* Styles Alertes BOSS */
         .boss-alert-box { padding: 12px !important; border-radius: 8px !important; margin-bottom: 10px !important; font-size: 14px !important; }
         .boss-red { background-color: #f8d7da !important; color: #721c24 !important; border: 1px solid #f5c6cb !important; }
         .boss-green { background-color: #d4edda !important; color: #155724 !important; border: 1px solid #c3e6cb !important; }
@@ -154,7 +123,6 @@ def apply_pro_design():
         </style>
     """, unsafe_allow_html=True)
 
-    # Fond d'écran
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
