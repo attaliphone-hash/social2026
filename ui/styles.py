@@ -96,8 +96,7 @@ def apply_pro_design():
             font-family: 'Baskerville', sans-serif !important;
             font-weight: 800 !important;    /* La Graisse (400=Normal, 700=Gras, 900=Très Gras) */
             font-size: 35px !important;   /* La Taille */
-            text-transform: uppercase !important; /* Mettre 'uppercase' pour tout en MAJUSCULES */
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            text-transform: uppercase !important; /* Mettre 'uppercase' pour tout en MAJUSCULES *
             margin-bottom: 25px !important;
         }
 
