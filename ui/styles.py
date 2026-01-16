@@ -3,7 +3,7 @@ import os
 import base64
 
 # ==============================================================================
-# DONNÉES DE RÉASSURANCE (VERSION LONGUE ORIGINALE)
+# DONNÉES DE RÉASSURANCE
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
@@ -34,93 +34,110 @@ def apply_pro_design():
             font-weight: 800 !important;
             font-size: 35px !important;
             text-transform: uppercase !important; 
-            margin-top: 5px !important;
+            margin-top: 15px !important;
             padding-top: 0px !important;
             margin-bottom: 20px !important; 
             line-height: 1.0 !important;
         }
 
-        /* --- 2. BOUTONS D'ACTION (Haut de page) --- */
-        button[data-testid="stBaseButton-secondary"] {
-            background-color: rgba(255, 255, 255, 0.7) !important;
-            border: 1px solid #ddd !important;
-            color: #555 !important;
-            font-size: 11px !important;
-            padding: 2px 8px !important;
-            height: auto !important;
-            min-height: 28px !important;
-            box-shadow: none !important;
-        }
-        button[data-testid="stBaseButton-secondary"]:hover {
-            background-color: white !important;
-            border-color: #aaa !important;
-            color: #000 !important;
-        }
-
-        /* Hack spécifique pour le bouton Upload */
-        .stFileUploader button {
-            background-color: rgba(255, 255, 255, 0.7) !important;
-            border: 1px solid #ddd !important;
-            color: transparent !important;
-            padding: 2px 8px !important;
-            font-size: 11px !important;
-            height: auto !important;
-            min-height: 28px !important;
-        }
-        .stFileUploader button::after {
-            content: "Charger un document";
-            color: #555 !important;
-            position: absolute;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 11px !important;
-            font-weight: normal !important;
-        }
-        .stFileUploader section { background: transparent !important; border: none !important; padding: 0 !important; }
-        .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
-        .stFileUploader div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
-
-        /* --- 3. FOOTER INTEGRÉ (LIENS ET COPYRIGHT) --- */
+        /* --- 2. BOUTONS D'ACTION (HAUT) - CORRECTION TAILLE & TEXTE --- */
         
-        /* Texte Copyright */
+        /* Bouton "Nouvelle Session" */
+        button[data-testid="stBaseButton-secondary"] {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            border: 1px solid #ccc !important;
+            color: #444 !important;
+            font-size: 12px !important;
+            height: 34px !important;      /* Hauteur fixe stricte */
+            min-height: 34px !important;
+            line-height: 1 !important;    /* Centrage vertical */
+            margin: 0 !important;
+            width: 100% !important;
+        }
+
+        /* Bouton "Upload" - TECHNIQUE ROBUSTE (Font-size 0) */
+        [data-testid="stFileUploader"] button {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            border: 1px solid #ccc !important;
+            
+            /* On réduit le texte original à 0 pour le faire disparaitre proprement */
+            font-size: 0px !important; 
+            
+            height: 34px !important;      /* Même hauteur que l'autre */
+            min-height: 34px !important;
+            width: 100% !important;
+            padding: 0 !important;
+            display: flex !important;     /* Flexbox pour centrer le nouveau texte */
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        /* Le nouveau texte inséré */
+        [data-testid="stFileUploader"] button::after {
+            content: "Charger un document";
+            font-size: 12px !important;   /* On remet la bonne taille ici */
+            color: #444 !important;
+            font-weight: normal !important;
+            display: block !important;
+            line-height: 1 !important;
+        }
+        
+        /* Nettoyage Uploader */
+        [data-testid="stFileUploader"] section { padding: 0 !important; }
+        [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
+        [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
+
+
+        /* --- 3. FOOTER INTEGRÉ - CORRECTION ALIGNEMENT --- */
+        
+        /* Le texte copyright */
         .footer-text {
-            color: #888 !important;
-            font-size: 11px !important; /* TAILLE FIXÉE */
+            color: #999 !important;
+            font-size: 11px !important;
             font-family: sans-serif !important;
             margin: 0 !important;
             padding: 0 !important;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end; /* Colle le texte à droite vers les boutons */
-            height: 100%;
-            white-space: nowrap !important;
+            
+            /* Alignement vertical critique */
+            line-height: 20px !important; 
+            height: 20px !important;
+            display: inline-block !important;
+            
+            text-align: right;
+            width: 100%;
         }
 
-        /* Liens (Boutons transformés) */
+        /* Les liens (Boutons transformés) */
         button[data-testid="stBaseButton-tertiary"] {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            color: #888 !important; /* MÊME COULEUR */
+            color: #999 !important; 
             text-decoration: underline !important; 
-            font-size: 11px !important; /* EXACTEMENT LA MÊME TAILLE */
-            padding: 0px 8px !important; 
+            font-size: 11px !important;
+            
+            /* Alignement vertical critique pour matcher le texte */
+            padding: 0px 5px !important; 
             margin: 0px !important;
-            height: auto !important;
-            min-height: 0px !important;
-            width: auto !important;
-            line-height: 1 !important;
-            white-space: nowrap !important; /* INTERDIT LE RENVOI À LA LIGNE */
+            height: 20px !important;
+            min-height: 20px !important;
+            line-height: 20px !important;
+            
+            vertical-align: top !important; /* Colle au haut de la ligne comme le texte */
         }
         
         button[data-testid="stBaseButton-tertiary"]:hover {
-            color: #444 !important;
-            background: transparent !important;
+            color: #555 !important;
+        }
+        
+        /* Suppression des marges parasites des colonnes du footer */
+        [data-testid="column"] {
+            padding: 0 !important;
         }
 
-        /* --- AUTRES STYLES --- */
+        /* --- AUTRES --- */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
+        
         .boss-alert-box { padding: 12px !important; border-radius: 8px !important; margin-bottom: 10px !important; font-size: 14px !important; }
         .boss-red { background-color: #f8d7da !important; color: #721c24 !important; border: 1px solid #f5c6cb !important; }
         .boss-green { background-color: #d4edda !important; color: #155724 !important; border: 1px solid #c3e6cb !important; }

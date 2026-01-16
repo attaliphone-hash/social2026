@@ -391,7 +391,7 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
             else:
                 st.info("Aucun abonnement actif trouvé.")
 
-# 1. ARGUMENTS (En tout premier)
+# 1. LES ARGUMENTS (TOUT EN PREMIER)
 render_top_columns()
 
 # 2. ALERTE ADMIN
@@ -403,9 +403,9 @@ st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-# 3. ZONE ACTIONS (UPLOAD & SESSION) - PLACÉE AVANT LE TITRE (DEMANDE CLIENT)
-# Colonnes ajustées pour que ce soit compact à gauche et aligné
-col_act1, col_act2, _ = st.columns([1.2, 0.8, 3], vertical_alignment="center")
+# 3. ZONE ACTIONS (UPLOAD & SESSION) - PLACÉE AVANT LE TITRE
+# Colonnes égales [1,1] pour avoir la même place. 
+col_act1, col_act2, _ = st.columns([1, 1, 3], vertical_alignment="center")
 
 with col_act1:
     uploaded_file = st.file_uploader(
@@ -425,14 +425,15 @@ with col_act2:
 st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
 # LOGIQUE CHAT & UPLOAD
+# ✅ CORRECTION : Initialisation variable propre (user_text)
 user_text = None
 if uploaded_file:
     try:
         if uploaded_file.type == "application/pdf":
             reader = pypdf.PdfReader(uploaded_file)
-            user_doc_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            user_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
         else:
-            user_doc_text = uploaded_file.read().decode("utf-8")
+            user_text = uploaded_file.read().decode("utf-8")
         st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
@@ -460,12 +461,13 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             context_text, sources_list = build_context(query)
             
             full_response = ""
+            # ✅ CORRECTION : Utilisation de la bonne variable 'user_text'
             for chunk in get_gemini_response_stream(
                 query=query, 
                 context=context_text, 
                 sources_list=sources_list,
                 certified_facts=certified_facts,
-                user_doc_content=user_doc_text
+                user_doc_content=user_text
             ):
                 full_response += chunk
                 message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
@@ -473,29 +475,27 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             if uploaded_file and "Document analysé" not in full_response:
                 full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
             
-            # ✅ LE PADDING EST BIEN ICI, HORS DU 'IF' ET ON A LA BOÎTE BLEUE
+            # ✅ LE PADDING EST BIEN ICI
             full_response += "<br><br>"
             
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# 5. FOOTER INTEGRÉ (LIGNE UNIQUE : COPYRIGHT + LIENS)
+# 5. FOOTER INTEGRÉ (LIGNE UNIQUE)
 st.markdown("<br><br><br>", unsafe_allow_html=True)
 
 # Colonnes ajustées pour centrer le bloc et tout garder sur une ligne
 _, c_copy, c_mentions, c_rgpd, _ = st.columns([2, 2, 1, 1, 2], vertical_alignment="center")
 
 with c_copy:
-    # Le texte est aligné à droite via CSS pour coller aux boutons
+    # Le texte aligné à droite
     st.markdown("<p class='footer-text'>© 2026 socialexpertfrance.fr &nbsp;|</p>", unsafe_allow_html=True)
 
 with c_mentions:
-    # Bouton transparent type lien
     if st.button("Mentions Légales", key="foot_mentions", type="tertiary"):
         modal_mentions()
 
 with c_rgpd:
-    # Bouton transparent type lien
     if st.button("RGPD & Cookies", key="foot_rgpd", type="tertiary"):
         modal_rgpd()
