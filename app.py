@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # --- IMPORTS UI ---
-from ui.styles import apply_pro_design, render_top_columns, render_subscription_cards
+from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -51,7 +51,7 @@ def manage_subscription_link(email):
         print(f"Erreur Stripe Portal: {e}")
     return None
 
-# --- FONCTION ROBUSTE (Veille BOSS) - VERSION BACKUP ---
+# --- FONCTION ROBUSTE (Veille BOSS) ---
 def get_boss_status_html():
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
@@ -127,11 +127,11 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
+    st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
+    
     render_top_columns()
     st.markdown("---")
-    
-    st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
-    
+
     tab1, tab2 = st.tabs(["🔐 Espace Client Abonnés", "Accès Découverte / Admin"])
 
     with tab1:
@@ -150,8 +150,12 @@ def check_password():
         
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
+        
+        # Affiche les cartes + crée les 2 boutons Streamlit (keys: btn_sub_month / btn_sub_year)
         render_subscription_cards()
         
+        # ✅ Connexion des boutons à Stripe (sinon rien ne se passe au clic)
+        # Note : st.button écrit dans st.session_state la valeur True le run du clic.
         if st.session_state.get("btn_sub_month"):
             url_checkout = create_checkout_session("Mensuel")
             if url_checkout:
@@ -257,7 +261,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
 # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (VERSION DU BACKUP)
+    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (Arrondis Intelligents + Style Pro)
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
@@ -343,44 +347,12 @@ SOURCES :
         "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
         "facts_section": facts_section
     })
-
-# --- DÉFINITION DES POPUPS (MODALES) ---
-@st.dialog("Mentions Légales")
-def modal_mentions():
-    st.markdown("""
-    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
-        <strong>ÉDITEUR :</strong><br>
-        Le site <em>socialexpertfrance.fr</em> est édité par la BUSINESS AGENT AI.<br>
-        Contact : sylvain.attal@businessagent-ai.com<br><br>
-        <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
-        L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
-        L'architecture, le code et le design sont la propriété exclusive de BUSINESS AGENT AI®. 
-        La réutilisation des réponses générées est autorisée dans le cadre de vos missions professionnelles.<br><br>
-        <strong>RESPONSABILITÉ :</strong><br>
-        Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique. 
-        L'utilisateur doit vérifier les réponses de l'IA qui n'engagent pas l'éditeur.
-    </div>
-    """, unsafe_allow_html=True)
-
-@st.dialog("Politique de Confidentialité (RGPD)")
-def modal_rgpd():
-    st.markdown("""
-    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
-        <strong>PROTECTION DES DONNÉES & COOKIES :</strong><br>
-        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé pour maintenir votre session active.<br>
-        2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire ou traceur tiers n'est utilisé.<br>
-        3. <strong>Données Volatiles :</strong> Le traitement est effectué en mémoire vive (RAM) et vos données ne servent jamais à entraîner les modèles d'IA.<br><br>
-        <em>Conformité RGPD : Droit à l'oubli garanti par défaut.</em>
-    </div>
-    """, unsafe_allow_html=True)
-
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
     with st.sidebar:
         st.markdown("### 👤 Mon Compte")
         st.write(f"Connecté : {user_email}")
-        
         if st.button("💳 Gérer mon abonnement", help="Factures, changement de carte, désabonnement"):
             portal_url = manage_subscription_link(user_email)
             if portal_url:
@@ -388,50 +360,44 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
             else:
                 st.info("Aucun abonnement actif trouvé.")
 
-# 1. ARGUMENTS (En tout premier)
-render_top_columns()
+st.markdown("<hr>", unsafe_allow_html=True)
 
-# 2. ALERTE ADMIN
-if st.session_state.user_email == "ADMINISTRATEUR":
+if user_email == "ADMINISTRATEUR":
     show_boss_alert()
 
-st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
+render_top_columns()
+st.markdown("<br>", unsafe_allow_html=True)
 
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-# 3. ZONE ACTIONS (UPLOAD & SESSION) - PLACÉE AVANT LE TITRE
-# Colonnes larges pour laisser la place aux boutons
-col_act1, col_act2, _ = st.columns([1.5, 1.5, 2], vertical_alignment="center")
+col_t, col_buttons = st.columns([3, 2]) 
+with col_t: 
+    st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
-with col_act1:
-    # Le bouton upload
-    uploaded_file = st.file_uploader(
-        "Upload", 
-        type=["pdf", "txt"], 
-        label_visibility="collapsed",
-        key=f"uploader_{st.session_state.uploader_key}"
-    )
+with col_buttons:
+    c_up, c_new = st.columns([1.6, 1])
+    with c_up:
+        uploaded_file = st.file_uploader(
+            "Upload", 
+            type=["pdf", "txt"], 
+            label_visibility="collapsed",
+            key=f"uploader_{st.session_state.uploader_key}"
+        )
+    with c_new:
+        if st.button("Nouvelle session"):
+            st.session_state.messages = []
+            st.session_state.uploader_key += 1
+            st.rerun()
 
-with col_act2:
-    if st.button("Nouvelle session"):
-        st.session_state.messages = []
-        st.session_state.uploader_key += 1
-        st.rerun()
-
-# 4. TITRE PRINCIPAL (EN DESSOUS DES BOUTONS)
-st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
-
-# LOGIQUE CHAT & UPLOAD
-# ✅ Variable user_text initialisée
-user_text = None
+user_doc_text = None
 if uploaded_file:
     try:
         if uploaded_file.type == "application/pdf":
             reader = pypdf.PdfReader(uploaded_file)
-            user_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            user_doc_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
         else:
-            user_text = uploaded_file.read().decode("utf-8")
+            user_doc_text = uploaded_file.read().decode("utf-8")
         st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
@@ -459,13 +425,12 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             context_text, sources_list = build_context(query)
             
             full_response = ""
-            # ✅ Utilisation de user_text
             for chunk in get_gemini_response_stream(
                 query=query, 
                 context=context_text, 
                 sources_list=sources_list,
                 certified_facts=certified_facts,
-                user_doc_content=user_text
+                user_doc_content=user_doc_text
             ):
                 full_response += chunk
                 message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
@@ -473,27 +438,12 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             if uploaded_file and "Document analysé" not in full_response:
                 full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
             
-            # ✅ LE PADDING EST BIEN ICI
+            # ✅ LE PADDING EST BIEN ICI, HORS DU 'IF' ET ON A LA BOÎTE BLEUE
             full_response += "<br><br>"
             
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# 5. FOOTER INTEGRÉ (LIGNE UNIQUE)
-st.markdown("<br><br><br>", unsafe_allow_html=True)
-
-# Colonnes ajustées pour centrer le bloc et tout garder sur une ligne
-_, c_copy, c_mentions, c_rgpd, _ = st.columns([2, 2, 1, 1, 2], vertical_alignment="center")
-
-with c_copy:
-    # Le texte aligné à droite
-    st.markdown("<p class='footer-text'>© 2026 socialexpertfrance.fr &nbsp;|</p>", unsafe_allow_html=True)
-
-with c_mentions:
-    if st.button("Mentions Légales", key="foot_mentions", type="tertiary"):
-        modal_mentions()
-
-with c_rgpd:
-    if st.button("RGPD & Cookies", key="foot_rgpd", type="tertiary"):
-        modal_rgpd()
+show_legal_info()
+st.markdown("<div style='text-align:center; color:#888; font-size:11px; margin-top:30px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
