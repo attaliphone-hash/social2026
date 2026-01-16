@@ -88,7 +88,7 @@ def apply_pro_design():
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
 
-/* --- TYPOGRAPHIE DES TITRES (H1, H2, H3) --- */
+        /* --- TYPOGRAPHIE DES TITRES (H1, H2, H3) --- */
         
         /* H1 : Le Grand Titre (ex: ExpertSocialPro V4) */
         h1 {
@@ -97,7 +97,6 @@ def apply_pro_design():
             font-weight: 800 !important;
             font-size: 35px !important;
             text-transform: uppercase !important; 
-            /* J'ai corrigé la fermeture du commentaire ici : */
             margin-bottom: 25px !important;
         }
 
@@ -124,33 +123,29 @@ def apply_pro_design():
         /* RESPONSIVE DESIGN (TABLETTES & MOBILES)                     */
         /* ============================================================ */
 
-        /* 1. RÈGLE UNIVERSELLE POUR LES BOUTONS (S'applique partout) */
-        /* Cela force le texte à passer à la ligne si la colonne est étroite */
+        /* 1. RÈGLE UNIVERSELLE POUR LES BOUTONS */
         .stButton button {
-            width: 100% !important;        /* Prend toute la largeur de la colonne */
-            white-space: normal !important; /* AUTORISE le texte sur plusieurs lignes */
-            height: auto !important;        /* La hauteur s'agrandit automatiquement */
-            padding: 8px 4px !important;    /* Marges internes ajustées */
-            line-height: 1.3 !important;    /* Interligne propre pour le texte sur 2 lignes */
+            width: 100% !important;        
+            white-space: normal !important; 
+            height: auto !important;        
+            padding: 8px 4px !important;    
+            line-height: 1.3 !important;    
         }
 
         /* 2. OPTIMISATION TABLETTES / PETITS LAPTOPS (Max 1024px) */
-        /* C'est ici qu'on gère l'iPad */
         @media (max-width: 1024px) {
-            h1 { font-size: 28px !important; } /* On réduit un peu le titre H1 */
+            h1 { font-size: 28px !important; } 
             h2 { font-size: 1.5rem !important; margin-top: 20px !important; }
             .block-container { padding-left: 1rem !important; padding-right: 1rem !important; }
         }
 
-        /* 3. OPTIMISATION MOBILE (Max 768px) - Ta règle d'origine améliorée */
+        /* 3. OPTIMISATION MOBILE (Max 768px) */
         @media (max-width: 768px) {
             .block-container { padding-top: 1rem !important; }
             iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
             
-            /* Textes de réassurance plus petits */
             .assurance-text { margin-bottom: 5px !important; line-height: 1.1 !important; font-size: 10px !important; }
             
-            /* Titres adaptés au mobile */
             h1 { font-size: 22px !important; margin-top: 0px !important; margin-bottom: 15px !important; }
             h2 { font-size: 18px !important; }
         }
@@ -158,6 +153,45 @@ def apply_pro_design():
         /* TWEAKS DIVERS */
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
+
+        /* ============================================================ */
+        /* ELEMENTS DÉPORTÉS DE APP.PY (CLEAN CODE)                    */
+        /* ============================================================ */
+
+        /* FOOTER */
+        .footer-copyright {
+            text-align: center !important;
+            color: #888 !important;
+            font-size: 11px !important;
+            margin-top: 30px !important;
+        }
+
+        /* ALERTES BOSS */
+        .boss-alert-box {
+            padding: 12px !important;
+            border-radius: 8px !important;
+            margin-bottom: 10px !important;
+            font-size: 14px !important;
+        }
+        
+        .boss-red {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            border: 1px solid #f5c6cb !important;
+        }
+
+        .boss-green {
+            background-color: #d4edda !important;
+            color: #155724 !important;
+            border: 1px solid #c3e6cb !important;
+        }
+
+        .boss-link {
+            text-decoration: underline !important;
+            font-weight: bold !important;
+            color: inherit !important;
+        }
+
         </style>
     """, unsafe_allow_html=True)
 
@@ -215,18 +249,9 @@ def show_legal_info():
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# CARTES D'ABONNEMENT (SANS ARGUMENTS)
+# CARTES D'ABONNEMENT
 # ==============================================================================
 def render_subscription_cards():
-    """
-    Affiche les deux cartes d'abonnement (Mensuel/Bleu et Annuel/Vert)
-    Version SANS ARGUMENTS pour éviter toute régression de signature.
-
-    IMPORTANT :
-    - Les URL de paiement doivent être créées côté app.py via Stripe (sessions dynamiques).
-    - Ici, on ne met aucun lien Stripe "cs_live_..." statique.
-    - On déclenche simplement des boutons Streamlit avec des keys stables.
-    """
     col_m, col_a = st.columns(2)
 
     with col_m:
