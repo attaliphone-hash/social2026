@@ -11,7 +11,8 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # --- IMPORTS UI ---
-from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
+# J'ai retiré 'show_legal_info' car on utilise maintenant les popups
+from ui.styles import apply_pro_design, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -128,7 +129,7 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    # Utilisation de H2 pour le login (plus élégant que le gros H1)
+    # Utilisation de H2 pour le login
     st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
     
     render_top_columns()
@@ -153,10 +154,9 @@ def check_password():
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
         
-        # Affiche les cartes + crée les 2 boutons Streamlit (keys: btn_sub_month / btn_sub_year)
+        # Affiche les cartes
         render_subscription_cards()
         
-        # ✅ Connexion des boutons à Stripe (sinon rien ne se passe au clic)
         if st.session_state.get("btn_sub_month"):
             url_checkout = create_checkout_session("Mensuel")
             if url_checkout:
@@ -262,7 +262,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
 # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (Arrondis Intelligents + Style Pro)
+    # PROMPT EXPERT SOCIAL 2026 - GOLDEN
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
@@ -309,7 +309,7 @@ STRUCTURE DE LA RÉPONSE (À RESPECTER SCRUPULEUSEMENT)
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-radius: 8px; border-left: 5px solid #024c6f; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-    <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION/h3>
+    <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION</h3>
     <p style="font-size: 18px; color: #111; margin-bottom: 5px; font-weight: 600;">
         Le montant / taux estimé est de : [INSÉRER RÉSULTAT FINAL]
     </p>
@@ -348,6 +348,7 @@ SOURCES :
         "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
         "facts_section": facts_section
     })
+
 # --- DÉFINITION DES POPUPS (MODALES) ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
@@ -391,20 +392,8 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
                 st.link_button("👉 Accéder au portail Stripe", portal_url)
             else:
                 st.info("Aucun abonnement actif trouvé.")
-
-        st.markdown("---")
         
-        # BOUTONS JURIDIQUES (POPUPS)
-        st.caption("Informations Légales")
-        col_legal_1, col_legal_2 = st.columns(2)
-        
-        with col_legal_1:
-            if st.button("⚖️ Mentions", use_container_width=True, help="Voir les mentions légales"):
-                modal_mentions()
-        
-        with col_legal_2:
-            if st.button("🔒 RGPD", use_container_width=True, help="Voir la politique de confidentialité"):
-                modal_rgpd()
+        # J'ai nettoyé les boutons juridiques d'ici pour les mettre en bas de page
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
@@ -422,8 +411,6 @@ st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
 # --- ZONE DES BOUTONS (Juste en dessous) ---
 # On crée 2 colonnes pour mettre l'Upload et le Reset côte à côte
-# Le ratio [0.8, 0.4, 2] sert à garder les boutons à gauche (et vide à droite)
-# Si tu veux que ça prenne toute la largeur, mets juste st.columns([2, 1])
 c_up, c_new, _ = st.columns([2, 1, 3], vertical_alignment="bottom")
 
 with c_up:
@@ -494,6 +481,18 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+# --- ZONE JURIDIQUE (BOUTONS DISCRETS EN BAS) ---
+st.markdown("<br><br>", unsafe_allow_html=True) # Un peu d'espace
+col_leg1, col_leg2, _ = st.columns([1, 1, 2]) # Colonnes pour aligner à gauche
+
+with col_leg1:
+    if st.button("⚖️ Mentions Légales", key="footer_mentions", use_container_width=True):
+        modal_mentions()
+
+with col_leg2:
+    if st.button("🔒 RGPD & Cookies", key="footer_rgpd", use_container_width=True):
+        modal_rgpd()
 
 # Footer avec classe CSS propre (géré dans styles.py)
 st.markdown("<div class='footer-copyright'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
