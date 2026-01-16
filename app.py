@@ -51,7 +51,7 @@ def manage_subscription_link(email):
         print(f"Erreur Stripe Portal: {e}")
     return None
 
-# --- FONCTION ROBUSTE (Veille BOSS) ---
+# --- FONCTION ROBUSTE (Veille BOSS) - VERSION BACKUP (STYLES INLINE) ---
 def get_boss_status_html():
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
@@ -73,8 +73,9 @@ def get_boss_status_html():
                 
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
-                # Construction du lien avec la classe CSS 'boss-link'
-                html_link = f'<a href="{link}" target="_blank" class="boss-link">{title}</a>'
+                # Styles restaurés du backup pour garantie fonctionnement
+                style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
+                style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
                 
                 if date_tag:
                     try:
@@ -83,20 +84,20 @@ def get_boss_status_html():
                         days_old = (now - pub_date_obj).days
                         date_str = pub_date_obj.strftime("%d/%m/%Y")
                         
+                        # Lien HTML restauré
+                        html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
+                        
                         if days_old < 8:
-                            # Alerte Rouge
-                            return f"""<div class="boss-alert-box boss-red">🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
+                            return f"""<div style='{style_alert}'>🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
                         else:
-                            # Alerte Verte (RAS)
-                            return f"""<div class="boss-alert-box boss-green">✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
+                            return f"""<div style='{style_success}'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
                             
                     except:
                         pass 
                 
-                # Fallback générique
-                return f"""<div class="boss-alert-box boss-red">📢 ALERTE BOSS : {html_link}</div>""", link
+                return f"""<div style='{style_alert}'>📢 ALERTE BOSS : <a href="{link}" target="_blank" style="color:inherit; font-weight:bold;">{title}</a></div>""", link
             
-            return "<div class='boss-alert-box' style='background-color:#f0f2f6;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
+            return "<div style='padding:10px; background-color:#f0f2f6; border-radius:5px;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
             
         return "", ""
     except Exception:
@@ -128,7 +129,7 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    # 1. ARGUMENTS EN TOUT PREMIER
+    # DESIGN DEMANDÉ : Arguments TOUT en haut
     render_top_columns()
     st.markdown("---")
     
@@ -259,7 +260,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
 # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (STRICTEMENT IDENTIQUE AU BACKUP)
+    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (VERSION DU BACKUP 12h14)
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
@@ -389,13 +390,11 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
                 st.link_button("👉 Accéder au portail Stripe", portal_url)
             else:
                 st.info("Aucun abonnement actif trouvé.")
-        
-        # J'ai nettoyé les boutons juridiques d'ici pour les mettre en bas de page
 
-# 1. LES ARGUMENTS (TOUT EN PREMIER)
+# 1. ARGUMENTS (En tout premier)
 render_top_columns()
 
-# 2. ALERTE ADMIN (Juste après)
+# 2. ALERTE ADMIN
 if st.session_state.user_email == "ADMINISTRATEUR":
     show_boss_alert()
 
@@ -405,6 +404,7 @@ if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
 # 3. ZONE ACTIONS (UPLOAD & SESSION) - PLACÉE AVANT LE TITRE (DEMANDE CLIENT)
+# Colonnes ajustées pour que ce soit compact à gauche et aligné
 col_act1, col_act2, _ = st.columns([1.2, 0.8, 3], vertical_alignment="center")
 
 with col_act1:
@@ -430,9 +430,9 @@ if uploaded_file:
     try:
         if uploaded_file.type == "application/pdf":
             reader = pypdf.PdfReader(uploaded_file)
-            user_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            user_doc_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
         else:
-            user_text = uploaded_file.read().decode("utf-8")
+            user_doc_text = uploaded_file.read().decode("utf-8")
         st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
@@ -465,7 +465,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
                 context=context_text, 
                 sources_list=sources_list,
                 certified_facts=certified_facts,
-                user_doc_content=user_text
+                user_doc_content=user_doc_text
             ):
                 full_response += chunk
                 message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
@@ -480,21 +480,22 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# 5. FOOTER INTÉGRÉ (LIGNE UNIQUE : COPYRIGHT + LIENS)
+# 5. FOOTER INTEGRÉ (LIGNE UNIQUE : COPYRIGHT + LIENS)
 st.markdown("<br><br><br>", unsafe_allow_html=True)
 
-# Colonnes serrées pour aligner le texte et les boutons sur une ligne
-_, c_copy, c_mentions, c_rgpd, _ = st.columns([3, 2, 1, 1, 3], vertical_alignment="center")
+# Colonnes ajustées pour centrer le bloc et tout garder sur une ligne
+_, c_copy, c_mentions, c_rgpd, _ = st.columns([2, 2, 1, 1, 2], vertical_alignment="center")
 
 with c_copy:
-    # On affiche le copyright comme du texte simple
+    # Le texte est aligné à droite via CSS pour coller aux boutons
     st.markdown("<p class='footer-text'>© 2026 socialexpertfrance.fr &nbsp;|</p>", unsafe_allow_html=True)
 
 with c_mentions:
-    # Le bouton "Tertiary" est transformé en lien gris par le CSS
+    # Bouton transparent type lien
     if st.button("Mentions Légales", key="foot_mentions", type="tertiary"):
         modal_mentions()
 
 with c_rgpd:
+    # Bouton transparent type lien
     if st.button("RGPD & Cookies", key="foot_rgpd", type="tertiary"):
         modal_rgpd()

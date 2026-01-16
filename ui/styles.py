@@ -3,14 +3,14 @@ import os
 import base64
 
 # ==============================================================================
-# DONNÉES DE RÉASSURANCE
+# DONNÉES DE RÉASSURANCE (VERSION LONGUE ORIGINALE)
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes."),
-    ("Sources officielles :", " Analyse simultanée BOSS, Code du Travail, URSSAF."),
-    ("Mise à Jour Agile :", " Base actualisée en temps réel dès publication."),
-    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée."),
-    ("Confidentialité :", " Aucun cookie pub. Données traitées en RAM uniquement.")
+    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
+    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
+    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
+    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
+    ("Confidentialité Garantie :", " Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.")
 ]
 
 def get_base64(bin_file):
@@ -27,26 +27,25 @@ def apply_pro_design():
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
 
-        /* --- 1. TITRE H1 (Remonté vers le haut et compact) --- */
+        /* --- 1. TITRE H1 --- */
         h1 {
             color: #000066 !important;
             font-family: 'Baskerville', 'Georgia', serif !important;
             font-weight: 800 !important;
             font-size: 35px !important;
             text-transform: uppercase !important; 
-            margin-top: 5px !important; /* Espace réduit au dessus */
+            margin-top: 5px !important;
             padding-top: 0px !important;
             margin-bottom: 20px !important; 
             line-height: 1.0 !important;
         }
 
-        /* --- 2. BOUTONS D'ACTION (Upload / Session) - Haut de page --- */
-        /* On cible les boutons "Secondary" (classiques) pour qu'ils soient petits et discrets */
+        /* --- 2. BOUTONS D'ACTION (Haut de page) --- */
         button[data-testid="stBaseButton-secondary"] {
             background-color: rgba(255, 255, 255, 0.7) !important;
             border: 1px solid #ddd !important;
             color: #555 !important;
-            font-size: 11px !important; /* Police petite */
+            font-size: 11px !important;
             padding: 2px 8px !important;
             height: auto !important;
             min-height: 28px !important;
@@ -58,11 +57,11 @@ def apply_pro_design():
             color: #000 !important;
         }
 
-        /* Hack spécifique pour le bouton Upload pour qu'il ressemble aux autres */
+        /* Hack spécifique pour le bouton Upload */
         .stFileUploader button {
             background-color: rgba(255, 255, 255, 0.7) !important;
             border: 1px solid #ddd !important;
-            color: transparent !important; /* On cache le texte anglais */
+            color: transparent !important;
             padding: 2px 8px !important;
             font-size: 11px !important;
             height: auto !important;
@@ -78,54 +77,50 @@ def apply_pro_design():
             font-size: 11px !important;
             font-weight: normal !important;
         }
-        
-        /* Nettoyage interface Upload */
         .stFileUploader section { background: transparent !important; border: none !important; padding: 0 !important; }
         .stFileUploader [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
         .stFileUploader div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
 
-
-        /* --- 3. FOOTER INTEGRÉ (Gris, Petit, Fondu) --- */
+        /* --- 3. FOOTER INTEGRÉ (LIENS ET COPYRIGHT) --- */
         
-        /* Le texte copyright "normal" */
+        /* Texte Copyright */
         .footer-text {
             color: #888 !important;
-            font-size: 11px !important;
+            font-size: 11px !important; /* TAILLE FIXÉE */
             font-family: sans-serif !important;
             margin: 0 !important;
             padding: 0 !important;
             display: flex;
             align-items: center;
+            justify-content: flex-end; /* Colle le texte à droite vers les boutons */
             height: 100%;
+            white-space: nowrap !important;
         }
 
-        /* Transformation des boutons "Tertiary" en LIENS TEXTE GRIS */
+        /* Liens (Boutons transformés) */
         button[data-testid="stBaseButton-tertiary"] {
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
-            color: #888 !important; /* MÊME COULEUR QUE LE COPYRIGHT */
+            color: #888 !important; /* MÊME COULEUR */
             text-decoration: underline !important; 
-            text-decoration-style: dotted !important;
-            font-size: 11px !important; 
-            padding: 0px 5px !important; 
+            font-size: 11px !important; /* EXACTEMENT LA MÊME TAILLE */
+            padding: 0px 8px !important; 
             margin: 0px !important;
             height: auto !important;
             min-height: 0px !important;
             width: auto !important;
             line-height: 1 !important;
+            white-space: nowrap !important; /* INTERDIT LE RENVOI À LA LIGNE */
         }
         
         button[data-testid="stBaseButton-tertiary"]:hover {
-            color: #444 !important; /* Devient plus sombre au survol */
+            color: #444 !important;
             background: transparent !important;
-            text-decoration-style: solid !important;
         }
 
         /* --- AUTRES STYLES --- */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
-        
-        /* Styles Alertes BOSS (Nécessaires pour app.py) */
         .boss-alert-box { padding: 12px !important; border-radius: 8px !important; margin-bottom: 10px !important; font-size: 14px !important; }
         .boss-red { background-color: #f8d7da !important; color: #721c24 !important; border: 1px solid #f5c6cb !important; }
         .boss-green { background-color: #d4edda !important; color: #155724 !important; border: 1px solid #c3e6cb !important; }
@@ -138,7 +133,6 @@ def apply_pro_design():
         </style>
     """, unsafe_allow_html=True)
 
-    # Fond d'écran
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
