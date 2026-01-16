@@ -92,7 +92,7 @@ def apply_pro_design():
         
         /* H1 : Le Grand Titre (ex: ExpertSocialPro V4) */
         h1 {
-            color: #005354 !important;      /* Couleur (Bleu) */
+            color: #000066 !important;      /* Couleur (Bleu) */
             font-family: 'Helvetica Neue', sans-serif !important;
             font-weight: 600 !important;    /* La Graisse (400=Normal, 700=Gras, 900=Très Gras) */
             font-size: 35px !important;   /* La Taille */
