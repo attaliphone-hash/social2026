@@ -309,7 +309,7 @@ STRUCTURE DE LA RÉPONSE (À RESPECTER SCRUPULEUSEMENT)
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-radius: 8px; border-left: 5px solid #024c6f; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-    <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION DÉFINITIVE</h3>
+    <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION/h3>
     <p style="font-size: 18px; color: #111; margin-bottom: 5px; font-weight: 600;">
         Le montant / taux estimé est de : [INSÉRER RÉSULTAT FINAL]
     </p>
