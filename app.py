@@ -247,15 +247,27 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
+    # === MODIFICATION DU PROMPT ICI ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Réponse fiable et aérée.
 SOURCES PRIORITAIRES : 1. Barème Officiel (URSSAF). 2. BOSS (Théorie).
 
 STRUCTURE RÉPONSE HTML :
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
-<ul><li>Règle...</li></ul>
+<ul>
+    <li>
+        <strong>ÉNONCÉ D'ABORD :</strong> Explique clairement la règle ou le mécanisme en premier.
+        <br><em>(Source : Cite l'article ou le BOSS ici, à la fin de l'explication)</em>
+    </li>
+</ul>
+
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calcul</h4>
-<div><ul><li>Calcul...</li></ul></div>
+<div>
+    <ul>
+        <li>Détail du calcul étape par étape...</li>
+    </ul>
+</div>
+
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h3 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION DÉFINITIVE</h3>
     <p><strong>Résultat : [VALEUR]</strong></p>
