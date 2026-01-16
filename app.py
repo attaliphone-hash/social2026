@@ -119,7 +119,7 @@ def show_boss_alert():
                 st.session_state.news_closed = True
                 st.rerun()
 
-# --- DÉFINITION DES POPUPS (MODALES) - Déplacé ici pour être dispo partout ---
+# --- POPUPS ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
     st.markdown("""
@@ -129,11 +129,7 @@ def modal_mentions():
         Contact : sylvain.attal@businessagent-ai.com<br><br>
         <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
         L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
-        L'architecture, le code et le design sont la propriété exclusive de BUSINESS AGENT AI®. 
-        La réutilisation des réponses générées est autorisée dans le cadre de vos missions professionnelles.<br><br>
-        <strong>RESPONSABILITÉ :</strong><br>
-        Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique. 
-        L'utilisateur doit vérifier les réponses de l'IA qui n'engagent pas l'éditeur.
+        L'architecture, le code et le design sont la propriété exclusive de BUSINESS AGENT AI®.
     </div>
     """, unsafe_allow_html=True)
 
@@ -142,10 +138,9 @@ def modal_rgpd():
     st.markdown("""
     <div style='font-size: 13px; color: #333; line-height: 1.6;'>
         <strong>PROTECTION DES DONNÉES & COOKIES :</strong><br>
-        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé pour maintenir votre session active.<br>
-        2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire ou traceur tiers n'est utilisé.<br>
-        3. <strong>Données Volatiles :</strong> Le traitement est effectué en mémoire vive (RAM) et vos données ne servent jamais à entraîner les modèles d'IA.<br><br>
-        <em>Conformité RGPD : Droit à l'oubli garanti par défaut.</em>
+        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé.<br>
+        2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire.<br>
+        3. <strong>Données Volatiles :</strong> Traitement en RAM uniquement.
     </div>
     """, unsafe_allow_html=True)
 
@@ -161,8 +156,8 @@ def check_password():
     render_top_columns()
     
     # 2. LIGNE COPYRIGHT / MENTIONS (SOUS LES ARGUMENTS)
-    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-    c_line = st.columns([1, 1, 1, 3]) # Ajustement pour alignement gauche
+    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+    c_line = st.columns([1.2, 0.8, 0.8, 3], vertical_alignment="center")
     with c_line[0]:
         st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
     with c_line[1]:
@@ -190,25 +185,17 @@ def check_password():
                 st.error("Identifiants incorrects ou compte non activé.")
         
         st.markdown("---")
-        st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
         render_subscription_cards()
         
         if st.session_state.get("btn_sub_month"):
             url_checkout = create_checkout_session("Mensuel")
-            if url_checkout:
-                st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
-            else:
-                st.error("Impossible d'ouvrir le paiement mensuel (Stripe).")
+            if url_checkout: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
 
         if st.session_state.get("btn_sub_year"):
             url_checkout = create_checkout_session("Annuel")
-            if url_checkout:
-                st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
-            else:
-                st.error("Impossible d'ouvrir le paiement annuel (Stripe).")
+            if url_checkout: st.markdown(f'<meta http-equiv="refresh" content="0;URL={url_checkout}">', unsafe_allow_html=True)
 
     with tab2:
-        st.caption("Code d'accès personnel")
         access_code = st.text_input("Code d'accès", type="password", key="pwd_codes")
         if st.button("Valider le code", use_container_width=True):
             if access_code == os.getenv("ADMIN_PASSWORD"):
@@ -227,7 +214,7 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- 3. CHARGEMENT MOTEUR & SYSTÈME IA ---
+# --- 3. CHARGEMENT MOTEUR & IA ---
 @st.cache_resource
 def load_engine():
     return SocialRuleEngine()
@@ -235,27 +222,20 @@ def load_engine():
 @st.cache_resource
 def load_ia_system():
     api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key:
-        raise ValueError("La clé GOOGLE_API_KEY est introuvable dans le fichier .env")
-        
     embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004", google_api_key=api_key)
-    
     try:
         vectorstore = PineconeVectorStore.from_existing_index(index_name="expert-social", embedding=embeddings)
-    except Exception as e:
-        raise ConnectionError(f"Impossible de se connecter à Pinecone ('expert-social') : {e}")
-        
+    except Exception:
+        raise ConnectionError("Erreur Pinecone")
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0, google_api_key=api_key)
     return vectorstore, llm
 
-# --- BLOC DE CHARGEMENT SÉCURISÉ ---
 try:
     with st.spinner("Chargement du cerveau de l'IA..."):
         engine = load_engine()
         vectorstore, llm = load_ia_system()
 except Exception as e:
-    st.error(f"🔴 ERREUR CRITIQUE DE CHARGEMENT : {e}")
-    st.info("Vérifiez vos clés API dans le fichier .env et votre connexion internet.")
+    st.error(f"Erreur IA : {e}")
     st.stop()
 
 def clean_query_for_engine(q):
@@ -264,183 +244,90 @@ def clean_query_for_engine(q):
     cleaned = [w for w in words if w not in stop_words]
     return " ".join(cleaned)
 
-# --- CONTEXTE PINECONE ---
 def build_context(query):
     raw_docs = vectorstore.similarity_search(query, k=25)
-    context_text = ""
-    sources_seen = []
-    
+    context_text, sources_seen = "", []
     for d in raw_docs:
         raw_src = d.metadata.get('source', 'Source Inconnue')
         clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
-        
-        if "REF" in clean_name: 
-            pretty_src = "Barème Officiel"
-        elif "LEGAL" in clean_name: 
-            pretty_src = "Code du Travail"
-        elif "BOSS" in clean_name: 
-            pretty_src = "BOSS"
-        else: 
-            pretty_src = clean_name
-        
+        if "REF" in clean_name: pretty_src = "Barème Officiel"
+        elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
+        elif "BOSS" in clean_name: pretty_src = "BOSS"
+        else: pretty_src = clean_name
         sources_seen.append(pretty_src)
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
-        
-    uniq_sources = []
-    for s in sources_seen:
-        if s and s not in uniq_sources:
-            uniq_sources.append(s)
-            
-    return context_text, uniq_sources
+    return context_text, list(set(sources_seen))
 
 def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
-    facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
+    facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
     prompt = ChatPromptTemplate.from_template("""
-Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
+Tu es l'Expert Social Pro 2026. Réponse fiable et aérée.
+SOURCES PRIORITAIRES : 1. Barème Officiel (URSSAF). 2. BOSS (Théorie).
 
-════════════════════════════════════════════
-RÈGLE D'OR : HIÉRARCHIE DES SOURCES
-════════════════════════════════════════════
-Si plusieurs documents semblent contradictoires, tu dois respecter cet ordre de priorité ABSOLU :
-1. **LES DOCUMENTS INTITULÉS "BARÈME OFFICIEL" ou "DONNÉES URSSAF"** : Ils contiennent les CHIFFRES, TAUX et PLAFONDS À JOUR (2026). Ils ont TOUJOURS raison sur les textes théoriques.
-2. **LES DOCUMENTS "BOSS"** : Ils expliquent le fonctionnement théorique. Si le "Barème Officiel" donne un chiffre précis, ignore les mentions "en attente de décret" du BOSS.
-
-MÉTHODOLOGIE INTERNE (NE PAS AFFICHER) :
-1. ANALYSE : Cherche en priorité les valeurs dans les documents identifiés comme "Barème Officiel".
-2. CALCUL MENTAL : Fais le calcul complet avec précision.
-3. ARRONDIS INTELLIGENTS : 
-   - Montants en EUROS (€) et DURÉES (Mois, Années) : Arrondis à 2 décimales (ex: 1250,50 € ou 3,39 mois).
-   - Coefficients techniques de paie (ex: Fillon, Taux AT) : Garde 4 décimales (ex: 0,3981).
-4. RÉDACTION : Utilise le format HTML ci-dessous. FORCE les listes avec <ul> et <li>.
-
-════════════════════════════════════════════
-INTERDICTIONS DE LANGAGE (STYLE PRO)
-════════════════════════════════════════════
-- Ne JAMAIS dire "J'ai consulté le fichier REF_...". Dis "Selon le Barème Officiel".
-- Ne détaille pas tes étapes de recherche interne. Donne directement l'information qualifiée.
-
-════════════════════════════════════════════
-STRUCTURE DE LA RÉPONSE (À RESPECTER SCRUPULEUSEMENT)
-════════════════════════════════════════════
-
-<h4 style="color: #024c6f; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-family: sans-serif;">Analyse & Règles Applicables</h4>
-<ul>
-<li>Explique la règle clairement...</li>
-<li>Cite le point de vigilance...</li>
-</ul>
-
-<h4 style="color: #024c6f; margin-bottom: 5px; margin-top: 20px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-family: sans-serif;">Détail du Calcul</h4>
-<div style="margin-top: 10px; margin-bottom: 10px;">
-<p>Voici le détail étape par étape :</p>
-<ul>
-<li><strong>Étape 1 :</strong> Détail du calcul...</li>
-<li><strong>Étape 2 :</strong> Détail du calcul...</li>
-<li><strong>Total :</strong> Résultat intermédiaire...</li>
-</ul>
+STRUCTURE RÉPONSE HTML :
+<h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
+<ul><li>Règle...</li></ul>
+<h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calcul</h4>
+<div><ul><li>Calcul...</li></ul></div>
+<div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
+    <h3 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION DÉFINITIVE</h3>
+    <p><strong>Résultat : [VALEUR]</strong></p>
 </div>
 
-<div style="background-color: #f0f8ff; padding: 20px; border-radius: 8px; border-left: 5px solid #024c6f; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-    <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION DÉFINITIVE</h3>
-    <p style="font-size: 18px; color: #111; margin-bottom: 5px; font-weight: 600;">
-        Le montant / taux estimé est de : [INSÉRER RÉSULTAT FINAL]
-    </p>
-    <p style="font-size: 13px; color: #555; margin-top: 0;">
-        <em>Basé sur les éléments fournis et les barèmes officiels.</em>
-    </p>
-</div>
-
-<h4 style="color: #024c6f; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-family: sans-serif;">Références Juridiques</h4>
-<p style="font-size: 12px; color: #666; font-style: italic; margin-bottom: 10px;">
-     <strong>Note :</strong> Base de calcul : Code du travail et données URSSAF uniquement. Sous réserve des dispositions conventionnelles (CCN) ou contractuelles spécifiques à l'entreprise.
-</p>
-<ul>
-<li>Source officielle...</li>
-</ul>
-
----
-DONNÉES CERTIFIÉES 2026 (YAML) :
-{facts_section}
-
-DOCUMENTS RETROUVÉS :
+CONTEXTE :
 {context}
 """ + user_doc_section + """
-QUESTION :
-{question}
-
-SOURCES :
-{sources_list}
+FAITS 2026 : {facts_section}
+QUESTION : {question}
+SOURCES : {sources_list}
 """)
-
     chain = prompt | llm | StrOutputParser()
     return chain.stream({
-        "context": context,
-        "question": query,
-        "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
-        "facts_section": facts_section
+        "context": context, "question": query, "sources_list": ", ".join(sources_list) if sources_list else "Aucune", "facts_section": facts_section
     })
 
-# --- 4. INTERFACE DE CHAT ET SIDEBAR ---
+# --- UI PRINCIPALE ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
     with st.sidebar:
-        st.markdown("### 👤 Mon Compte")
-        st.write(f"Connecté : {user_email}")
-        
-        if st.button("💳 Gérer mon abonnement", help="Factures, changement de carte, désabonnement"):
-            portal_url = manage_subscription_link(user_email)
-            if portal_url:
-                st.link_button("👉 Accéder au portail Stripe", portal_url)
-            else:
-                st.info("Aucun abonnement actif trouvé.")
+        st.write(f"👤 {user_email}")
+        if st.button("💳 Abonnement"): 
+            l = manage_subscription_link(user_email)
+            if l: st.link_button("Stripe", l)
 
-# 1. ARGUMENTS (En tout premier)
+# 1. ARGUMENTS (TEXTES LONGS)
 render_top_columns()
 
-# 2. LIGNE COPYRIGHT / LIENS (DIRECTEMENT SOUS LES ARGUMENTS)
-# --- Positionnement stratégique ---
-st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
-# Colonnes pour alignement gauche : [Copyright] [Lien] [Lien] [Espace vide]
-c_foot1, c_foot2, c_foot3, _ = st.columns([1.2, 0.8, 0.8, 3], vertical_alignment="center")
-
-with c_foot1:
-    st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
-with c_foot2:
-    if st.button("Mentions Légales", key="main_mentions", type="tertiary"): modal_mentions()
-with c_foot3:
-    if st.button("RGPD & Cookies", key="main_rgpd", type="tertiary"): modal_rgpd()
+# 2. COPYRIGHT / LIENS
+st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+c_line = st.columns([1.2, 0.8, 0.8, 3], vertical_alignment="center")
+with c_line[0]: st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
+with c_line[1]: 
+    if st.button("Mentions Légales", key="top_mentions", type="tertiary"): modal_mentions()
+with c_line[2]: 
+    if st.button("RGPD & Cookies", key="top_rgpd", type="tertiary"): modal_rgpd()
 
 st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
 
-# 3. ALERTE ADMIN
-if st.session_state.user_email == "ADMINISTRATEUR":
-    show_boss_alert()
+if st.session_state.user_email == "ADMINISTRATEUR": show_boss_alert()
+if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
 
-if "uploader_key" not in st.session_state:
-    st.session_state.uploader_key = 0
-
-# 4. ZONE ACTIONS (ALIGNÉE GAUCHE)
-col_act1, col_act2, _ = st.columns([1.5, 1.5, 3], vertical_alignment="center", gap="small")
-
+# 3. ACTIONS (GAUCHE - UPLOAD + BOUTON)
+col_act1, col_act2, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
 with col_act1:
-    uploaded_file = st.file_uploader(
-        "Upload", 
-        type=["pdf", "txt"], 
-        label_visibility="collapsed",
-        key=f"uploader_{st.session_state.uploader_key}"
-    )
-
+    uploaded_file = st.file_uploader("Upload", type=["pdf", "txt"], label_visibility="collapsed", key=f"uploader_{st.session_state.uploader_key}")
 with col_act2:
-    if st.button("Nouvelle session", use_container_width=True): 
+    if st.button("Nouvelle session", use_container_width=True):
         st.session_state.messages = []
         st.session_state.uploader_key += 1
         st.rerun()
 
-# 5. TITRE PRINCIPAL
+# 4. TITRE
 st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
-# LOGIQUE CHAT
+# LOGIQUE
 user_text = None
 if uploaded_file:
     try:
@@ -449,48 +336,26 @@ if uploaded_file:
             user_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
         else:
             user_text = uploaded_file.read().decode("utf-8")
-        st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
-    except Exception as e:
-        st.error(f"Erreur lecture fichier: {e}")
+        st.toast(f"📎 {uploaded_file.name}", icon="✅")
+    except: st.error("Erreur lecture")
 
-if "messages" not in st.session_state: 
-    st.session_state.messages = []
+if "messages" not in st.session_state: st.session_state.messages = []
+for m in st.session_state.messages:
+    with st.chat_message(m["role"], avatar=("avatar-logo.png" if m["role"]=="assistant" else None)): st.markdown(m["content"], unsafe_allow_html=True)
 
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"]=="assistant" else None)):
-        st.markdown(msg["content"], unsafe_allow_html=True)
-
-if query := st.chat_input("Votre question juridique ou chiffrée..."):
-    st.session_state.messages.append({"role": "user", "content": query})
-    with st.chat_message("user"):
-        st.markdown(query)
-    
+if q := st.chat_input("Votre question..."):
+    st.session_state.messages.append({"role": "user", "content": q})
+    with st.chat_message("user"): st.markdown(q)
     with st.chat_message("assistant", avatar="avatar-logo.png"):
-        message_placeholder = st.empty()
-        
-        cleaned_q = clean_query_for_engine(query)
-        matched = engine.match_rules(cleaned_q if cleaned_q else query, top_k=5, min_score=2)
-        certified_facts = engine.format_certified_facts(matched)
-        
-        with st.spinner("Analyse en cours..."):
-            context_text, sources_list = build_context(query)
-            
-            full_response = ""
-            for chunk in get_gemini_response_stream(
-                query=query, 
-                context=context_text, 
-                sources_list=sources_list,
-                certified_facts=certified_facts,
-                user_doc_content=user_text
-            ):
-                full_response += chunk
-                message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
-            
-            if uploaded_file and "Document analysé" not in full_response:
-                full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
-            
-            full_response += "<br><br>"
-            
-            message_placeholder.markdown(full_response, unsafe_allow_html=True)
-                
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+        ph = st.empty()
+        cleaned_q = clean_query_for_engine(q)
+        facts = engine.format_certified_facts(engine.match_rules(cleaned_q))
+        ctx, srcs = build_context(q)
+        full_resp = ""
+        # ✅ BUG FIXÉ: use user_text here
+        for chunk in get_gemini_response_stream(q, ctx, srcs, facts, user_text):
+            full_resp += chunk
+            ph.markdown(full_resp + "▌", unsafe_allow_html=True)
+        if uploaded_file: full_resp += f"\n* 📄 Doc: {uploaded_file.name}"
+        ph.markdown(full_resp + "<br><br>", unsafe_allow_html=True)
+    st.session_state.messages.append({"role": "assistant", "content": full_resp})
