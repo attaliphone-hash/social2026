@@ -372,14 +372,14 @@ st.markdown("<br>", unsafe_allow_html=True)
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-col_t, col_buttons = st.columns([3, 2]) 
+# ✅ AJOUT DE vertical_alignment="center" pour aligner le Titre face aux Boutons
+col_t, col_buttons = st.columns([3, 2], vertical_alignment="center") 
 with col_t: 
-    # Titre "Propre" (H1) sans style inline. 
-    # J'ai gardé ton texte "EXPERT SOCIAL PRO ABONNÉS"
     st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
 with col_buttons:
-    c_up, c_new = st.columns([1.6, 1])
+    # ✅ AJOUT DE vertical_alignment="bottom" pour caler le bouton Upload et Nouvelle Session sur la même ligne de base
+    c_up, c_new = st.columns([1.6, 1], vertical_alignment="bottom")
     with c_up:
         uploaded_file = st.file_uploader(
             "Upload", 
