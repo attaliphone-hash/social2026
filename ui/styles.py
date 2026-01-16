@@ -97,7 +97,7 @@ def apply_pro_design():
             font-weight: 800 !important;
             font-size: 35px !important;
             text-transform: uppercase !important; 
-            margin-bottom: 25px !important;
+            margin-bottom: 0px !important;
         }
 
         /* H2 : Les Sous-titres */
