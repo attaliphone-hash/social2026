@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # --- IMPORTS UI ---
-from ui.styles import apply_pro_design, show_legal_info, render_top_columns, render_subscription_cards
+from ui.styles import apply_pro_design, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
@@ -51,7 +51,7 @@ def manage_subscription_link(email):
         print(f"Erreur Stripe Portal: {e}")
     return None
 
-# --- FONCTION ROBUSTE (Veille BOSS) ---
+# --- FONCTION ROBUSTE (Veille BOSS) - VERSION BACKUP ---
 def get_boss_status_html():
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
@@ -73,6 +73,7 @@ def get_boss_status_html():
                 
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
+                # Styles inline conservés par sécurité
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
                 style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
                 
@@ -127,11 +128,11 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
-    
     render_top_columns()
     st.markdown("---")
-
+    
+    st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
+    
     tab1, tab2 = st.tabs(["🔐 Espace Client Abonnés", "Accès Découverte / Admin"])
 
     with tab1:
@@ -150,12 +151,8 @@ def check_password():
         
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
-        
-        # Affiche les cartes + crée les 2 boutons Streamlit (keys: btn_sub_month / btn_sub_year)
         render_subscription_cards()
         
-        # ✅ Connexion des boutons à Stripe (sinon rien ne se passe au clic)
-        # Note : st.button écrit dans st.session_state la valeur True le run du clic.
         if st.session_state.get("btn_sub_month"):
             url_checkout = create_checkout_session("Mensuel")
             if url_checkout:
@@ -260,9 +257,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
-# ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (Arrondis Intelligents + Style Pro)
-    # ==================================================================================
+    # PROMPT EXACT DU BACKUP
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
 
@@ -339,7 +334,7 @@ SOURCES :
 {sources_list}
 """)
 
-    # 👇 EXÉCUTION (Ne pas oublier !)
+    # 👇 EXÉCUTION
     chain = prompt | llm | StrOutputParser()
     return chain.stream({
         "context": context,
@@ -347,12 +342,14 @@ SOURCES :
         "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
         "facts_section": facts_section
     })
+
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
     with st.sidebar:
         st.markdown("### 👤 Mon Compte")
         st.write(f"Connecté : {user_email}")
+        
         if st.button("💳 Gérer mon abonnement", help="Factures, changement de carte, désabonnement"):
             portal_url = manage_subscription_link(user_email)
             if portal_url:
@@ -360,44 +357,49 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
             else:
                 st.info("Aucun abonnement actif trouvé.")
 
-st.markdown("<hr>", unsafe_allow_html=True)
+# 1. ARGUMENTS (En tout premier)
+render_top_columns()
 
-if user_email == "ADMINISTRATEUR":
+# 2. ALERTE ADMIN (Juste après)
+if st.session_state.user_email == "ADMINISTRATEUR":
     show_boss_alert()
 
-render_top_columns()
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
 
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-col_t, col_buttons = st.columns([3, 2]) 
-with col_t: 
-    st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
+# 3. ZONE ACTIONS (ALIGNÉE A GAUCHE)
+# [1.2, 0.8, 3] = Ratio : Large (Upload), Petit (Session), Reste vide
+col_act1, col_act2, _ = st.columns([1.2, 0.8, 3], vertical_alignment="center", gap="small")
 
-with col_buttons:
-    c_up, c_new = st.columns([1.6, 1])
-    with c_up:
-        uploaded_file = st.file_uploader(
-            "Upload", 
-            type=["pdf", "txt"], 
-            label_visibility="collapsed",
-            key=f"uploader_{st.session_state.uploader_key}"
-        )
-    with c_new:
-        if st.button("Nouvelle session"):
-            st.session_state.messages = []
-            st.session_state.uploader_key += 1
-            st.rerun()
+with col_act1:
+    uploaded_file = st.file_uploader(
+        "Upload", 
+        type=["pdf", "txt"], 
+        label_visibility="collapsed",
+        key=f"uploader_{st.session_state.uploader_key}"
+    )
 
-user_doc_text = None
+with col_act2:
+    if st.button("Nouvelle session", use_container_width=True): 
+        st.session_state.messages = []
+        st.session_state.uploader_key += 1
+        st.rerun()
+
+# 4. TITRE PRINCIPAL (EN DESSOUS - TOUT A GAUCHE)
+st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
+
+# LOGIQUE CHAT & UPLOAD
+# ✅ INITIALISATION VARIABLE OK
+user_text = None
 if uploaded_file:
     try:
         if uploaded_file.type == "application/pdf":
             reader = pypdf.PdfReader(uploaded_file)
-            user_doc_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            user_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
         else:
-            user_doc_text = uploaded_file.read().decode("utf-8")
+            user_text = uploaded_file.read().decode("utf-8")
         st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
@@ -425,12 +427,13 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             context_text, sources_list = build_context(query)
             
             full_response = ""
+            # ✅ Utilisation user_text
             for chunk in get_gemini_response_stream(
                 query=query, 
                 context=context_text, 
                 sources_list=sources_list,
                 certified_facts=certified_facts,
-                user_doc_content=user_doc_text
+                user_doc_content=user_text
             ):
                 full_response += chunk
                 message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
@@ -438,12 +441,23 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             if uploaded_file and "Document analysé" not in full_response:
                 full_response += f"\n* 📄 Document analysé : {uploaded_file.name}"
             
-            # ✅ LE PADDING EST BIEN ICI, HORS DU 'IF' ET ON A LA BOÎTE BLEUE
             full_response += "<br><br>"
             
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-show_legal_info()
-st.markdown("<div style='text-align:center; color:#888; font-size:11px; margin-top:30px;'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
+# 5. FOOTER INTEGRÉ (LIGNE UNIQUE)
+st.markdown("<br><br><br>", unsafe_allow_html=True)
+_, c_copy, c_mentions, c_rgpd, _ = st.columns([2, 2, 1, 1, 2], vertical_alignment="center")
+
+with c_copy:
+    st.markdown("<p class='footer-text'>© 2026 socialexpertfrance.fr &nbsp;|</p>", unsafe_allow_html=True)
+
+with c_mentions:
+    if st.button("Mentions Légales", key="foot_mentions", type="tertiary"):
+        modal_mentions()
+
+with c_rgpd:
+    if st.button("RGPD & Cookies", key="foot_rgpd", type="tertiary"):
+        modal_rgpd()
