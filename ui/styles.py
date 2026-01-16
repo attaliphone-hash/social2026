@@ -3,7 +3,7 @@ import os
 import base64
 
 # ==============================================================================
-# DONNÉES DE RÉASSURANCE (VERSION LONGUE STRICTE - VALIDÉE)
+# 1. ARGUMENTS (VERSION LONGUE - VERIFIÉE)
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
@@ -23,27 +23,23 @@ def apply_pro_design():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
 
-        #MainMenu {visibility: hidden;}
-        header {visibility: hidden !important; height: 0px;}
-        footer {visibility: hidden;}
+        #MainMenu, header, footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
 
-        /* --- 1. TITRE H1 --- */
+        /* --- TITRE H1 --- */
         h1 {
-            font-family: 'Baskerville', 'Libre Baskerville', 'Georgia', serif !important;
+            font-family: 'Baskerville', 'Georgia', serif !important;
             color: #253E92 !important;
             font-size: 35px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important; 
             margin-top: 10px !important;
-            padding-top: 0px !important;
             margin-bottom: 20px !important; 
-            line-height: 1.1 !important;
             text-align: left !important;
         }
 
-        /* --- 2. BOUTONS (Nouvelle Session & Upload) --- */
+        /* --- BOUTONS : STYLE GÉNÉRAL --- */
         button[data-testid="stBaseButton-secondary"], 
         [data-testid="stFileUploader"] button {
             font-family: 'Open Sans', sans-serif !important;
@@ -54,10 +50,8 @@ def apply_pro_design():
             border: 1px solid #ccc !important;
             color: #333 !important;
             border-radius: 4px !important;
-            box-shadow: none !important;
-            margin: 0 !important;
             width: 100% !important;
-            padding: 0 10px !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             position: relative !important;
         }
 
@@ -65,56 +59,42 @@ def apply_pro_design():
         button[data-testid="stBaseButton-secondary"]:hover, 
         [data-testid="stFileUploader"] button:hover {
             border-color: #253E92 !important;
-            background-color: #fff !important;
+            color: #253E92 !important;
         }
 
-        /* --- CORRECTION UPLOADER (SUPPRESSION ARTEFACTS) --- */
+        /* --- HACK UPLOADER : LA SOLUTION RADICALE --- */
         
-        /* On cache explicitement tout contenu interne (div, span) du bouton */
-        [data-testid="stFileUploader"] button > div,
-        [data-testid="stFileUploader"] button > span,
-        [data-testid="stFileUploader"] button > small {
-            visibility: hidden !important;
-            width: 0 !important;
-            height: 0 !important;
-            padding: 0 !important;
+        /* 1. On cible TOUS les enfants directs du bouton (le texte, l'icône, le small) */
+        /* Et on les supprime de l'affichage. Plus de superposition possible. */
+        [data-testid="stFileUploader"] button > * {
+            display: none !important;
         }
 
-        /* On injecte le texte propre, centré */
+        /* 2. On recrée le texte proprement via ::after */
         [data-testid="stFileUploader"] button::after {
             content: "Charger un document";
-            visibility: visible !important;
             font-family: 'Open Sans', sans-serif !important;
             font-size: 12px !important;
-            color: #333 !important;
+            color: inherit !important; /* Prend la couleur du parent (gris ou bleu au survol) */
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             white-space: nowrap;
-            pointer-events: none;
+            display: block !important;
         }
 
-        /* Changement de couleur au survol */
-        [data-testid="stFileUploader"] button:hover::after {
-            color: #253E92 !important;
-        }
-
-        /* Nettoyage final pour éviter les décalages */
-        [data-testid="stFileUploader"] button svg { display: none !important; }
+        /* 3. Nettoyage des alentours (dropzone, instructions) */
         [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
         [data-testid="stFileUploader"] section { padding: 0 !important; }
         [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
 
 
-        /* --- 3. BARRE DE LIENS --- */
+        /* --- FOOTER & LIENS --- */
         .footer-text {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 11px !important; 
             color: #7A7A7A !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            white-space: nowrap;
         }
 
         button[data-testid="stBaseButton-tertiary"] {
@@ -123,25 +103,21 @@ def apply_pro_design():
             color: #7A7A7A !important;
             background: transparent !important;
             border: none !important;
-            box-shadow: none !important;
-            text-decoration: none !important; 
             padding: 0 !important;
-            margin: 0 !important;
-            height: auto !important;
-            line-height: 1 !important;
+            text-decoration: none !important; 
         }
-        
         button[data-testid="stBaseButton-tertiary"]:hover {
             color: #253E92 !important;
             text-decoration: underline !important;
         }
 
-        /* --- AUTRES --- */
-        .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
-        .assurance-text { font-size: 10px !important; color: #024c6f !important; text-align: left; line-height: 1.3; margin-bottom: 5px; }
+        /* --- TEXTES ARGUMENTS --- */
+        .assurance-text { font-size: 10px !important; color: #024c6f !important; line-height: 1.3; margin-bottom: 5px; }
         .assurance-title { font-weight: bold; color: #024c6f; font-size: 10px !important; }
         .assurance-desc { font-weight: normal; color: #444; font-size: 10px !important; }
-        .boss-alert-box { padding: 12px !important; border-radius: 8px !important; margin-bottom: 10px !important; font-size: 14px !important; }
+        
+        .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
+        .boss-alert-box { padding: 12px !important; border-radius: 8px !important; font-size: 14px !important; }
 
         </style>
     """, unsafe_allow_html=True)
