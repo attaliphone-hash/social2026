@@ -3,7 +3,7 @@ import os
 import base64
 
 # ==============================================================================
-# 1. ARGUMENTS (VERSION LONGUE - VERIFIÉE)
+# 1. ARGUMENTS (VERSION LONGUE - STRICTE)
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
     ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
@@ -23,6 +23,7 @@ def apply_pro_design():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
 
+        /* Cache Header/Footer Streamlit */
         #MainMenu, header, footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
@@ -39,9 +40,45 @@ def apply_pro_design():
             text-align: left !important;
         }
 
-        /* --- BOUTONS : STYLE GÉNÉRAL --- */
-        button[data-testid="stBaseButton-secondary"], 
+        /* --- LE FAUX BOUTON UPLOAD (Visuel uniquement) --- */
+        .fake-upload-btn {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 12px;
+            height: 40px;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            pointer-events: none; /* Le clic doit passer au travers vers l'uploader invisible */
+        }
+
+        /* --- LE VRAI UPLOADER (Invisible & Superposé) --- */
+        [data-testid="stFileUploader"] {
+            margin-top: -42px !important; /* On le remonte pour couvrir le faux bouton */
+            opacity: 0 !important;        /* On le rend invisible */
+            z-index: 99 !important;       /* On le met au-dessus */
+            height: 40px !important;
+        }
+        
+        [data-testid="stFileUploader"] section {
+            height: 40px !important;
+            min-height: 40px !important;
+            padding: 0 !important;
+        }
+        
+        /* Ajustement de la zone de drop pour qu'elle ne soit pas trop grande */
         [data-testid="stFileUploader"] button {
+            width: 100% !important;
+            height: 40px !important;
+        }
+
+        /* --- BOUTON NOUVELLE SESSION --- */
+        button[data-testid="stBaseButton-secondary"] {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 12px !important;
             height: 40px !important;
@@ -52,45 +89,13 @@ def apply_pro_design():
             border-radius: 4px !important;
             width: 100% !important;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            position: relative !important;
         }
-
-        /* Survol */
-        button[data-testid="stBaseButton-secondary"]:hover, 
-        [data-testid="stFileUploader"] button:hover {
+        button[data-testid="stBaseButton-secondary"]:hover {
             border-color: #253E92 !important;
             color: #253E92 !important;
         }
 
-        /* --- HACK UPLOADER : LA SOLUTION RADICALE --- */
-        
-        /* 1. On cible TOUS les enfants directs du bouton (le texte, l'icône, le small) */
-        /* Et on les supprime de l'affichage. Plus de superposition possible. */
-        [data-testid="stFileUploader"] button > * {
-            display: none !important;
-        }
-
-        /* 2. On recrée le texte proprement via ::after */
-        [data-testid="stFileUploader"] button::after {
-            content: "Charger un document";
-            font-family: 'Open Sans', sans-serif !important;
-            font-size: 12px !important;
-            color: inherit !important; /* Prend la couleur du parent (gris ou bleu au survol) */
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            white-space: nowrap;
-            display: block !important;
-        }
-
-        /* 3. Nettoyage des alentours (dropzone, instructions) */
-        [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
-        [data-testid="stFileUploader"] section { padding: 0 !important; }
-        [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
-
-
-        /* --- FOOTER & LIENS --- */
+        /* --- FOOTER & TEXTES --- */
         .footer-text {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 11px !important; 
@@ -111,7 +116,6 @@ def apply_pro_design():
             text-decoration: underline !important;
         }
 
-        /* --- TEXTES ARGUMENTS --- */
         .assurance-text { font-size: 10px !important; color: #024c6f !important; line-height: 1.3; margin-bottom: 5px; }
         .assurance-title { font-weight: bold; color: #024c6f; font-size: 10px !important; }
         .assurance-desc { font-weight: normal; color: #444; font-size: 10px !important; }
