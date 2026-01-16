@@ -88,7 +88,37 @@ def apply_pro_design():
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
 
-        h1 { font-family: 'Helvetica Neue', sans-serif; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
+        /* --- TYPOGRAPHIE DES TITRES (H1, H2, H3) --- */
+        
+        /* H1 : Le Grand Titre (ex: ExpertSocialPro V4) */
+        h1 {
+            color: #0f172a !important;      /* Couleur (Bleu Nuit Profond) */
+            font-family: 'Helvetica Neue', sans-serif !important;
+            font-weight: 800 !important;    /* La Graisse (400=Normal, 700=Gras, 900=Très Gras) */
+            font-size: 3.5rem !important;   /* La Taille */
+            text-transform: 'uppercase' !important; /* Mettre 'uppercase' pour tout en MAJUSCULES */
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            margin-bottom: 20px !important;
+        }
+
+        /* H2 : Les Sous-titres (ex: Dans les réponses de l'IA) */
+        h2 {
+            color: #1e3a8a !important;      /* Bleu un peu plus vif */
+            font-family: 'Arial', sans-serif !important;
+            font-weight: 600 !important;    /* Semi-bold */
+            font-size: 1.8rem !important;
+            border-bottom: 2px solid #e2e8f0; /* Une ligne grise fine sous le titre */
+            padding-bottom: 8px !important;
+            margin-top: 30px !important;
+        }
+
+        /* H3 : Les petits titres de section */
+        h3 {
+            color: #334155 !important;      /* Gris bleuté foncé */
+            font-weight: bold !important;
+            font-size: 1.4rem !important;
+            margin-top: 15px !important;
+        }
 
         /* --- OPTIMISATION MOBILE --- */
         @media (max-width: 768px) {
