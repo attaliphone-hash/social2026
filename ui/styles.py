@@ -34,67 +34,67 @@ def apply_pro_design():
             font-weight: 800 !important;
             font-size: 35px !important;
             text-transform: uppercase !important; 
-            margin-top: 10px !important;
+            margin-top: 15px !important;
             padding-top: 0px !important;
             margin-bottom: 20px !important; 
             line-height: 1.0 !important;
         }
 
-        /* --- 2. BOUTONS D'ACTION (HAUT) - FIXATION STRICTE --- */
+        /* --- 2. BOUTONS D'ACTION (HAUT) --- */
         
-        /* Bouton "Nouvelle Session" (Standard) */
-        button[data-testid="stBaseButton-secondary"] {
-            background-color: rgba(255, 255, 255, 0.8) !important;
-            border: 1px solid #ccc !important;
-            color: #444 !important;
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            height: 38px !important;     /* Hauteur forcée */
-            min-height: 38px !important; /* Hauteur forcée */
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0px 10px !important;
-            line-height: 1 !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Bouton "Upload" (Spécifique) */
-        [data-testid="stFileUploader"] button {
-            background-color: rgba(255, 255, 255, 0.8) !important;
-            border: 1px solid #ccc !important;
-            color: transparent !important; /* Cache le texte anglais */
-            font-size: 0px !important;     /* Réduit le texte anglais à néant */
+        /* Harmonisation de la taille des boutons */
+        .stButton button, [data-testid="stFileUploader"] button {
             height: 38px !important;
             min-height: 38px !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            border: 1px solid #ccc !important;
+            background-color: rgba(255, 255, 255, 0.8) !important;
+            color: #444 !important;
+            border-radius: 4px !important;
+            box-shadow: none !important;
+            padding: 0 10px !important;
             width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            position: relative !important; /* INDISPENSABLE pour le texte centré */
         }
 
-        /* Le texte "Charger un document" qui se superpose */
+        /* Effet au survol */
+        .stButton button:hover, [data-testid="stFileUploader"] button:hover {
+            border-color: #999 !important;
+            background-color: #fff !important;
+            color: #000 !important;
+        }
+
+        /* === TRUCAGE DU BOUTON UPLOAD (METHODE GRID) === */
+        /* Cette méthode superpose les textes parfaitement */
+        [data-testid="stFileUploader"] button {
+            display: grid !important;
+            place-items: center !important;
+        }
+        
+        /* On rend le texte original invisible mais il garde sa place pour la structure */
+        [data-testid="stFileUploader"] button > div {
+            visibility: hidden !important;
+            grid-area: 1 / 1 / 2 / 2;
+        }
+        
+        /* On injecte le nouveau texte par dessus, parfaitement centré via la Grid */
         [data-testid="stFileUploader"] button::after {
             content: "Charger un document";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%); /* Centrage parfait mathématique */
+            visibility: visible !important;
+            grid-area: 1 / 1 / 2 / 2;
             color: #444 !important;
             font-size: 12px !important;
             font-weight: 500 !important;
-            white-space: nowrap;
-            pointer-events: none;
+            pointer-events: none; /* Le clic traverse vers le bouton */
         }
-        
-        /* Nettoyage de l'interface Upload */
+
+        /* Nettoyage de l'interface autour du bouton */
         [data-testid="stFileUploader"] section { padding: 0 !important; }
         [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
         [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
 
 
-        /* --- 3. FOOTER INTEGRÉ - ALIGNEMENT PIXEL --- */
+        /* --- 3. FOOTER INTEGRÉ --- */
         
         /* Texte Copyright */
         .footer-text {
@@ -103,9 +103,10 @@ def apply_pro_design():
             font-family: sans-serif !important;
             margin: 0 !important;
             padding: 0 !important;
-            line-height: 24px !important; /* Doit matcher la hauteur des boutons */
+            line-height: 24px !important; 
             text-align: right;
             display: block;
+            white-space: nowrap;
         }
 
         /* Liens (Boutons transformés) */
@@ -121,26 +122,20 @@ def apply_pro_design():
             height: 24px !important;
             min-height: 24px !important;
             line-height: 24px !important;
-            white-space: nowrap !important;
             vertical-align: middle !important;
+            width: auto !important;
         }
         
         button[data-testid="stBaseButton-tertiary"]:hover {
             color: #555 !important;
         }
         
-        /* Enlève le gap entre les colonnes du footer pour serrer les éléments */
         [data-testid="column"] {
             gap: 0rem !important;
         }
 
         /* --- AUTRES --- */
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
-        
-        .boss-alert-box { padding: 12px !important; border-radius: 8px !important; margin-bottom: 10px !important; font-size: 14px !important; }
-        .boss-red { background-color: #f8d7da !important; color: #721c24 !important; border: 1px solid #f5c6cb !important; }
-        .boss-green { background-color: #d4edda !important; color: #155724 !important; border: 1px solid #c3e6cb !important; }
-        .boss-link { text-decoration: underline !important; font-weight: bold !important; color: inherit !important; }
         
         .assurance-text { font-size: 10px !important; color: #024c6f !important; text-align: left; line-height: 1.3; margin-bottom: 5px; }
         .assurance-title { font-weight: bold; color: #024c6f; font-size: 10px !important; }

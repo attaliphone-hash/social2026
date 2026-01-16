@@ -51,7 +51,7 @@ def manage_subscription_link(email):
         print(f"Erreur Stripe Portal: {e}")
     return None
 
-# --- FONCTION ROBUSTE (Veille BOSS) - VERSION BACKUP (STYLES INLINE) ---
+# --- FONCTION ROBUSTE (Veille BOSS) - VERSION BACKUP ---
 def get_boss_status_html():
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
@@ -73,7 +73,6 @@ def get_boss_status_html():
                 
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
-                # Styles restaurés du backup pour garantie fonctionnement
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 10px; font-size: 14px;"
                 style_success = "background-color: #d4edda; color: #155724; padding: 12px; border-radius: 8px; border: 1px solid #c3e6cb; margin-bottom: 10px; font-size: 14px;"
                 
@@ -84,7 +83,6 @@ def get_boss_status_html():
                         days_old = (now - pub_date_obj).days
                         date_str = pub_date_obj.strftime("%d/%m/%Y")
                         
-                        # Lien HTML restauré
                         html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
                         
                         if days_old < 8:
@@ -129,7 +127,6 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    # DESIGN DEMANDÉ : Arguments TOUT en haut
     render_top_columns()
     st.markdown("---")
     
@@ -260,7 +257,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
 # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (VERSION DU BACKUP 12h14)
+    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (VERSION DU BACKUP)
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
@@ -391,7 +388,7 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
             else:
                 st.info("Aucun abonnement actif trouvé.")
 
-# 1. LES ARGUMENTS (TOUT EN PREMIER)
+# 1. ARGUMENTS (En tout premier)
 render_top_columns()
 
 # 2. ALERTE ADMIN
@@ -404,10 +401,11 @@ if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
 # 3. ZONE ACTIONS (UPLOAD & SESSION) - PLACÉE AVANT LE TITRE
-# Colonnes égales [1,1] pour avoir la même place. 
-col_act1, col_act2, _ = st.columns([1, 1, 3], vertical_alignment="center")
+# Colonnes larges pour laisser la place aux boutons
+col_act1, col_act2, _ = st.columns([1.5, 1.5, 2], vertical_alignment="center")
 
 with col_act1:
+    # Le bouton upload
     uploaded_file = st.file_uploader(
         "Upload", 
         type=["pdf", "txt"], 
@@ -425,7 +423,7 @@ with col_act2:
 st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
 # LOGIQUE CHAT & UPLOAD
-# ✅ CORRECTION : Initialisation variable propre (user_text)
+# ✅ Variable user_text initialisée
 user_text = None
 if uploaded_file:
     try:
@@ -461,7 +459,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
             context_text, sources_list = build_context(query)
             
             full_response = ""
-            # ✅ CORRECTION : Utilisation de la bonne variable 'user_text'
+            # ✅ Utilisation de user_text
             for chunk in get_gemini_response_stream(
                 query=query, 
                 context=context_text, 
