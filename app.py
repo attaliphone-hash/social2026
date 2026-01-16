@@ -348,18 +348,63 @@ SOURCES :
         "sources_list": ", ".join(sources_list) if sources_list else "Aucune",
         "facts_section": facts_section
     })
+# --- DÉFINITION DES POPUPS (MODALES) ---
+@st.dialog("Mentions Légales")
+def modal_mentions():
+    st.markdown("""
+    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
+        <strong>ÉDITEUR :</strong><br>
+        Le site <em>socialexpertfrance.fr</em> est édité par la BUSINESS AGENT AI.<br>
+        Contact : sylvain.attal@businessagent-ai.com<br><br>
+        <strong>PROPRIÉTÉ INTELLECTUELLE :</strong><br>
+        L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur.
+        L'architecture, le code et le design sont la propriété exclusive de BUSINESS AGENT AI®. 
+        La réutilisation des réponses générées est autorisée dans le cadre de vos missions professionnelles.<br><br>
+        <strong>RESPONSABILITÉ :</strong><br>
+        Les réponses sont fournies à titre indicatif et ne remplacent pas une consultation juridique. 
+        L'utilisateur doit vérifier les réponses de l'IA qui n'engagent pas l'éditeur.
+    </div>
+    """, unsafe_allow_html=True)
+
+@st.dialog("Politique de Confidentialité (RGPD)")
+def modal_rgpd():
+    st.markdown("""
+    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
+        <strong>PROTECTION DES DONNÉES & COOKIES :</strong><br>
+        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé pour maintenir votre session active.<br>
+        2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire ou traceur tiers n'est utilisé.<br>
+        3. <strong>Données Volatiles :</strong> Le traitement est effectué en mémoire vive (RAM) et vos données ne servent jamais à entraîner les modèles d'IA.<br><br>
+        <em>Conformité RGPD : Droit à l'oubli garanti par défaut.</em>
+    </div>
+    """, unsafe_allow_html=True)
+
 # --- 4. INTERFACE DE CHAT ET SIDEBAR ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
     with st.sidebar:
         st.markdown("### 👤 Mon Compte")
         st.write(f"Connecté : {user_email}")
+        
         if st.button("💳 Gérer mon abonnement", help="Factures, changement de carte, désabonnement"):
             portal_url = manage_subscription_link(user_email)
             if portal_url:
                 st.link_button("👉 Accéder au portail Stripe", portal_url)
             else:
                 st.info("Aucun abonnement actif trouvé.")
+
+        st.markdown("---")
+        
+        # BOUTONS JURIDIQUES (POPUPS)
+        st.caption("Informations Légales")
+        col_legal_1, col_legal_2 = st.columns(2)
+        
+        with col_legal_1:
+            if st.button("⚖️ Mentions", use_container_width=True, help="Voir les mentions légales"):
+                modal_mentions()
+        
+        with col_legal_2:
+            if st.button("🔒 RGPD", use_container_width=True, help="Voir la politique de confidentialité"):
+                modal_rgpd()
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
@@ -450,6 +495,5 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-show_legal_info()
 # Footer avec classe CSS propre (géré dans styles.py)
 st.markdown("<div class='footer-copyright'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
