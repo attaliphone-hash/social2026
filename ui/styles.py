@@ -6,11 +6,11 @@ import base64
 # DONNÉES DE RÉASSURANCE
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
-    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
-    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
-    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.")
+    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes."),
+    ("Sources officielles :", " Analyse simultanée BOSS, Code du Travail, URSSAF."),
+    ("Mise à Jour Agile :", " Base actualisée en temps réel dès publication."),
+    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée."),
+    ("Confidentialité :", " Aucun cookie pub. Données traitées en RAM uniquement.")
 ]
 
 def get_base64(bin_file):
@@ -19,6 +19,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
+    # Import Police Open Sans
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
@@ -29,11 +30,11 @@ def apply_pro_design():
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
 
-        /* --- 1. TITRE H1 --- */
+        /* --- 1. TITRE H1 (Baskerville - Aligné Gauche) --- */
         h1 {
             font-family: 'Baskerville', 'Libre Baskerville', 'Georgia', serif !important;
             color: #253E92 !important;
-            font-size: 35px !important;
+            font-size: 35px !important; /* VOUS POUVEZ MODIFIER ICI */
             font-weight: 700 !important;
             text-transform: uppercase !important; 
             margin-top: 10px !important;
@@ -43,11 +44,12 @@ def apply_pro_design():
             text-align: left !important;
         }
 
-        /* --- 2. BOUTONS D'ACTION (HAUT) --- */
+        /* --- 2. BOUTONS (Open Sans - Aligné Gauche) --- */
+        
+        /* Style commun pour les deux boutons */
         button[data-testid="stBaseButton-secondary"], 
         [data-testid="stFileUploader"] button {
             font-family: 'Open Sans', sans-serif !important;
-            font-size: 12px !important;
             height: 40px !important;
             min-height: 40px !important;
             background-color: rgba(255, 255, 255, 0.9) !important;
@@ -57,56 +59,84 @@ def apply_pro_design():
             box-shadow: none !important;
             margin: 0 !important;
             width: 100% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+            padding: 0 10px !important;
         }
 
+        /* Survol */
         button[data-testid="stBaseButton-secondary"]:hover, 
         [data-testid="stFileUploader"] button:hover {
             border-color: #253E92 !important;
             color: #253E92 !important;
             background-color: #fff !important;
         }
+        
+        /* TAILLE DE POLICE DES BOUTONS (À MODIFIER ICI SI BESOIN) */
+        button[data-testid="stBaseButton-secondary"] {
+            font-size: 12px !important; 
+        }
 
-        /* --- HACK UPLOADER (Simple & Stable) --- */
-        [data-testid="stFileUploader"] button small { display: none !important; }
+        /* --- CORRECTION UPLOADER (Le fameux bouton) --- */
+        
+        /* On écrase le texte "Browse files" en le mettant à 0px */
+        [data-testid="stFileUploader"] button {
+            font-size: 0px !important; 
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+        }
+
+        /* On injecte le texte "Charger un document" avec la bonne taille */
         [data-testid="stFileUploader"] button::after {
             content: "Charger un document";
+            font-size: 12px !important; /* REMETTRE LA TAILLE ICI */
             font-family: 'Open Sans', sans-serif !important;
-            font-size: 12px !important;
-            color: inherit !important;
-            display: block !important;
+            color: #333 !important;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
         }
         
+        /* On s'assure que le texte change de couleur au survol aussi */
+        [data-testid="stFileUploader"] button:hover::after {
+            color: #253E92 !important;
+        }
+
+        /* Nettoyage interface Uploader */
         [data-testid="stFileUploader"] section { padding: 0 !important; }
         [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
         [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
 
-        /* --- 3. BARRE DE COPYRIGHT / LIENS (Nouvelle position) --- */
-        /* C'est ce style qui gère la ligne sous les arguments */
-        .legal-line {
+
+        /* --- 3. BARRE DE LIENS (Sous les arguments) --- */
+        .footer-text {
             font-family: 'Open Sans', sans-serif !important;
-            font-size: 11px !important;
+            font-size: 11px !important; /* MODIFIER ICI */
             color: #7A7A7A !important;
-            text-align: center !important; /* Centré ou right selon préférence */
-            margin-top: 15px !important;
-            margin-bottom: 15px !important;
-            padding-bottom: 10px !important;
-            border-bottom: 1px solid #eee; /* Le petit filet de séparation */
+            margin: 0 !important;
+            padding: 0 !important;
+            white-space: nowrap;
+        }
+
+        button[data-testid="stBaseButton-tertiary"] {
+            font-family: 'Open Sans', sans-serif !important;
+            font-size: 11px !important; /* MODIFIER ICI */
+            color: #7A7A7A !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            text-decoration: none !important; 
+            padding: 0 !important;
+            margin: 0 !important;
+            height: auto !important;
+            line-height: 1 !important;
         }
         
-        .legal-link {
-            color: #7A7A7A !important;
-            text-decoration: none !important;
-            border-bottom: 1px dotted #7A7A7A;
-            cursor: pointer !important;
-            margin-left: 10px !important;
-            margin-right: 10px !important;
-        }
-        .legal-link:hover {
+        button[data-testid="stBaseButton-tertiary"]:hover {
             color: #253E92 !important;
-            border-bottom: 1px solid #253E92;
+            text-decoration: underline !important;
         }
 
         /* --- AUTRES --- */
