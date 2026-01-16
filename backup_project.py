@@ -1,76 +1,63 @@
 import os
-import zipfile
+import shutil
 import datetime
 
-# --- CONFIGURATION ---
-# Dossiers à ignorer (pour ne pas alourdir le backup avec des fichiers inutiles)
-IGNORE_FOLDERS = {
-    'venv', '__pycache__', '.git', '.idea', '.vscode', 'data_clean', 'data', '.DS_Store'
-}
-# Extensions de fichiers à inclure dans le fichier texte (pour l'IA)
-EXTENSIONS_TEXTE = {'.py', '.txt', '.md', '.css', '.toml', '.yaml', '.json'}
-
-def get_desktop_path():
-    return os.path.join(os.path.expanduser("~"), "Desktop")
-
-def create_backup():
-    # 1. Préparation du nom et du dossier
-    now = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%S")
-    desktop = get_desktop_path()
-    backup_name = f"BACKUP_SOCIAL_2026_{now}"
-    backup_dir = os.path.join(desktop, backup_name)
+def create_backup_folder():
+    # --- CONFIGURATION ---
+    # Nom du dossier qui sera créé sur le Bureau
+    BACKUP_NAME = "BACKUP_SOCIAL_EXPERT_STABLE"
     
-    os.makedirs(backup_dir, exist_ok=True)
-    
-    zip_filename = os.path.join(backup_dir, f"source_complete_{now}.zip")
-    txt_filename = os.path.join(backup_dir, f"CONTEXTE_IA_{now}.txt")
-    
-    print(f"🚀 Démarrage du backup vers le Bureau...")
-    print(f"📂 Dossier : {backup_dir}")
+    # Liste des dossiers/fichiers à IGNORER (ne pas copier)
+    # Ajoute ici tout ce qui est lourd et inutile pour un backup
+    PATTERNS_TO_IGNORE = {
+        '.git', 
+        '__pycache__', 
+        'venv', 
+        'env', 
+        '.idea', 
+        '.vscode', 
+        'node_modules', 
+        'chroma_db', # Base de données vectorielle locale
+        '.DS_Store'
+    }
 
+    # --- LOGIQUE ---
     project_root = os.getcwd()
-    files_to_process = []
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    destination_path = os.path.join(desktop_path, BACKUP_NAME)
 
-    # 2. Scan des fichiers
-    for root, dirs, files in os.walk(project_root):
-        # Filtrer les dossiers ignorés
-        dirs[:] = [d for d in dirs if d not in IGNORE_FOLDERS]
+    print(f"🔄 Préparation du backup...")
+    print(f"📍 Source : {project_root}")
+    print(f"🎯 Destination : {destination_path}")
+
+    # 1. NETTOYAGE : Si le dossier existe déjà sur le Bureau, on le supprime
+    if os.path.exists(destination_path):
+        print("🗑️  Suppression de l'ancienne version stable sur le bureau...")
+        try:
+            shutil.rmtree(destination_path)
+        except Exception as e:
+            print(f"❌ Impossible de supprimer l'ancien dossier : {e}")
+            return
+
+    # 2. COPIE : On clone le projet vers le Bureau en filtrant les indésirables
+    try:
+        shutil.copytree(
+            project_root, 
+            destination_path, 
+            ignore=shutil.ignore_patterns(*PATTERNS_TO_IGNORE)
+        )
         
-        for file in files:
-            if file == "backup_project.py" or file.startswith("."):
-                continue
-                
-            file_path = os.path.join(root, file)
-            rel_path = os.path.relpath(file_path, project_root)
-            files_to_process.append((file_path, rel_path))
+        # 3. TIMESTAMP : On ajoute un petit fichier texte dedans pour la date
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d à %Hh%M")
+        with open(os.path.join(destination_path, "DATE_VERSION.txt"), "w") as f:
+            f.write(f"Cette version stable a été sauvegardée le : {timestamp}")
 
-    # 3. Création du ZIP (Sauvegarde technique)
-    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for file_path, rel_path in files_to_process:
-            zipf.write(file_path, rel_path)
-    print(f"✅ Archive ZIP créée ({len(files_to_process)} fichiers).")
+        print("-" * 30)
+        print(f"✅ SUCCÈS ! Le DOSSIER '{BACKUP_NAME}' est sur ton Bureau.")
+        print(f"📅 Version datée du : {timestamp}")
 
-    # 4. Création du fichier TEXTE (Pour l'IA)
-    with open(txt_filename, 'w', encoding='utf-8') as outfile:
-        outfile.write(f"# BACKUP DU PROJET SOCIAL 2026 - {now}\n")
-        outfile.write(f"# Ce fichier contient tout le code source pour analyse.\n\n")
-        
-        for file_path, rel_path in files_to_process:
-            # On ne met dans le texte que le code, pas les images ou pdfs
-            _, ext = os.path.splitext(file_path)
-            if ext.lower() in EXTENSIONS_TEXTE:
-                outfile.write("="*60 + "\n")
-                outfile.write(f"FICHIER : {rel_path}\n")
-                outfile.write("="*60 + "\n")
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as infile:
-                        outfile.write(infile.read())
-                    outfile.write("\n\n")
-                except Exception as e:
-                    outfile.write(f"[Erreur de lecture : {e}]\n\n")
-
-    print(f"✅ Fichier CONTEXTE IA généré.")
-    print(f"🎉 Terminé ! Tout est sur ton Bureau.")
+    except Exception as e:
+        print(f"❌ Erreur lors de la copie du dossier : {e}")
 
 if __name__ == "__main__":
-    create_backup()
+    create_backup_folder()
