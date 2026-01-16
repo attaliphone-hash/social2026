@@ -120,14 +120,42 @@ def apply_pro_design():
             margin-top: 15px !important;
         }
 
-        /* --- OPTIMISATION MOBILE --- */
-        @media (max-width: 768px) {
-            .block-container { padding-top: 0.2rem !important; }
-            iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
-            .assurance-text { margin-bottom: 2px !important; line-height: 1.1 !important; font-size: 10px !important; }
-            h1 { font-size: 1.5rem !important; margin-top: 0px !important; }
+        /* ============================================================ */
+        /* RESPONSIVE DESIGN (TABLETTES & MOBILES)                     */
+        /* ============================================================ */
+
+        /* 1. RÈGLE UNIVERSELLE POUR LES BOUTONS (S'applique partout) */
+        /* Cela force le texte à passer à la ligne si la colonne est étroite */
+        .stButton button {
+            width: 100% !important;        /* Prend toute la largeur de la colonne */
+            white-space: normal !important; /* AUTORISE le texte sur plusieurs lignes */
+            height: auto !important;        /* La hauteur s'agrandit automatiquement */
+            padding: 8px 4px !important;    /* Marges internes ajustées */
+            line-height: 1.3 !important;    /* Interligne propre pour le texte sur 2 lignes */
         }
 
+        /* 2. OPTIMISATION TABLETTES / PETITS LAPTOPS (Max 1024px) */
+        /* C'est ici qu'on gère l'iPad */
+        @media (max-width: 1024px) {
+            h1 { font-size: 28px !important; } /* On réduit un peu le titre H1 */
+            h2 { font-size: 1.5rem !important; margin-top: 20px !important; }
+            .block-container { padding-left: 1rem !important; padding-right: 1rem !important; }
+        }
+
+        /* 3. OPTIMISATION MOBILE (Max 768px) - Ta règle d'origine améliorée */
+        @media (max-width: 768px) {
+            .block-container { padding-top: 1rem !important; }
+            iframe[title="st.iframe"] + br, hr + br, .stMarkdown br { display: none; }
+            
+            /* Textes de réassurance plus petits */
+            .assurance-text { margin-bottom: 5px !important; line-height: 1.1 !important; font-size: 10px !important; }
+            
+            /* Titres adaptés au mobile */
+            h1 { font-size: 22px !important; margin-top: 0px !important; margin-bottom: 15px !important; }
+            h2 { font-size: 18px !important; }
+        }
+
+        /* TWEAKS DIVERS */
         .stExpander details summary p { font-size: 12px !important; color: #666 !important; }
         .stExpander { border: none !important; background-color: transparent !important; }
         </style>
