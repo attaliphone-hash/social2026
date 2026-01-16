@@ -3,14 +3,14 @@ import os
 import base64
 
 # ==============================================================================
-# DONNÉES DE RÉASSURANCE (VERSION LONGUE REMISE EN PLACE)
+# DONNÉES DE RÉASSURANCE
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
-    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
-    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
-    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.")
+    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes."),
+    ("Sources officielles :", " Analyse simultanée BOSS, Code du Travail, URSSAF."),
+    ("Mise à Jour Agile :", " Base actualisée en temps réel dès publication."),
+    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée."),
+    ("Confidentialité :", " Aucun cookie pub. Données traitées en RAM uniquement.")
 ]
 
 def get_base64(bin_file):
@@ -24,9 +24,8 @@ def apply_pro_design():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
 
-        #MainMenu {visibility: hidden;}
-        header {visibility: hidden !important; height: 0px;}
-        footer {visibility: hidden;}
+        /* Cache les éléments par défaut de Streamlit */
+        #MainMenu, header, footer {visibility: hidden;}
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
 
@@ -37,79 +36,80 @@ def apply_pro_design():
             font-size: 35px !important;
             font-weight: 700 !important;
             text-transform: uppercase !important; 
-            margin-top: 10px !important;
-            padding-top: 0px !important;
+            margin-top: 15px !important;
             margin-bottom: 20px !important; 
             line-height: 1.1 !important;
             text-align: left !important;
         }
 
-        /* --- 2. BOUTONS (Nouvelle Session & Upload) --- */
-        
-        /* Style de base commun */
+        /* --- 2. BOUTONS (STYLE UNIFIÉ) --- */
+        /* On cible le bouton standard ET le bouton interne de l'uploader */
         button[data-testid="stBaseButton-secondary"], 
         [data-testid="stFileUploader"] button {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 12px !important;
             height: 40px !important;
             min-height: 40px !important;
-            background-color: rgba(255, 255, 255, 0.9) !important;
+            background-color: white !important;
             border: 1px solid #ccc !important;
             color: #333 !important;
             border-radius: 4px !important;
-            box-shadow: none !important;
-            margin: 0 !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
             width: 100% !important;
-            padding: 0 10px !important;
-            /* Flexbox pour centrage vertical parfait */
+            margin: 0 !important;
+            
+            /* Flexbox pour centrage parfait */
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            position: relative !important;
         }
 
-        /* Survol */
+        /* Effet au survol (Hover) */
         button[data-testid="stBaseButton-secondary"]:hover, 
         [data-testid="stFileUploader"] button:hover {
             border-color: #253E92 !important;
-            background-color: #fff !important;
+            background-color: #f8f9fa !important;
+            color: #253E92 !important;
         }
 
-        /* --- CORRECTION UPLOADER (LA MÉTHODE 'TRANSPARENT TEXT') --- */
-        
-        /* 1. On rend le texte anglais "Browse files" TRANSPARENT mais présent */
-        /* Cela garde la forme du bouton intacte */
+        /* --- 3. HACK UPLOADER (METHODE OVERLAY CSS) --- */
+        /* Cette méthode est la plus stable : on ne touche pas au DOM, on masque juste le texte */
+
+        /* A. On rend le texte "Browse files" invisible (transparent) */
         [data-testid="stFileUploader"] button {
             color: transparent !important;
         }
         
-        /* 2. On ajoute le texte français par dessus, centré */
+        /* B. On injecte le nouveau texte par dessus via un pseudo-élément */
         [data-testid="stFileUploader"] button::after {
             content: "Charger un document";
             font-family: 'Open Sans', sans-serif !important;
             font-size: 12px !important;
-            color: #333 !important; /* Couleur du texte visible */
+            color: #333 !important; /* Couleur normale du texte */
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             white-space: nowrap;
-            pointer-events: none; /* Le clic traverse vers le bouton */
+            pointer-events: none; /* Le clic traverse pour atteindre le vrai bouton */
         }
 
-        /* Changement de couleur du texte français au survol */
+        /* C. On gère la couleur du texte injecté au survol */
         [data-testid="stFileUploader"] button:hover::after {
             color: #253E92 !important;
         }
 
-        /* Suppression des icônes parasites ou instructions */
+        /* Nettoyage : on cache l'icône trombone par défaut */
         [data-testid="stFileUploader"] button svg { display: none !important; }
+        
+        /* Ajustements de layout pour l'uploader */
+        [data-testid="stFileUploader"] { line-height: 0; }
+        [data-testid="stFileUploader"] section { padding: 0 !important; }
         [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
-        [data-testid="stFileUploader"] section { padding: 0 !important; min-height: 0 !important; }
         [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
 
 
-        /* --- 3. BARRE DE LIENS (Sous les arguments) --- */
+        /* --- 4. FOOTER (Aligné en haut) --- */
         .footer-text {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 11px !important; 
@@ -119,18 +119,16 @@ def apply_pro_design():
             white-space: nowrap;
         }
 
+        /* Liens discrets */
         button[data-testid="stBaseButton-tertiary"] {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 11px !important; 
             color: #7A7A7A !important;
             background: transparent !important;
             border: none !important;
-            box-shadow: none !important;
-            text-decoration: none !important; 
-            padding: 0 !important;
-            margin: 0 !important;
+            padding: 0 5px !important;
             height: auto !important;
-            line-height: 1 !important;
+            text-decoration: none !important; 
         }
         
         button[data-testid="stBaseButton-tertiary"]:hover {
@@ -139,15 +137,22 @@ def apply_pro_design():
         }
 
         /* --- AUTRES --- */
-        .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; padding: 10px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
+        /* Bulles de chat */
+        .stChatMessage { 
+            background-color: rgba(255,255,255,0.95); 
+            border-radius: 15px; 
+            padding: 10px; 
+            margin-bottom: 10px; 
+            border: 1px solid #e0e0e0; 
+        }
+        
+        /* Texte arguments */
         .assurance-text { font-size: 10px !important; color: #024c6f !important; text-align: left; line-height: 1.3; margin-bottom: 5px; }
         .assurance-title { font-weight: bold; color: #024c6f; font-size: 10px !important; }
         .assurance-desc { font-weight: normal; color: #444; font-size: 10px !important; }
         
+        /* Alertes BOSS */
         .boss-alert-box { padding: 12px !important; border-radius: 8px !important; margin-bottom: 10px !important; font-size: 14px !important; }
-        .boss-red { background-color: #f8d7da !important; color: #721c24 !important; border: 1px solid #f5c6cb !important; }
-        .boss-green { background-color: #d4edda !important; color: #155724 !important; border: 1px solid #c3e6cb !important; }
-        .boss-link { text-decoration: underline !important; font-weight: bold !important; color: inherit !important; }
 
         </style>
     """, unsafe_allow_html=True)
