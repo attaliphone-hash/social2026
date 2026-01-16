@@ -34,80 +34,81 @@ def apply_pro_design():
             font-weight: 800 !important;
             font-size: 35px !important;
             text-transform: uppercase !important; 
-            margin-top: 15px !important;
+            margin-top: 10px !important;
             padding-top: 0px !important;
             margin-bottom: 20px !important; 
             line-height: 1.0 !important;
         }
 
-        /* --- 2. BOUTONS D'ACTION (HAUT) - CORRECTION TAILLE & TEXTE --- */
+        /* --- 2. BOUTONS D'ACTION (HAUT) - FIXATION STRICTE --- */
         
-        /* Bouton "Nouvelle Session" */
+        /* Bouton "Nouvelle Session" (Standard) */
         button[data-testid="stBaseButton-secondary"] {
             background-color: rgba(255, 255, 255, 0.8) !important;
             border: 1px solid #ccc !important;
             color: #444 !important;
             font-size: 12px !important;
-            height: 34px !important;      /* Hauteur fixe stricte */
-            min-height: 34px !important;
-            line-height: 1 !important;    /* Centrage vertical */
-            margin: 0 !important;
+            font-weight: 500 !important;
+            height: 38px !important;     /* Hauteur forcée */
+            min-height: 38px !important; /* Hauteur forcée */
             width: 100% !important;
+            margin: 0 !important;
+            padding: 0px 10px !important;
+            line-height: 1 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Bouton "Upload" - TECHNIQUE ROBUSTE (Font-size 0) */
+        /* Bouton "Upload" (Spécifique) */
         [data-testid="stFileUploader"] button {
             background-color: rgba(255, 255, 255, 0.8) !important;
             border: 1px solid #ccc !important;
-            
-            /* On réduit le texte original à 0 pour le faire disparaitre proprement */
-            font-size: 0px !important; 
-            
-            height: 34px !important;      /* Même hauteur que l'autre */
-            min-height: 34px !important;
+            color: transparent !important; /* Cache le texte anglais */
+            font-size: 0px !important;     /* Réduit le texte anglais à néant */
+            height: 38px !important;
+            min-height: 38px !important;
             width: 100% !important;
+            margin: 0 !important;
             padding: 0 !important;
-            display: flex !important;     /* Flexbox pour centrer le nouveau texte */
-            align-items: center !important;
-            justify-content: center !important;
+            position: relative !important; /* INDISPENSABLE pour le texte centré */
         }
 
-        /* Le nouveau texte inséré */
+        /* Le texte "Charger un document" qui se superpose */
         [data-testid="stFileUploader"] button::after {
             content: "Charger un document";
-            font-size: 12px !important;   /* On remet la bonne taille ici */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centrage parfait mathématique */
             color: #444 !important;
-            font-weight: normal !important;
-            display: block !important;
-            line-height: 1 !important;
+            font-size: 12px !important;
+            font-weight: 500 !important;
+            white-space: nowrap;
+            pointer-events: none;
         }
         
-        /* Nettoyage Uploader */
+        /* Nettoyage de l'interface Upload */
         [data-testid="stFileUploader"] section { padding: 0 !important; }
         [data-testid="stFileUploaderDropzoneInstructions"] { display: none !important; }
         [data-testid="stFileUploader"] div[data-testid="stFileUploaderInterface"] { margin: 0 !important; }
 
 
-        /* --- 3. FOOTER INTEGRÉ - CORRECTION ALIGNEMENT --- */
+        /* --- 3. FOOTER INTEGRÉ - ALIGNEMENT PIXEL --- */
         
-        /* Le texte copyright */
+        /* Texte Copyright */
         .footer-text {
             color: #999 !important;
             font-size: 11px !important;
             font-family: sans-serif !important;
             margin: 0 !important;
             padding: 0 !important;
-            
-            /* Alignement vertical critique */
-            line-height: 20px !important; 
-            height: 20px !important;
-            display: inline-block !important;
-            
+            line-height: 24px !important; /* Doit matcher la hauteur des boutons */
             text-align: right;
-            width: 100%;
+            display: block;
         }
 
-        /* Les liens (Boutons transformés) */
+        /* Liens (Boutons transformés) */
         button[data-testid="stBaseButton-tertiary"] {
             background: transparent !important;
             border: none !important;
@@ -115,24 +116,22 @@ def apply_pro_design():
             color: #999 !important; 
             text-decoration: underline !important; 
             font-size: 11px !important;
-            
-            /* Alignement vertical critique pour matcher le texte */
             padding: 0px 5px !important; 
             margin: 0px !important;
-            height: 20px !important;
-            min-height: 20px !important;
-            line-height: 20px !important;
-            
-            vertical-align: top !important; /* Colle au haut de la ligne comme le texte */
+            height: 24px !important;
+            min-height: 24px !important;
+            line-height: 24px !important;
+            white-space: nowrap !important;
+            vertical-align: middle !important;
         }
         
         button[data-testid="stBaseButton-tertiary"]:hover {
             color: #555 !important;
         }
         
-        /* Suppression des marges parasites des colonnes du footer */
+        /* Enlève le gap entre les colonnes du footer pour serrer les éléments */
         [data-testid="column"] {
-            padding: 0 !important;
+            gap: 0rem !important;
         }
 
         /* --- AUTRES --- */
