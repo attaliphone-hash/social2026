@@ -120,10 +120,10 @@ def apply_pro_design():
 
         /* ============================================================ */
         /* STYLE SPÉCIFIQUE DES BOUTONS JURIDIQUES (TERTIARY)          */
-        /* Pour qu'ils ressemblent à des petits blocs semi-transparents */
+        /* Correction validée : data-testid */
         /* ============================================================ */
-        button[kind="tertiary"] {
-            background-color: rgba(245, 245, 245, 0.7) !important; /* Gris très clair transparent */
+        button[data-testid="stBaseButton-tertiary"] {
+            background-color: rgba(245, 245, 245, 0.7) !important;
             border: 1px solid #ddd !important;
             color: #666 !important;
             font-size: 10px !important; /* Texte vraiment petit */
@@ -131,11 +131,11 @@ def apply_pro_design():
             height: auto !important;
             min-height: 0px !important;
             border-radius: 4px !important;
-            width: 100% !important;
+            width: auto !important; /* Pas full width pour ceux-là */
             transition: all 0.2s ease;
         }
         
-        button[kind="tertiary"]:hover {
+        button[data-testid="stBaseButton-tertiary"]:hover {
             background-color: #e0e0e0 !important;
             color: #333 !important;
             border-color: #ccc !important;
@@ -144,7 +144,9 @@ def apply_pro_design():
         /* ============================================================ */
         /* RESPONSIVE DESIGN                                           */
         /* ============================================================ */
-        .stButton button {
+        
+        /* On cible uniquement les boutons CLASSIQUES (Secondary) pour le full width */
+        button[data-testid="stBaseButton-secondary"] {
             width: 100% !important;        
             white-space: normal !important; 
             height: auto !important;        
@@ -161,7 +163,7 @@ def apply_pro_design():
             h1 { font-size: 22px !important; }
         }
 
-        /* FOOTER & ALERTS */
+        /* FOOTER & ALERTS BOSS (CRITIQUE) */
         .footer-copyright {
             text-align: center !important;
             color: #888 !important;
@@ -196,7 +198,6 @@ def apply_pro_design():
         )
 
 def render_top_columns():
-    # On réduit un peu l'espacement avec les colonnes pour que ça rentre bien en haut
     cols = st.columns(5, gap="small")
     for i, col in enumerate(cols):
         title, desc = ARGUMENTS_UNIFIES[i]

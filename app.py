@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # --- IMPORTS UI ---
-# J'ai retiré 'show_legal_info' car on utilise maintenant les popups
 from ui.styles import apply_pro_design, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
@@ -52,7 +51,8 @@ def manage_subscription_link(email):
         print(f"Erreur Stripe Portal: {e}")
     return None
 
-# --- FONCTION ROBUSTE (Veille BOSS) - VERSION CSS NETTOYÉE ---
+# --- FONCTION ROBUSTE (Veille BOSS) ---
+# CETTE FONCTION EST INTACTE ET UTILISE LES STYLES DÉFINIS DANS STYLES.PY
 def get_boss_status_html():
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
@@ -74,7 +74,7 @@ def get_boss_status_html():
                 
                 date_tag = latest_item.find('pubdate') or latest_item.find('pubDate')
                 
-                # Construction du lien avec la classe CSS 'boss-link' (voir styles.py)
+                # Construction du lien avec la classe CSS 'boss-link'
                 html_link = f'<a href="{link}" target="_blank" class="boss-link">{title}</a>'
                 
                 if date_tag:
@@ -85,16 +85,15 @@ def get_boss_status_html():
                         date_str = pub_date_obj.strftime("%d/%m/%Y")
                         
                         if days_old < 8:
-                            # Utilisation de la classe CSS 'boss-red'
+                            # Alerte Rouge
                             return f"""<div class="boss-alert-box boss-red">🚨 <strong>NOUVELLE MISE À JOUR BOSS ({date_str})</strong> : {html_link}</div>""", link
                         else:
-                            # Utilisation de la classe CSS 'boss-green'
+                            # Alerte Verte (RAS)
                             return f"""<div class="boss-alert-box boss-green">✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} : {html_link}</div>""", link
                             
                     except:
                         pass 
                 
-                # Fallback générique
                 return f"""<div class="boss-alert-box boss-red">📢 ALERTE BOSS : {html_link}</div>""", link
             
             return "<div class='boss-alert-box' style='background-color:#f0f2f6;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
@@ -129,12 +128,12 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    # Utilisation de H2 pour le login
-    st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
-    
+    # 1. ARGUMENTS EN TOUT PREMIER (Demande validée)
     render_top_columns()
     st.markdown("---")
-
+    
+    st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
+    
     tab1, tab2 = st.tabs(["🔐 Espace Client Abonnés", "Accès Découverte / Admin"])
 
     with tab1:
@@ -153,8 +152,6 @@ def check_password():
         
         st.markdown("---")
         st.write("✨ **Pas encore abonné ?** Choisissez votre formule :")
-        
-        # Affiche les cartes
         render_subscription_cards()
         
         if st.session_state.get("btn_sub_month"):
@@ -395,12 +392,14 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
         
         # J'ai nettoyé les boutons juridiques d'ici pour les mettre en bas de page
 
-st.markdown("<hr>", unsafe_allow_html=True)
+# 1. LES ARGUMENTS (TOUT EN PREMIER)
+render_top_columns()
 
+# 2. L'ALERTE BOSS (SI ADMIN)
 if user_email == "ADMINISTRATEUR":
     show_boss_alert()
 
-render_top_columns()
+st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)
 
 if "uploader_key" not in st.session_state:
@@ -410,7 +409,6 @@ if "uploader_key" not in st.session_state:
 st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
 # --- ZONE DES BOUTONS (Juste en dessous) ---
-# On crée 2 colonnes pour mettre l'Upload et le Reset côte à côte
 c_up, c_new, _ = st.columns([2, 1, 3], vertical_alignment="bottom")
 
 with c_up:
@@ -483,16 +481,15 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 # --- ZONE JURIDIQUE (BOUTONS DISCRETS EN BAS) ---
-st.markdown("<br><br><br>", unsafe_allow_html=True) # Un peu plus d'espace
-col_leg1, col_leg2, _ = st.columns([1, 1, 4]) # Colonnes ajustées pour que ce soit discret à gauche
+# UTILISE type="tertiary" POUR LE LOOK TRANSPARENT DÉFINI DANS STYLES.PY
+st.markdown("<br><br><br>", unsafe_allow_html=True) 
+col_leg1, col_leg2, _ = st.columns([1, 1, 4]) 
 
 with col_leg1:
-    # ✅ AJOUT DE type="tertiary" pour activer le style CSS "semi-transparent"
     if st.button("⚖️ Mentions Légales", key="footer_mentions", type="tertiary"):
         modal_mentions()
 
 with col_leg2:
-    # ✅ AJOUT DE type="tertiary"
     if st.button("🔒 RGPD & Cookies", key="footer_rgpd", type="tertiary"):
         modal_rgpd()
 
