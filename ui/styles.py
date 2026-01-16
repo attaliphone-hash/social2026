@@ -95,7 +95,7 @@ def apply_pro_design():
             color: #005354 !important;      /* Couleur (Bleu) */
             font-family: 'Helvetica Neue', sans-serif !important;
             font-weight: 600 !important;    /* La Graisse (400=Normal, 700=Gras, 900=Très Gras) */
-            font-size: 30px !important;   /* La Taille */
+            font-size: 35px !important;   /* La Taille */
             text-transform: uppercase !important; /* Mettre 'uppercase' pour tout en MAJUSCULES */
             text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
             margin-bottom: 25px !important;
