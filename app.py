@@ -52,7 +52,6 @@ def manage_subscription_link(email):
     return None
 
 # --- FONCTION ROBUSTE (Veille BOSS) ---
-# CETTE FONCTION EST INTACTE ET UTILISE LES STYLES DÉFINIS DANS STYLES.PY
 def get_boss_status_html():
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
@@ -94,6 +93,7 @@ def get_boss_status_html():
                     except:
                         pass 
                 
+                # Fallback générique
                 return f"""<div class="boss-alert-box boss-red">📢 ALERTE BOSS : {html_link}</div>""", link
             
             return "<div class='boss-alert-box' style='background-color:#f0f2f6;'>✅ Veille BOSS : Aucune actualité détectée.</div>", ""
@@ -128,7 +128,7 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    # 1. ARGUMENTS EN TOUT PREMIER (Demande validée)
+    # 1. ARGUMENTS EN TOUT PREMIER
     render_top_columns()
     st.markdown("---")
     
@@ -259,7 +259,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 (à utiliser en priorité si pertinent) ---\n{certified_facts}\n" if certified_facts else ""
     
 # ==================================================================================
-    # PROMPT EXPERT SOCIAL 2026 - GOLDEN
+    # PROMPT EXPERT SOCIAL 2026 - GOLDEN (STRICTEMENT IDENTIQUE AU BACKUP)
     # ==================================================================================
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Tu dois fournir une réponse d'une fiabilité absolue avec une présentation claire et aérée.
@@ -306,7 +306,7 @@ STRUCTURE DE LA RÉPONSE (À RESPECTER SCRUPULEUSEMENT)
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-radius: 8px; border-left: 5px solid #024c6f; margin-top: 25px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-    <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION</h3>
+    <h3 style="color: #024c6f; margin-top: 0; font-family: sans-serif; font-size: 18px;">🎯 CONCLUSION DÉFINITIVE</h3>
     <p style="font-size: 18px; color: #111; margin-bottom: 5px; font-weight: 600;">
         Le montant / taux estimé est de : [INSÉRER RÉSULTAT FINAL]
     </p>
@@ -395,23 +395,19 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
 # 1. LES ARGUMENTS (TOUT EN PREMIER)
 render_top_columns()
 
-# 2. L'ALERTE BOSS (SI ADMIN)
-if user_email == "ADMINISTRATEUR":
+# 2. ALERTE ADMIN (Juste après)
+if st.session_state.user_email == "ADMINISTRATEUR":
     show_boss_alert()
 
-st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
 
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-# --- TITRE PRINCIPAL (Pleine largeur) ---
-st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
+# 3. ZONE ACTIONS (UPLOAD & SESSION) - PLACÉE AVANT LE TITRE (DEMANDE CLIENT)
+col_act1, col_act2, _ = st.columns([1.2, 0.8, 3], vertical_alignment="center")
 
-# --- ZONE DES BOUTONS (Juste en dessous) ---
-c_up, c_new, _ = st.columns([2, 1, 3], vertical_alignment="bottom")
-
-with c_up:
+with col_act1:
     uploaded_file = st.file_uploader(
         "Upload", 
         type=["pdf", "txt"], 
@@ -419,20 +415,24 @@ with c_up:
         key=f"uploader_{st.session_state.uploader_key}"
     )
 
-with c_new:
+with col_act2:
     if st.button("Nouvelle session"):
         st.session_state.messages = []
         st.session_state.uploader_key += 1
         st.rerun()
 
-user_doc_text = None
+# 4. TITRE PRINCIPAL (EN DESSOUS DES BOUTONS)
+st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
+
+# LOGIQUE CHAT & UPLOAD
+user_text = None
 if uploaded_file:
     try:
         if uploaded_file.type == "application/pdf":
             reader = pypdf.PdfReader(uploaded_file)
-            user_doc_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
+            user_text = "\n".join([p.extract_text() for p in reader.pages if p.extract_text()])
         else:
-            user_doc_text = uploaded_file.read().decode("utf-8")
+            user_text = uploaded_file.read().decode("utf-8")
         st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
     except Exception as e:
         st.error(f"Erreur lecture fichier: {e}")
@@ -465,7 +465,7 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
                 context=context_text, 
                 sources_list=sources_list,
                 certified_facts=certified_facts,
-                user_doc_content=user_doc_text
+                user_doc_content=user_text
             ):
                 full_response += chunk
                 message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
@@ -480,18 +480,21 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
                 
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
-# --- ZONE JURIDIQUE (BOUTONS DISCRETS EN BAS) ---
-# UTILISE type="tertiary" POUR LE LOOK TRANSPARENT DÉFINI DANS STYLES.PY
-st.markdown("<br><br><br>", unsafe_allow_html=True) 
-col_leg1, col_leg2, _ = st.columns([1, 1, 4]) 
+# 5. FOOTER INTÉGRÉ (LIGNE UNIQUE : COPYRIGHT + LIENS)
+st.markdown("<br><br><br>", unsafe_allow_html=True)
 
-with col_leg1:
-    if st.button("⚖️ Mentions Légales", key="footer_mentions", type="tertiary"):
+# Colonnes serrées pour aligner le texte et les boutons sur une ligne
+_, c_copy, c_mentions, c_rgpd, _ = st.columns([3, 2, 1, 1, 3], vertical_alignment="center")
+
+with c_copy:
+    # On affiche le copyright comme du texte simple
+    st.markdown("<p class='footer-text'>© 2026 socialexpertfrance.fr &nbsp;|</p>", unsafe_allow_html=True)
+
+with c_mentions:
+    # Le bouton "Tertiary" est transformé en lien gris par le CSS
+    if st.button("Mentions Légales", key="foot_mentions", type="tertiary"):
         modal_mentions()
 
-with col_leg2:
-    if st.button("🔒 RGPD & Cookies", key="footer_rgpd", type="tertiary"):
+with c_rgpd:
+    if st.button("RGPD & Cookies", key="foot_rgpd", type="tertiary"):
         modal_rgpd()
-
-# Footer avec classe CSS propre (géré dans styles.py)
-st.markdown("<div class='footer-copyright'>© 2026 socialexpertfrance.fr</div>", unsafe_allow_html=True)
