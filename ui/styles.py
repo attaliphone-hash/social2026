@@ -88,32 +88,33 @@ def apply_pro_design():
         .assurance-title { font-weight: bold; color: #024c6f; display: inline; font-size: 11px !important; }
         .assurance-desc { font-weight: normal; color: #444; display: inline; font-size: 11px !important; }
 
-        /* --- TYPOGRAPHIE DES TITRES (H1, H2, H3) --- */
+/* --- TYPOGRAPHIE DES TITRES (H1, H2, H3) --- */
         
         /* H1 : Le Grand Titre (ex: ExpertSocialPro V4) */
         h1 {
-            color: #000066 !important;      /* Couleur (Bleu) */
-            font-family: 'Baskerville', sans-serif !important;
-            font-weight: 800 !important;    /* La Graisse (400=Normal, 700=Gras, 900=Très Gras) */
-            font-size: 35px !important;   /* La Taille */
-            text-transform: uppercase !important; /* Mettre 'uppercase' pour tout en MAJUSCULES *
+            color: #000066 !important;      /* Bleu Marine Profond */
+            font-family: 'Baskerville', 'Georgia', serif !important; /* Baskerville est une Serif */
+            font-weight: 800 !important;
+            font-size: 35px !important;
+            text-transform: uppercase !important; 
+            /* J'ai corrigé la fermeture du commentaire ici : */
             margin-bottom: 25px !important;
         }
 
-        /* H2 : Les Sous-titres (ex: Dans les réponses de l'IA) */
+        /* H2 : Les Sous-titres */
         h2 {
-            color: #1e3a8a !important;      /* Bleu un peu plus vif */
+            color: #1e3a8a !important;
             font-family: 'Arial', sans-serif !important;
-            font-weight: 600 !important;    /* Semi-bold */
+            font-weight: 600 !important;
             font-size: 1.8rem !important;
-            border-bottom: 2px solid #e2e8f0; /* Une ligne grise fine sous le titre */
+            border-bottom: 2px solid #e2e8f0;
             padding-bottom: 8px !important;
             margin-top: 30px !important;
         }
 
-        /* H3 : Les petits titres de section */
+        /* H3 : Les petits titres */
         h3 {
-            color: #334155 !important;      /* Gris bleuté foncé */
+            color: #334155 !important;
             font-weight: bold !important;
             font-size: 1.4rem !important;
             margin-top: 15px !important;
