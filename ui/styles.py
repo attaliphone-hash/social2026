@@ -92,13 +92,13 @@ def apply_pro_design():
         
         /* H1 : Le Grand Titre (ex: ExpertSocialPro V4) */
         h1 {
-            color: #0f172a !important;      /* Couleur (Bleu Nuit Profond) */
+            color: #005354c !important;      /* Couleur (Bleu) */
             font-family: 'Helvetica Neue', sans-serif !important;
-            font-weight: 800 !important;    /* La Graisse (400=Normal, 700=Gras, 900=Très Gras) */
-            font-size: 3.5rem !important;   /* La Taille */
-            text-transform: 'uppercase' !important; /* Mettre 'uppercase' pour tout en MAJUSCULES */
+            font-weight: 600 !important;    /* La Graisse (400=Normal, 700=Gras, 900=Très Gras) */
+            font-size: 30px !important;   /* La Taille */
+            text-transform: uppercase !important; /* Mettre 'uppercase' pour tout en MAJUSCULES */
             text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-            margin-bottom: 20px !important;
+            margin-bottom: 25px !important;
         }
 
         /* H2 : Les Sous-titres (ex: Dans les réponses de l'IA) */

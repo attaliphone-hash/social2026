@@ -127,7 +127,7 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
+    st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
     
     render_top_columns()
     st.markdown("---")
