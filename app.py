@@ -372,26 +372,28 @@ st.markdown("<br>", unsafe_allow_html=True)
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
 
-# ✅ AJOUT DE vertical_alignment="center" pour aligner le Titre face aux Boutons
-col_t, col_buttons = st.columns([3, 2], vertical_alignment="center") 
-with col_t: 
-    st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
+# --- TITRE PRINCIPAL (Pleine largeur) ---
+st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
-with col_buttons:
-    # ✅ AJOUT DE vertical_alignment="bottom" pour caler le bouton Upload et Nouvelle Session sur la même ligne de base
-    c_up, c_new = st.columns([1.6, 1], vertical_alignment="bottom")
-    with c_up:
-        uploaded_file = st.file_uploader(
-            "Upload", 
-            type=["pdf", "txt"], 
-            label_visibility="collapsed",
-            key=f"uploader_{st.session_state.uploader_key}"
-        )
-    with c_new:
-        if st.button("Nouvelle session"):
-            st.session_state.messages = []
-            st.session_state.uploader_key += 1
-            st.rerun()
+# --- ZONE DES BOUTONS (Juste en dessous) ---
+# On crée 2 colonnes pour mettre l'Upload et le Reset côte à côte
+# Le ratio [0.8, 0.4, 2] sert à garder les boutons à gauche (et vide à droite)
+# Si tu veux que ça prenne toute la largeur, mets juste st.columns([2, 1])
+c_up, c_new, _ = st.columns([2, 1, 3], vertical_alignment="bottom")
+
+with c_up:
+    uploaded_file = st.file_uploader(
+        "Upload", 
+        type=["pdf", "txt"], 
+        label_visibility="collapsed",
+        key=f"uploader_{st.session_state.uploader_key}"
+    )
+
+with c_new:
+    if st.button("Nouvelle session"):
+        st.session_state.messages = []
+        st.session_state.uploader_key += 1
+        st.rerun()
 
 user_doc_text = None
 if uploaded_file:
