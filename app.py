@@ -132,7 +132,7 @@ def check_password():
     render_top_columns()
     st.markdown("---")
 
-    tab1, tab2 = st.tabs(["🔐 Espace Client Abonnés", "🎁 Accès Promotionnel / Admin"])
+    tab1, tab2 = st.tabs(["🔐 Espace Client Abonnés", "Accès Découverte / Admin"])
 
     with tab1:
         st.caption("Connectez-vous pour accéder à votre espace abonné.")
