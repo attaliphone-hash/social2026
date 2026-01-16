@@ -483,15 +483,17 @@ if query := st.chat_input("Votre question juridique ou chiffrée..."):
     st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 # --- ZONE JURIDIQUE (BOUTONS DISCRETS EN BAS) ---
-st.markdown("<br><br>", unsafe_allow_html=True) # Un peu d'espace
-col_leg1, col_leg2, _ = st.columns([1, 1, 2]) # Colonnes pour aligner à gauche
+st.markdown("<br><br><br>", unsafe_allow_html=True) # Un peu plus d'espace
+col_leg1, col_leg2, _ = st.columns([1, 1, 4]) # Colonnes ajustées pour que ce soit discret à gauche
 
 with col_leg1:
-    if st.button("⚖️ Mentions Légales", key="footer_mentions", use_container_width=True):
+    # ✅ AJOUT DE type="tertiary" pour activer le style CSS "semi-transparent"
+    if st.button("⚖️ Mentions Légales", key="footer_mentions", type="tertiary"):
         modal_mentions()
 
 with col_leg2:
-    if st.button("🔒 RGPD & Cookies", key="footer_rgpd", use_container_width=True):
+    # ✅ AJOUT DE type="tertiary"
+    if st.button("🔒 RGPD & Cookies", key="footer_rgpd", type="tertiary"):
         modal_rgpd()
 
 # Footer avec classe CSS propre (géré dans styles.py)
