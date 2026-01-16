@@ -373,7 +373,7 @@ if "uploader_key" not in st.session_state:
 
 col_t, col_buttons = st.columns([3, 2]) 
 with col_t: 
-    st.markdown("<h1>EXPERT SOCIAL PRO FRANCE </h1>", unsafe_allow_html=True)
+    st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
 
 with col_buttons:
     c_up, c_new = st.columns([1.6, 1])
