@@ -127,7 +127,7 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    st.markdown("<h2 style='text-align: center; color: #024c6f;'>Expert Social Pro - Accès</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #024c6f;'>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
     
     render_top_columns()
     st.markdown("---")
@@ -373,7 +373,7 @@ if "uploader_key" not in st.session_state:
 
 col_t, col_buttons = st.columns([3, 2]) 
 with col_t: 
-    st.markdown("<h1 style='color: #024c6f; margin:0;'>Expert Social Pro V4</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #024c6f; margin:0;'>EXPERT SOCIAL PRO FRANCE </h1>", unsafe_allow_html=True)
 
 with col_buttons:
     c_up, c_new = st.columns([1.6, 1])
