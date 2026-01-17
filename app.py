@@ -45,112 +45,141 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE (100% OFFICIEL - BOSS / SERVICE-PUBLIC / NET-ENT)
+# MODULE DE VEILLE JURIDIQUE (VERSION FINALISÉE "INCASSABLE")
 # ==============================================================================
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+import streamlit as st
 
-def check_feed(source_name, rss_url, target_link, colors):
-    bg_col, border_col, txt_col = colors
-
+def get_feed_info_safe(rss_url):
+    """
+    Tente de lire le flux. Si ça échoue pour N'IMPORTE quelle raison,
+    renvoie None au lieu de faire planter l'application.
+    """
     try:
-        # Simulation Navigateur pour passer les sécurités de l'État
+        # On imite un vrai navigateur (Chrome sur Windows) pour ne pas être bloqué
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        response = requests.get(rss_url, headers=headers, timeout=10)
-
+        # On attend max 6 secondes pour ne pas ralentir toute l'appli
+        response = requests.get(rss_url, headers=headers, timeout=6)
+        
         if response.status_code != 200:
-            return ""
-
+            return None, None
+            
+        # Décodage propre
         content = response.content.decode("utf-8", errors="ignore")
         
-        # Nettoyage préventif
-        content = content.replace("\x00", "")
-
-        # Parsing Hybride
+        # Tentative de lecture XML (ou HTML si XML échoue)
         try:
             soup = BeautifulSoup(content, "xml")
         except:
             soup = BeautifulSoup(content, "html.parser")
-
-        # Recherche Item/Entry
+            
+        # Recherche de la première actualité
         item = soup.find("item") or soup.find("entry")
-        if not item: return ""
-
-        # Titre
-        title_tag = item.find("title")
-        title = title_tag.get_text(strip=True) if title_tag else "Actualité Officielle"
-
-        # Date (Extraction Robuste)
+        if not item: return None, None
+        
+        # Récupération du Titre
+        title = "Actualité récente"
+        t_tag = item.find("title")
+        if t_tag: title = t_tag.get_text(strip=True)
+        
+        # Récupération de la Date (Compatible tous formats)
         pub_date = None
+        # On cherche dans toutes les balises possibles
         for tag in ["pubDate", "pubdate", "updated", "published", "dc:date", "date"]:
             t = item.find(tag)
             if t:
                 txt = t.get_text(strip=True)
                 try:
-                    # ISO
+                    # Format 1 : ISO (2026-01-17...)
                     if "T" in txt or "-" in txt:
                         clean = txt.split("T")[0]
                         pub_date = datetime.strptime(clean, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                    # Standard
+                    # Format 2 : Standard (Fri, 17 Jan...)
                     else:
                         pub_date = parsedate_to_datetime(txt)
                         if pub_date.tzinfo is None: pub_date = pub_date.replace(tzinfo=timezone.utc)
                     
-                    if pub_date: break
+                    if pub_date: break # Si on a trouvé, on arrête de chercher
                 except: pass
+        
+        return pub_date, title
 
-        if not pub_date: return ""
+    except Exception:
+        return None, None
 
-        # Affichage
-        now = datetime.now(timezone.utc)
-        days_old = (now - pub_date).days
-        date_str = pub_date.strftime("%d/%m")
+def render_watch_line(source_name, rss_url, target_link, colors):
+    """
+    Affiche la ligne de veille.
+    IMPORTANT : Si le flux plante, affiche une ligne grise (Fallback) au lieu de rien.
+    """
+    bg, border, txt = colors
+    
+    # 1. On interroge le flux
+    found_date, found_title = get_feed_info_safe(rss_url)
+    
+    # --- CAS DE SECOURS (Si le flux est inaccessible) ---
+    # Au lieu de return "", on retourne une ligne grise.
+    if not found_date:
+        return f"""
+        <div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px; display:flex; justify-content:space-between; align-items:center;'>
+            <span>ℹ️ <strong>Veille {source_name}</strong> : <a href='{target_link}' target='_blank' style='text-decoration:underline; color:inherit;'>Accès direct aux actus</a></span>
+            <span style='font-size:10px; background:#eee; padding:2px 6px; border-radius:4px;'>Flux indisponible</span>
+        </div>
+        """
 
-        if days_old < 8:
-            return f"""
-            <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
-                🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> :
-                <a href='{target_link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:#721c24;'>{title}</a>
-            </div>
-            """
-        else:
-            return f"""
-            <div style='background-color:{bg_col}; color:{txt_col}; padding:10px; border-radius:6px; border:1px solid {border_col}; margin-bottom:8px; font-size:13px; opacity:0.9;'>
-                ✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str}
-                <a href='{target_link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a>
-            </div>
-            """
-    except:
-        return ""
-    return ""
+    # --- CAS NORMAL (Flux accessible) ---
+    now = datetime.now(timezone.utc)
+    days = (now - found_date).days
+    date_str = found_date.strftime("%d/%m")
+    
+    # ALERTE ROUGE (< 8 jours)
+    if days < 8:
+        return f"""
+        <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
+            🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : <a href='{target_link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:#721c24;'>{found_title}</a>
+        </div>
+        """
+    # RAS (Vert/Bleu/Orange)
+    else:
+        return f"""
+        <div style='background-color:{bg}; color:{txt}; padding:10px; border-radius:6px; border:1px solid {border}; margin-bottom:8px; font-size:13px; opacity:0.9;'>
+            ✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a>
+        </div>
+        """
 
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # 1. BOSS (Doctrine Officielle)
-    html_boss = check_feed(
+    # 1. BOSS (Source Officielle)
+    html_boss = render_watch_line(
         "BOSS",
         "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss",
         "https://boss.gouv.fr/portail/accueil/actualites.html",
-        ("#d4edda", "#c3e6cb", "#155724")
+        ("#d4edda", "#c3e6cb", "#155724") # Vert
     )
     
-    # 2. SERVICE-PUBLIC (Rubrique RH/Social Officielle)
-    html_social = check_feed(
+    # 2. SERVICE-PUBLIC (Source Officielle RH)
+    # Flux Pro-Santé-Social (le plus fiable) -> Lien vers la page RH "Entreprendre"
+    html_social = render_watch_line(
         "Service-Public (RH)",
         "https://rss.service-public.fr/rss/pro-social-sante.xml",
-        "https://entreprendre.service-public.fr/vosdroits/N24267", # Page RH directe
-        ("#d1ecf1", "#bee5eb", "#0c5460")
+        "https://entreprendre.service-public.fr/vosdroits/N24267", 
+        ("#d1ecf1", "#bee5eb", "#0c5460") # Bleu
     )
     
-    # 3. NET-ENTREPRISES (Technique/DSN Officiel) - Remplace URSSAF
-    # Flux des actualités déclaratives (Arrêts de service, normes DSN, etc.)
-    html_net = check_feed(
+    # 3. NET-ENTREPRISES (Source Officielle DSN)
+    # Remplace l'Urssaf pour les actus déclaratives
+    html_net = render_watch_line(
         "Net-Entreprises (DSN)",
-        "https://www.net-entreprises.fr/feed/", 
+        "https://www.net-entreprises.fr/feed/",
         "https://www.net-entreprises.fr/actualites/",
-        ("#fff3cd", "#ffeeba", "#856404")
+        ("#fff3cd", "#ffeeba", "#856404") # Orange
     )
 
     full_html = html_boss + html_social + html_net
@@ -159,7 +188,7 @@ def show_legal_watch_bar():
         c1, c2 = st.columns([0.95, 0.05])
         with c1: st.markdown(full_html, unsafe_allow_html=True)
         with c2: 
-            if st.button("✖️", key="btn_close_news", help="Masquer"): 
+            if st.button("✖️", key="btn_close_news", help="Masquer la veille"): 
                 st.session_state.news_closed = True
                 st.rerun()
 # --- POPUPS ---
