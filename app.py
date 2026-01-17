@@ -45,14 +45,45 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE "FAIL-SAFE" (AFFICHAGE GARANTI)
+# MODULE DE VEILLE JURIDIQUE (SIMULATION NAVIGATEUR AVANCÉE)
 # ==============================================================================
 
+def get_soup_with_session(url):
+    """
+    Simule un vrai navigateur (Chrome) avec une session persistante et des headers complets
+    pour contourner les protections anti-robots (WAF) de l'URSSAF.
+    """
+    session = requests.Session()
+    
+    # Entêtes complets d'un Chrome sur Windows
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Referer": "https://www.google.com/"
+    }
+    
+    try:
+        response = session.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        # On force l'encodage pour éviter les caractères bizarres
+        response.encoding = response.apparent_encoding
+        return BeautifulSoup(response.text, 'html.parser')
+    except Exception as e:
+        # print(f"Erreur connexion {url}: {e}") # Pour debug seulement
+        return None
+
 def extract_date_from_text(text):
-    """
-    Tente de trouver une date dans un texte brut (RSS ou HTML) via Regex.
-    Gère les formats : JJ/MM/AAAA, YYYY-MM-DD, JJ mois AAAA.
-    """
+    """Extrait une date (format français ou ISO) d'un texte brut"""
+    if not text: return None
+    
     text = text.lower()
     MONTHS = {
         "janvier": 1, "fevrier": 2, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
@@ -60,117 +91,113 @@ def extract_date_from_text(text):
     }
     
     try:
-        # 1. Format ISO (2026-01-17)
-        match_iso = re.search(r"(\d{4})-(\d{2})-(\d{2})", text)
-        if match_iso:
-            return datetime(int(match_iso.group(1)), int(match_iso.group(2)), int(match_iso.group(3)), tzinfo=timezone.utc)
-
-        # 2. Format Français (17 janvier 2026)
+        # 1. Recherche format "17 janvier 2026" (URSSAF / Web)
+        # Regex souple qui autorise "le 17", "publié le 17", etc.
         match_fr = re.search(r"(\d{1,2})\s+(janvier|fevrier|février|mars|avril|mai|juin|juillet|aout|août|septembre|octobre|novembre|decembre|décembre)\s+(\d{4})", text)
         if match_fr:
             day = int(match_fr.group(1))
             month = MONTHS[match_fr.group(2)]
             year = int(match_fr.group(3))
             return datetime(year, month, day, tzinfo=timezone.utc)
-            
-        # 3. Format RSS Standard (17 Jan 2026)
-        match_rss = re.search(r"(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})", text, re.IGNORECASE)
-        if match_rss:
-             return parsedate_to_datetime(match_rss.group(0)).replace(tzinfo=timezone.utc)
 
+        # 2. Recherche format ISO ou RSS (Service Public / BOSS)
+        match_iso = re.search(r"(\d{4})-(\d{2})-(\d{2})", text)
+        if match_iso:
+            return datetime(int(match_iso.group(1)), int(match_iso.group(2)), int(match_iso.group(3)), tzinfo=timezone.utc)
+            
     except: pass
     return None
 
-def get_status_line(source_name, url, colors, check_mode="rss"):
+def generate_watch_line(source_name, url_check, url_click, colors, method="rss"):
     """
-    Génère la ligne HTML pour une source donnée.
-    check_mode : 'rss' (lit un flux XML) ou 'web' (tente de lire une page HTML).
-    FORCE L'AFFICHAGE même si l'analyse échoue.
+    Génère la ligne de veille.
+    method="rss" : Lit un flux XML (BOSS, Service-Public)
+    method="scraping" : Lit la page HTML directement (URSSAF)
     """
-    # Couleurs
     bg_col, border_col, txt_col = colors
-    style_base = f"padding: 10px; border-radius: 6px; border: 1px solid {border_col}; margin-bottom: 8px; font-size: 13px;"
+    found_date = None
+    found_title = "Actualité récente"
     
-    # Valeurs par défaut (si échec)
-    display_html = f"<div style='background-color:{bg_col}; color:{txt_col}; {style_base} opacity:0.9;'>ℹ️ <strong>Veille {source_name}</strong> : Accès direct aux actualités <a href='{url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>(Ouvrir le site)</a></div>"
+    # --- 1. RÉCUPÉRATION DE L'INFO ---
+    soup = get_soup_with_session(url_check)
     
-    try:
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-        
-        # Pour l'URSSAF, on ne tente même plus de parser si ça échoue trop souvent, 
-        # on affiche juste le lien si le check_mode est 'static'
-        if check_mode == "static":
-            return display_html
-
-        response = requests.get(url, headers=headers, timeout=6)
-        
-        if response.status_code == 200:
-            content = response.text
-            
-            # --- 1. RECHERCHE DE LA DATE (Sur tout le contenu brut, c'est plus fiable) ---
-            # On coupe le contenu pour ne pas lire le footer (souvent des vieilles dates copyright)
-            snippet = content[:5000] 
-            found_date = extract_date_from_text(snippet)
-            
-            # --- 2. RECHERCHE DU TITRE (Si RSS) ---
-            title = "Actualités récentes"
-            if check_mode == "rss":
-                soup = BeautifulSoup(content, 'html.parser')
-                item = soup.find('item') or soup.find('entry')
-                if item:
-                    title_tag = item.find('title')
-                    if title_tag: title = title_tag.text.strip()
-                    # Si on trouve une date spécifique dans l'item, elle est prioritaire
-                    item_date = extract_date_from_text(str(item))
-                    if item_date: found_date = item_date
-
-            # --- 3. CALCUL DU STATUT ---
-            if found_date:
-                now = datetime.now(timezone.utc)
-                days_old = (now - found_date).days
-                date_str = found_date.strftime("%d/%m")
+    if soup:
+        if method == "rss":
+            item = soup.find('item') or soup.find('entry')
+            if item:
+                title_tag = item.find('title')
+                if title_tag: found_title = title_tag.text.strip()
+                # On cherche la date dans l'item
+                found_date = extract_date_from_text(str(item))
                 
-                # ALERTE ROUGE (< 8 jours)
-                if days_old < 8:
-                    return f"<div style='background-color:#f8d7da; color:#721c24; {style_base}'>🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : <a href='{url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
-                
-                # R.A.S (Vert/Bleu/Orange)
-                else:
-                    return f"<div style='background-color:{bg_col}; color:{txt_col}; {style_base} opacity:0.9;'>✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} <a href='{url}' target='_blank' style='color:inherit; font-size:11px; margin-left:5px; text-decoration:underline;'>(Voir)</a></div>"
+        elif method == "scraping":
+            # Pour l'URSSAF, on cherche la première date visible dans le corps de la page
+            # On prend le 'main' ou 'body' pour éviter le header/footer
+            body_text = soup.get_text(" ", strip=True)[:10000] # Les 10k premiers caractères
+            found_date = extract_date_from_text(body_text)
+            found_title = "Consulter les actualités" # Titre générique pour le scraping
 
-    except Exception:
-        pass # En cas d'erreur technique, on retourne le display_html par défaut (Ligne visible avec lien)
+    # --- 2. AFFICHAGE ---
+    
+    # Si échec technique (site muet), on affiche le lien de secours
+    if not found_date:
+        return f"""
+        <div style='background-color:{bg_col}; color:{txt_col}; padding:10px; border-radius:6px; border:1px solid {border_col}; margin-bottom:8px; font-size:13px; opacity:0.8;'>
+            ℹ️ <strong>Veille {source_name}</strong> : <a href='{url_click}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>Accéder aux actualités</a>
+        </div>
+        """
 
-    return display_html
+    # Calcul ancienneté
+    now = datetime.now(timezone.utc)
+    days_old = (now - found_date).days
+    date_str = found_date.strftime("%d/%m")
+    
+    # ROUGE (Nouveau < 8 jours)
+    if days_old < 8:
+        return f"""
+        <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
+            🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : {found_title}
+            <a href='{url_click}' target='_blank' style='margin-left:5px; text-decoration:underline; font-weight:bold; color:#721c24;'>[Lire]</a>
+        </div>
+        """
+    # VERT/CALME (Ancien)
+    else:
+        return f"""
+        <div style='background-color:{bg_col}; color:{txt_col}; padding:10px; border-radius:6px; border:1px solid {border_col}; margin-bottom:8px; font-size:13px; opacity:0.9;'>
+            ✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str}
+            <a href='{url_click}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir site]</a>
+        </div>
+        """
 
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # 1. BOSS (RSS Standard - Vert)
-    html_boss = get_status_line(
+    # 1. BOSS (RSS)
+    html_boss = generate_watch_line(
         "BOSS", 
-        "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss",
+        "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss", # Check
+        "https://boss.gouv.fr/portail/accueil/actualites.html", # Click
         ("#d4edda", "#c3e6cb", "#155724"),
-        check_mode="rss"
+        method="rss"
     )
     
-    # 2. Service-Public (RSS Complexe - Bleu)
-    html_social = get_status_line(
+    # 2. SERVICE PUBLIC (RSS)
+    html_social = generate_watch_line(
         "Social & Loi", 
-        "https://rss.service-public.fr/rss/pro-social-sante.xml",
+        "https://rss.service-public.fr/rss/pro-social-sante.xml", # Check
+        "https://www.service-public.fr/professionnels-entreprises/actualites", # Click
         ("#d1ecf1", "#bee5eb", "#0c5460"),
-        check_mode="rss"
+        method="rss"
     )
     
-    # 3. URSSAF (Page Web protégée - Orange)
-    # On force l'affichage du lien direct vers la page actus. 
-    # On tente un check 'web', mais si ça échoue, la fonction renverra le lien par défaut.
-    html_urssaf = get_status_line(
+    # 3. URSSAF (SCRAPING DIRECT avec Simulation Chrome)
+    html_urssaf = generate_watch_line(
         "URSSAF", 
-        "https://www.urssaf.fr/accueil/actualites.html",
+        "https://www.urssaf.fr/accueil/actualites.html", # Check (Lecture page)
+        "https://www.urssaf.fr/accueil/actualites.html", # Click
         ("#fff3cd", "#ffeeba", "#856404"),
-        check_mode="web" 
+        method="scraping"
     )
 
     full_html = html_boss + html_social + html_urssaf
