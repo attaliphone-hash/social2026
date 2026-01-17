@@ -45,90 +45,121 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE (BOSS + SOCIAL ISO + LEGISOCIAL)
+# MODULE DE VEILLE JURIDIQUE (CORRIGÉ PAR GPT - PARSEUR XML)
 # ==============================================================================
 
 def get_smart_date(item_soup):
     """
-    Intelligence Date : Capable de lire le format Standard (BOSS/LégiSocial) 
-    ET le format ISO (Service-Public).
+    Lit les dates RSS (pubDate) + Atom (updated/published) + ISO (dc:date).
+    Version robuste validée.
     """
-    # 1. Essai Standard (Format : Fri, 17 Jan 2026...)
-    date_tag = item_soup.find('pubdate') or item_soup.find('pubDate')
-    if date_tag:
-        try:
-            dt = parsedate_to_datetime(date_tag.text.strip())
-            if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
-            return dt
-        except: pass
+    # 1) RSS standard
+    for tag_name in ("pubDate", "pubdate"):
+        t = item_soup.find(tag_name)
+        if t and t.get_text(strip=True):
+            try:
+                dt = parsedate_to_datetime(t.get_text(strip=True))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt.astimezone(timezone.utc)
+            except Exception:
+                pass
 
-    # 2. Essai ISO (Format : 2026-01-17T...) - Spécifique Service-Public
-    dc_date = item_soup.find('dc:date') or item_soup.find('date')
-    if dc_date:
-        try:
-            text = dc_date.text.strip()
-            # On prend juste la partie YYYY-MM-DD
-            clean_text = text.split('T')[0]
-            dt = datetime.strptime(clean_text, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-            return dt
-        except: pass
-        
+    # 2) Atom (Souvent utilisé par Service-Public)
+    for tag_name in ("updated", "published"):
+        t = item_soup.find(tag_name)
+        if t and t.get_text(strip=True):
+            try:
+                txt = t.get_text(strip=True)
+                clean_txt = txt.split("T")[0]  # YYYY-MM-DD
+                dt = datetime.strptime(clean_txt, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                return dt
+            except Exception:
+                pass
+
+    # 3) Dublin Core / ISO
+    for tag_name in ("dc:date", "date"):
+        t = item_soup.find(tag_name)
+        if t and t.get_text(strip=True):
+            try:
+                txt = t.get_text(strip=True)
+                clean_txt = txt.split("T")[0]
+                dt = datetime.strptime(clean_txt, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                return dt
+            except Exception:
+                pass
+
     return None
 
 def check_rss_source(source_name, rss_url, target_link, colors):
-    """
-    Analyse le flux, trouve la date (peu importe le format) et génère l'alerte.
-    """
     bg_col, border_col, txt_col = colors
-    
+
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(rss_url, headers=headers, timeout=5)
+        response = requests.get(rss_url, headers=headers, timeout=8)
+
+        if response.status_code != 200:
+            return ""
+
+        content = response.content.decode("utf-8", errors="ignore")
+
+        # ✅ XML parser (CRUCIAL : C'est la correction majeure)
+        # Nécessite que lxml soit installé, sinon mettre 'html.parser' mais on perd la fiabilité
+        try:
+            soup = BeautifulSoup(content, "xml")
+        except:
+            soup = BeautifulSoup(content, "html.parser") # Fallback si lxml absent
+
+        # RSS ou Atom (Gère les deux types de flux)
+        item = soup.find("item")
+        if not item:
+            item = soup.find("entry")
+
+        if not item:
+            return ""
+
+        # Gestion robuste du titre
+        title_tag = item.find("title")
+        title = title_tag.get_text(strip=True) if title_tag else "(Actualité détectée)"
+
+        # Récupération intelligente de la date
+        pub_date = get_smart_date(item)
         
-        if response.status_code == 200:
-            content = response.content.decode('utf-8', errors='ignore')
-            soup = BeautifulSoup(content, 'html.parser')
-            item = soup.find('item') or soup.find('entry')
-            
-            if item:
-                title = item.find('title').text.strip()
-                
-                # --- INTELLIGENCE DATE ---
-                pub_date = get_smart_date(item)
-                
-                if pub_date:
-                    now = datetime.now(timezone.utc)
-                    days_old = (now - pub_date).days
-                    date_str = pub_date.strftime("%d/%m")
-                    
-                    # CAS 1 : C'EST CHAUD (< 8 jours) -> ROUGE
-                    if days_old < 8:
-                        return f"""
-                        <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
-                            🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : 
-                            <a href='{target_link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:#721c24;'>{title}</a>
-                        </div>
-                        """
-                    
-                    # CAS 2 : C'EST FROID (> 8 jours) -> COULEUR NORMALE
-                    else:
-                        return f"""
-                        <div style='background-color:{bg_col}; color:{txt_col}; padding:10px; border-radius:6px; border:1px solid {border_col}; margin-bottom:8px; font-size:13px; opacity:0.9;'>
-                            ✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} 
-                            <a href='{target_link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a>
-                        </div>
-                        """
-    except:
-        pass
-    
-    # Si le flux plante vraiment, on ne retourne rien (pas de gris), comme demandé au début.
+        # Si pas de date, on n'affiche rien (Sécurité demandée)
+        if not pub_date:
+            return ""
+
+        now = datetime.now(timezone.utc)
+        days_old = (now - pub_date).days
+        date_str = pub_date.strftime("%d/%m")
+
+        # --- LOGIQUE D'AFFICHAGE (Rouge ou Couleur) ---
+        if days_old < 8:
+            return f"""
+            <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
+                🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> :
+                <a href='{target_link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:#721c24;'>{title}</a>
+            </div>
+            """
+        else:
+            return f"""
+            <div style='background-color:{bg_col}; color:{txt_col}; padding:10px; border-radius:6px; border:1px solid {border_col}; margin-bottom:8px; font-size:13px; opacity:0.9;'>
+                ✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str}
+                <a href='{target_link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a>
+            </div>
+            """
+
+    except Exception as e:
+        # print(f"[RSS ERROR] {source_name}: {e}") # Debug
+        return ""
+
     return ""
 
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # 1. BOSS (Standard)
+    # 1. BOSS (Vert)
     html_boss = check_rss_source(
         "BOSS",
         "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss",
@@ -136,7 +167,7 @@ def show_legal_watch_bar():
         ("#d4edda", "#c3e6cb", "#155724")
     )
     
-    # 2. SERVICE-PUBLIC (Format ISO corrigé par get_smart_date)
+    # 2. Service-Public (Bleu) - DOIT FONCTIONNER AVEC PARSER XML
     html_social = check_rss_source(
         "Social & Loi",
         "https://rss.service-public.fr/rss/pro-social-sante.xml",
@@ -144,7 +175,7 @@ def show_legal_watch_bar():
         ("#d1ecf1", "#bee5eb", "#0c5460")
     )
     
-    # 3. LEGISOCIAL (Standard - Flux Parfait)
+    # 3. LégiSocial (Orange) - Flux RSS très propre
     html_legisocial = check_rss_source(
         "Social (LégiSocial)",
         "https://www.legisocial.fr/rss/actualites-sociales.xml",
