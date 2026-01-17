@@ -45,7 +45,7 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE (ARCHITECTURE VALIDÉE & SÉCURISÉE)
+# MODULE DE VEILLE JURIDIQUE (CAMOUFLAGE ANTI-ROBOT ACTIVÉ)
 # ==============================================================================
 import requests
 from bs4 import BeautifulSoup
@@ -53,29 +53,36 @@ from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 import streamlit as st
 
-# Outil de lecture de date compatible (Standard + ISO)
+# 1. OUTIL DE GESTION DE DATE (Compatible BOSS & Service-Public)
 def parse_date_intelligent(date_str):
     try:
-        # Essai 1 : Format Standard (ex: Sat, 17 Jan 2026...)
+        # Format Standard (ex: Sat, 17 Jan 2026...)
         dt = parsedate_to_datetime(date_str)
         if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
         return dt
     except:
         try:
-            # Essai 2 : Format ISO (ex: 2026-01-17T...)
+            # Format ISO (ex: 2026-01-17T...)
             clean_str = date_str.split('T')[0]
             dt = datetime.strptime(clean_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             return dt
         except:
             return None
 
+# 2. HEADER DE CAMOUFLAGE (Crée l'illusion d'être un vrai PC Windows)
+def get_headers():
+    return {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7"
+    }
+
 # --- SOURCE 1 : BOSS (OFFICIEL) ---
 def get_boss_status_html():
     target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=6)
+        response = requests.get(url, headers=get_headers(), timeout=8) # Timeout un peu plus long
         
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
@@ -99,16 +106,16 @@ def get_boss_status_html():
     except Exception:
         pass
     
-    # SECURITÉ : Ligne Grise si échec
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- SOURCE 2 : SERVICE-PUBLIC (OFFICIEL) ---
+# --- SOURCE 2 : SERVICE-PUBLIC (Avec URL PRO & Headers Renforcés) ---
 def get_service_public_status():
-    target_url = "https://www.service-public.fr/professionnels-entreprises/actualites"
+    target_url = "https://entreprendre.service-public.fr/actualites"
     try:
-        url = "https://www.service-public.fr/rss/actualites.xml"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=6)
+        # URL OFFICIELLE MODERNE (Celle qui remplace les anciennes)
+        url = "https://www.service-public.fr/abonnements/rss/actu-actualites-professionnels.rss"
+        
+        response = requests.get(url, headers=get_headers(), timeout=8) # Camouflage activé ici
         
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
@@ -132,7 +139,6 @@ def get_service_public_status():
     except Exception:
         pass
 
-    # SECURITÉ : Ligne Grise si échec
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- SOURCE 3 : NET-ENTREPRISES (OFFICIEL) ---
@@ -140,8 +146,7 @@ def get_net_entreprises_status():
     target_url = "https://www.net-entreprises.fr/actualites/"
     try:
         url = "https://www.net-entreprises.fr/feed/"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=6)
+        response = requests.get(url, headers=get_headers(), timeout=8)
         
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
@@ -165,7 +170,6 @@ def get_net_entreprises_status():
     except Exception:
         pass
 
-    # SECURITÉ : Ligne Grise si échec
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- FONCTION PRINCIPALE ---
@@ -173,20 +177,17 @@ def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # Appels indépendants (Cloisonnement)
-    html_boss = get_boss_status_html()
-    html_sp = get_service_public_status()
-    html_net = get_net_entreprises_status()
+    c1, c2 = st.columns([0.95, 0.05])
     
-    full_html = html_boss + html_sp + html_net
-    
-    if full_html:
-        c1, c2 = st.columns([0.95, 0.05])
-        with c1: st.markdown(full_html, unsafe_allow_html=True)
-        with c2: 
-            if st.button("✖️", key="btn_close_news", help="Masquer"): 
-                st.session_state.news_closed = True
-                st.rerun()
+    with c1:
+        st.markdown(get_boss_status_html(), unsafe_allow_html=True)
+        st.markdown(get_service_public_status(), unsafe_allow_html=True)
+        st.markdown(get_net_entreprises_status(), unsafe_allow_html=True)
+        
+    with c2: 
+        if st.button("✖️", key="btn_close_news", help="Masquer"): 
+            st.session_state.news_closed = True
+            st.rerun()
 # --- POPUPS ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
