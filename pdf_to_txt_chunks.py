@@ -8,7 +8,7 @@ RAW_FILES = [
 ]
 
 OUTPUT_DIR = "data_clean"
-CHUNK_SIZE = 3000  # ~1 page dense
+CHUNK_SIZE = 1500  
 
 def process_pdfs():
     # On ne crée le dossier que s'il n'existe pas, on ne l'efface pas !
