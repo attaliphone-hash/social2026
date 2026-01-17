@@ -45,138 +45,111 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE (FINAL : BOSS + SERVICE PUBLIC + LÉGISOCIAL)
+# MODULE DE VEILLE JURIDIQUE (BOSS + SOCIAL ISO + LEGISOCIAL)
 # ==============================================================================
 
-def get_rss_data_secure(url, source_type="standard"):
+def get_smart_date(item_soup):
     """
-    Récupère Date, Titre et Lien d'un flux RSS de manière robuste.
-    source_type="iso" pour Service-Public (dates complexes), "standard" pour les autres.
+    Intelligence Date : Capable de lire le format Standard (BOSS/LégiSocial) 
+    ET le format ISO (Service-Public).
     """
+    # 1. Essai Standard (Format : Fri, 17 Jan 2026...)
+    date_tag = item_soup.find('pubdate') or item_soup.find('pubDate')
+    if date_tag:
+        try:
+            dt = parsedate_to_datetime(date_tag.text.strip())
+            if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+            return dt
+        except: pass
+
+    # 2. Essai ISO (Format : 2026-01-17T...) - Spécifique Service-Public
+    dc_date = item_soup.find('dc:date') or item_soup.find('date')
+    if dc_date:
+        try:
+            text = dc_date.text.strip()
+            # On prend juste la partie YYYY-MM-DD
+            clean_text = text.split('T')[0]
+            dt = datetime.strptime(clean_text, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            return dt
+        except: pass
+        
+    return None
+
+def check_rss_source(source_name, rss_url, target_link, colors):
+    """
+    Analyse le flux, trouve la date (peu importe le format) et génère l'alerte.
+    """
+    bg_col, border_col, txt_col = colors
+    
     try:
-        # User-Agent pour passer pour un navigateur
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        response = requests.get(url, headers=headers, timeout=6)
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(rss_url, headers=headers, timeout=5)
         
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
             soup = BeautifulSoup(content, 'html.parser')
-            
-            # On cherche le premier item (le plus récent)
             item = soup.find('item') or soup.find('entry')
             
             if item:
-                # 1. TITRE
-                title = "Actualité détectée"
-                title_tag = item.find('title')
-                if title_tag: title = title_tag.text.strip()
+                title = item.find('title').text.strip()
                 
-                # 2. LIEN (EXTRACTION PAR REGEX POUR ÉVITER LES BUGS)
-                # BeautifulSoup vide parfois la balise <link>, donc on la cherche dans le texte brut
-                item_str = str(item)
-                link = url # Fallback
-                # Regex qui cherche ce qu'il y a entre <link>...</link>
-                link_match = re.search(r"<(?:link|guid)[^>]*>(.*?)</(?:link|guid)>", item_str, re.IGNORECASE)
-                if link_match:
-                    link = link_match.group(1).strip()
-                    # Nettoyage CDATA si présent
-                    link = link.replace("<![CDATA[", "").replace("]]>", "")
+                # --- INTELLIGENCE DATE ---
+                pub_date = get_smart_date(item)
                 
-                # 3. DATE
-                pub_date = None
-                
-                # CAS A : SERVICE PUBLIC (Format ISO : 2026-01-17T...)
-                if source_type == "iso":
-                    # On cherche dc:date ou date
-                    # Regex pour capturer YYYY-MM-DD
-                    match_iso = re.search(r"(\d{4})-(\d{2})-(\d{2})", item_str)
-                    if match_iso:
-                        pub_date = datetime(int(match_iso.group(1)), int(match_iso.group(2)), int(match_iso.group(3)), tzinfo=timezone.utc)
-                
-                # CAS B : STANDARD (BOSS / LÉGISOCIAL) (Format : Fri, 17 Jan 2026...)
-                if not pub_date:
-                    date_tag = item.find('pubdate') or item.find('pubDate')
-                    if date_tag:
-                        try:
-                            pub_date = parsedate_to_datetime(date_tag.text.strip())
-                            if pub_date.tzinfo is None: pub_date = pub_date.replace(tzinfo=timezone.utc)
-                        except: pass
-
-                return pub_date, title, link
-
-    except Exception:
+                if pub_date:
+                    now = datetime.now(timezone.utc)
+                    days_old = (now - pub_date).days
+                    date_str = pub_date.strftime("%d/%m")
+                    
+                    # CAS 1 : C'EST CHAUD (< 8 jours) -> ROUGE
+                    if days_old < 8:
+                        return f"""
+                        <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
+                            🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : 
+                            <a href='{target_link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:#721c24;'>{title}</a>
+                        </div>
+                        """
+                    
+                    # CAS 2 : C'EST FROID (> 8 jours) -> COULEUR NORMALE
+                    else:
+                        return f"""
+                        <div style='background-color:{bg_col}; color:{txt_col}; padding:10px; border-radius:6px; border:1px solid {border_col}; margin-bottom:8px; font-size:13px; opacity:0.9;'>
+                            ✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} 
+                            <a href='{target_link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a>
+                        </div>
+                        """
+    except:
         pass
     
-    return None, None, None
-
-def generate_watch_line(source_name, rss_url, colors, source_type="standard"):
-    """
-    Génère la ligne HTML Rouge (Alerte) ou Couleur (RAS).
-    """
-    bg_col, border_col, txt_col = colors
-    
-    # 1. On va chercher l'info
-    found_date, found_title, found_link = get_rss_data_secure(rss_url, source_type)
-    
-    # Si échec technique (flux HS), on masque la ligne pour ne pas polluer
-    if not found_date:
-        return "" 
-
-    # 2. Calcul des jours
-    now = datetime.now(timezone.utc)
-    days_old = (now - found_date).days
-    date_str = found_date.strftime("%d/%m")
-    
-    # 3. Logique d'affichage (Le Cœur du Système)
-    
-    # ALERTE ROUGE (< 8 jours) : Il y a du nouveau !
-    if days_old < 8:
-        return f"""
-        <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
-            🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : 
-            <a href='{found_link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:#721c24;'>{found_title}</a>
-        </div>
-        """
-    
-    # CALME / RAS (> 8 jours) : Tout va bien, on affiche pour info.
-    else:
-        return f"""
-        <div style='background-color:{bg_col}; color:{txt_col}; padding:10px; border-radius:6px; border:1px solid {border_col}; margin-bottom:8px; font-size:13px; opacity:0.9;'>
-            ✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} 
-            <a href='{found_link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir l'article]</a>
-        </div>
-        """
+    # Si le flux plante vraiment, on ne retourne rien (pas de gris), comme demandé au début.
+    return ""
 
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # 1. BOSS (Flux Officiel) -> VERT
-    html_boss = generate_watch_line(
+    # 1. BOSS (Standard)
+    html_boss = check_rss_source(
         "BOSS",
         "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss",
-        ("#d4edda", "#c3e6cb", "#155724"),
-        source_type="standard"
+        "https://boss.gouv.fr/portail/accueil/actualites.html",
+        ("#d4edda", "#c3e6cb", "#155724")
     )
     
-    # 2. SERVICE-PUBLIC (Flux Officiel) -> BLEU
-    # Note : source_type="iso" est CRUCIAL ici pour lire leurs dates bizarres
-    html_social = generate_watch_line(
+    # 2. SERVICE-PUBLIC (Format ISO corrigé par get_smart_date)
+    html_social = check_rss_source(
         "Social & Loi",
         "https://rss.service-public.fr/rss/pro-social-sante.xml",
-        ("#d1ecf1", "#bee5eb", "#0c5460"),
-        source_type="iso" 
+        "https://www.service-public.fr/professionnels-entreprises/actualites",
+        ("#d1ecf1", "#bee5eb", "#0c5460")
     )
     
-    # 3. LÉGISOCIAL (Remplace URSSAF) -> ORANGE
-    # Flux très fiable qui relaie les taux, le JO et les infos URSSAF
-    html_legisocial = generate_watch_line(
+    # 3. LEGISOCIAL (Standard - Flux Parfait)
+    html_legisocial = check_rss_source(
         "Social (LégiSocial)",
         "https://www.legisocial.fr/rss/actualites-sociales.xml",
-        ("#fff3cd", "#ffeeba", "#856404"),
-        source_type="standard"
+        "https://www.legisocial.fr/actualites-sociales/",
+        ("#fff3cd", "#ffeeba", "#856404")
     )
 
     full_html = html_boss + html_social + html_legisocial
@@ -185,7 +158,7 @@ def show_legal_watch_bar():
         c1, c2 = st.columns([0.95, 0.05])
         with c1: st.markdown(full_html, unsafe_allow_html=True)
         with c2: 
-            if st.button("✖️", key="btn_close_news", help="Masquer la veille"): 
+            if st.button("✖️", key="btn_close_news", help="Masquer"): 
                 st.session_state.news_closed = True
                 st.rerun()
 # --- POPUPS ---
