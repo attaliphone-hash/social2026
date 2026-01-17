@@ -49,38 +49,36 @@ def manage_subscription_link(email):
 # ==============================================================================
 def check_single_rss_source(url, source_name, colors):
     """
-    Analyse un flux RSS et retourne une ligne HTML formatée.
-    colors = (fond_normal, bordure_normal, texte_normal)
+    Analyse un flux RSS avec le parseur 'html.parser' (Natif Python, plus robuste).
     """
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=4)
+        response = requests.get(url, headers=headers, timeout=5) # Timeout augmenté à 5s
         
         if response.status_code == 200:
-            # On tente de parser le XML
-            soup = BeautifulSoup(response.content, 'xml')
-            item = soup.find('item') # On prend le tout dernier article
+            # ✅ CORRECTION MAJEURE ICI : 'html.parser' au lieu de 'xml'
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # On cherche le premier item (tolérance aux majuscules)
+            item = soup.find('item') 
             
             if item:
                 title = item.find('title').text.strip()
-                # Nettoyage lien
-                raw_link = item.find('link').text.strip() if item.find('link') else ""
-                link = raw_link if raw_link else url
+                # Gestion lien parfois vide ou mal formaté
+                raw_link = item.find('link')
+                link = raw_link.text.strip() if raw_link else url
                 
-                date_tag = item.find('pubDate') or item.find('date') or item.find('dc:date')
+                # ✅ BLINDAGE DATE : On teste toutes les variantes possibles
+                date_tag = item.find('pubdate') or item.find('pubDate') or item.find('date') or item.find('dc:date')
                 
-                # Styles CSS
                 bg_col, border_col, txt_col = colors
                 
-                # Style "Alerte Rouge" (Actu brûlante < 8 jours)
                 style_alert = "background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 6px; border: 1px solid #f5c6cb; margin-bottom: 8px; font-size: 13px;"
-                # Style "Info Normale" (Actu > 8 jours) - aux couleurs de la source
                 style_normal = f"background-color: {bg_col}; color: {txt_col}; padding: 10px; border-radius: 6px; border: 1px solid {border_col}; margin-bottom: 8px; font-size: 13px;"
 
                 if date_tag:
                     try:
                         pub_date = parsedate_to_datetime(date_tag.text.strip())
-                        # Correction timezone si absente
                         if pub_date.tzinfo is None: pub_date = pub_date.replace(tzinfo=timezone.utc)
                         
                         now = datetime.now(timezone.utc)
@@ -89,45 +87,46 @@ def check_single_rss_source(url, source_name, colors):
                         
                         html_link = f'<a href="{link}" target="_blank" style="text-decoration:underline; font-weight:bold; color:inherit;">{title}</a>'
                         
-                        # Si très récent (< 8 jours) -> ALERTE ROUGE
                         if days_old < 8:
                             return f"<div style='{style_alert}'>🚨 <strong>NOUVEAU ({source_name} - {date_str})</strong> : {html_link}</div>"
-                        # Sinon -> Ligne de veille calme (Couleur Source)
                         else:
                             return f"<div style='{style_normal}'>✅ <strong>Veille {source_name}</strong> ({date_str}) : {html_link}</div>"
-                            
-                    except: pass
+                    except: 
+                        pass # Erreur de date uniquement
                 
-                # Fallback si pas de date lisible mais contenu présent
+                # Si on a le titre mais pas la date, on affiche quand même (Sécurité)
                 return f"<div style='{style_normal}'>ℹ️ <strong>Actu {source_name}</strong> : <a href='{link}' target='_blank' style='color:inherit; font-weight:bold;'>{title}</a></div>"
                 
-    except Exception:
-        pass # Silence total en cas d'erreur technique pour ne pas casser l'app
+    except Exception as e:
+        # Astuce de debug : décommentez la ligne suivante pour voir l'erreur dans la console
+        # print(f"Erreur RSS {source_name}: {e}")
+        pass 
     return ""
 
 def show_legal_watch_bar():
-    """Affiche les lignes de veille empilées"""
+    """Affiche les lignes de veille empilées (Version Corrigée & Hack Urssaf)"""
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # 1. BOSS (Vert)
+    # 1. BOSS (Vert) - Flux Officiel
     html_boss = check_single_rss_source(
         "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss",
         "BOSS",
         ("#d4edda", "#c3e6cb", "#155724") 
     )
     
-    # 2. Service-Public / Code du Travail (Bleu)
+    # 2. Service-Public (Bleu) - Flux Officiel "Social & Santé"
     html_social = check_single_rss_source(
         "https://rss.service-public.fr/rss/pro-social-sante.xml",
         "Social & Loi",
         ("#d1ecf1", "#bee5eb", "#0c5460") 
     )
     
-    # 3. URSSAF (Orange)
+    # 3. URSSAF (Orange) - HACK GOOGLE NEWS (Car flux officiel mort)
+    # On demande à Google : "Donne-moi en RSS tout ce qui sort sur le site urssaf.fr"
     html_urssaf = check_single_rss_source(
-        "https://www.urssaf.fr/accueil/outils-documentation/actualites.rss",
-        "URSSAF",
+        "https://news.google.com/rss/search?q=site:urssaf.fr+when:15d&hl=fr&gl=FR&ceid=FR:fr",
+        "URSSAF (via Google)",
         ("#fff3cd", "#ffeeba", "#856404") 
     )
 
