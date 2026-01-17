@@ -45,7 +45,7 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE (CAMOUFLAGE ANTI-ROBOT ACTIVÉ)
+# MODULE DE VEILLE JURIDIQUE (MULTI-URLS + CAMOUFLAGE)
 # ==============================================================================
 import requests
 from bs4 import BeautifulSoup
@@ -74,7 +74,8 @@ def get_headers():
     return {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7"
+        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": "https://www.google.com/"
     }
 
 # --- SOURCE 1 : BOSS (OFFICIEL) ---
@@ -82,7 +83,7 @@ def get_boss_status_html():
     target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
-        response = requests.get(url, headers=get_headers(), timeout=8) # Timeout un peu plus long
+        response = requests.get(url, headers=get_headers(), timeout=6)
         
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
@@ -108,37 +109,45 @@ def get_boss_status_html():
     
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- SOURCE 2 : SERVICE-PUBLIC (Avec URL PRO & Headers Renforcés) ---
+# --- SOURCE 2 : SERVICE-PUBLIC (STRATÉGIE MULTI-URLS) ---
 def get_service_public_status():
     target_url = "https://entreprendre.service-public.fr/actualites"
-    try:
-        # URL OFFICIELLE MODERNE (Celle qui remplace les anciennes)
-        url = "https://www.service-public.fr/abonnements/rss/actu-actualites-professionnels.rss"
-        
-        response = requests.get(url, headers=get_headers(), timeout=8) # Camouflage activé ici
-        
-        if response.status_code == 200:
-            content = response.content.decode('utf-8', errors='ignore')
-            soup = BeautifulSoup(content, 'html.parser')
-            item = soup.find('item') or soup.find('entry')
+    
+    # Liste des flux à tester (du plus précis au plus robuste)
+    urls_to_try = [
+        "https://www.service-public.fr/abonnements/rss/actu-actualites-professionnels.rss", # Cible n°1
+        "https://www.service-public.fr/rss/actualites.xml", # Cible n°2 (Général)
+        "https://rss.service-public.fr/rss/pro-social-sante.xml" # Cible n°3 (Vieux serveur)
+    ]
+    
+    for url in urls_to_try:
+        try:
+            response = requests.get(url, headers=get_headers(), timeout=5) # Timeout court pour enchaîner vite
             
-            if item:
-                title = item.find('title').text.strip()
-                date_tag = item.find('dc:date') or item.find('date') or item.find('pubDate')
+            if response.status_code == 200:
+                content = response.content.decode('utf-8', errors='ignore')
+                soup = BeautifulSoup(content, 'html.parser')
+                item = soup.find('item') or soup.find('entry')
                 
-                if date_tag:
-                    pub_date = parse_date_intelligent(date_tag.text.strip())
-                    if pub_date:
-                        days = (datetime.now(timezone.utc) - pub_date).days
-                        date_str = pub_date.strftime("%d/%m")
-                        
-                        if days < 8:
-                            return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU SERVICE-PUBLIC ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
-                        else:
-                            return f"<div style='background-color:#d1ecf1; color:#0c5460; padding:10px; border-radius:6px; border:1px solid #bee5eb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Service-Public (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
-    except Exception:
-        pass
+                if item:
+                    title = item.find('title').text.strip()
+                    date_tag = item.find('dc:date') or item.find('date') or item.find('pubDate')
+                    
+                    if date_tag:
+                        pub_date = parse_date_intelligent(date_tag.text.strip())
+                        if pub_date:
+                            days = (datetime.now(timezone.utc) - pub_date).days
+                            date_str = pub_date.strftime("%d/%m")
+                            
+                            # Si on a réussi, on retourne immédiatement le résultat
+                            if days < 8:
+                                return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU SERVICE-PUBLIC ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
+                            else:
+                                return f"<div style='background-color:#d1ecf1; color:#0c5460; padding:10px; border-radius:6px; border:1px solid #bee5eb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Service-Public (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
+        except Exception:
+            continue # Si ça plante, on passe à l'URL suivante
 
+    # Si AUCUNE des 3 URLs ne marche :
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- SOURCE 3 : NET-ENTREPRISES (OFFICIEL) ---
@@ -146,7 +155,7 @@ def get_net_entreprises_status():
     target_url = "https://www.net-entreprises.fr/actualites/"
     try:
         url = "https://www.net-entreprises.fr/feed/"
-        response = requests.get(url, headers=get_headers(), timeout=8)
+        response = requests.get(url, headers=get_headers(), timeout=6)
         
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
