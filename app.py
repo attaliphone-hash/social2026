@@ -45,30 +45,42 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE MULTI-SOURCES (NOUVEAU)
+# MODULE DE VEILLE JURIDIQUE (CORRIGÉ : EXTRACTION LIEN PAR REGEX)
 # ==============================================================================
 def check_single_rss_source(url, source_name, colors):
     """
-    Analyse un flux RSS avec le parseur 'html.parser' (Natif Python, plus robuste).
+    Analyse un flux RSS.
+    CORRECTIF CRITIQUE : Utilise Regex pour extraire le lien.
+    Cela empêche BeautifulSoup de vider le lien et de renvoyer vers l'appli.
     """
     try:
         headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=5) # Timeout augmenté à 5s
+        response = requests.get(url, headers=headers, timeout=6)
         
         if response.status_code == 200:
-            # ✅ CORRECTION MAJEURE ICI : 'html.parser' au lieu de 'xml'
-            soup = BeautifulSoup(response.content, 'html.parser')
+            content_str = response.content.decode('utf-8', errors='ignore')
+            soup = BeautifulSoup(content_str, 'html.parser')
             
-            # On cherche le premier item (tolérance aux majuscules)
+            # On cherche le premier item
             item = soup.find('item') 
             
             if item:
                 title = item.find('title').text.strip()
-                # Gestion lien parfois vide ou mal formaté
-                raw_link = item.find('link')
-                link = raw_link.text.strip() if raw_link else url
                 
-                # ✅ BLINDAGE DATE : On teste toutes les variantes possibles
+                # --- EXTRACTION "BRUTE" DU LIEN (ANTI-BUG) ---
+                # On convertit l'item en texte et on cherche le lien manuellement
+                item_str = str(item)
+                # Regex qui cherche ce qu'il y a entre <link> et </link> ou <guid>
+                link_match = re.search(r"<(?:link|guid)[^>]*>(.*?)</(?:link|guid)>", item_str, re.IGNORECASE)
+                
+                if link_match:
+                    link = link_match.group(1).strip()
+                    # Si le lien est encapsulé dans CDATA (fréquent), on nettoie
+                    link = link.replace("<![CDATA[", "").replace("]]>", "")
+                else:
+                    link = url # Fallback si échec total
+                
+                # --- GESTION DATE (Multi-formats) ---
                 date_tag = item.find('pubdate') or item.find('pubDate') or item.find('date') or item.find('dc:date')
                 
                 bg_col, border_col, txt_col = colors
@@ -78,8 +90,16 @@ def check_single_rss_source(url, source_name, colors):
 
                 if date_tag:
                     try:
-                        pub_date = parsedate_to_datetime(date_tag.text.strip())
-                        if pub_date.tzinfo is None: pub_date = pub_date.replace(tzinfo=timezone.utc)
+                        date_text = date_tag.text.strip()
+                        # Gestion format ISO complexe (Service-Public)
+                        if "T" in date_text and len(date_text) > 10:
+                            dt_part = date_text.split('T')[0]
+                            tm_part = date_text.split('T')[1].split('+')[0].split('Z')[0]
+                            pub_date = datetime.strptime(f"{dt_part} {tm_part}", "%Y-%m-%d %H:%M:%S")
+                            pub_date = pub_date.replace(tzinfo=timezone.utc)
+                        else:
+                            pub_date = parsedate_to_datetime(date_text)
+                            if pub_date.tzinfo is None: pub_date = pub_date.replace(tzinfo=timezone.utc)
                         
                         now = datetime.now(timezone.utc)
                         days_old = (now - pub_date).days
@@ -92,52 +112,48 @@ def check_single_rss_source(url, source_name, colors):
                         else:
                             return f"<div style='{style_normal}'>✅ <strong>Veille {source_name}</strong> ({date_str}) : {html_link}</div>"
                     except: 
-                        pass # Erreur de date uniquement
+                        pass 
                 
-                # Si on a le titre mais pas la date, on affiche quand même (Sécurité)
+                # Fallback sans date
                 return f"<div style='{style_normal}'>ℹ️ <strong>Actu {source_name}</strong> : <a href='{link}' target='_blank' style='color:inherit; font-weight:bold;'>{title}</a></div>"
                 
-    except Exception as e:
-        # Astuce de debug : décommentez la ligne suivante pour voir l'erreur dans la console
-        # print(f"Erreur RSS {source_name}: {e}")
+    except Exception:
         pass 
     return ""
 
 def show_legal_watch_bar():
-    """Affiche les lignes de veille empilées (Version Corrigée & Hack Urssaf)"""
+    """Affiche les lignes de veille empilées"""
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # 1. BOSS (Vert) - Flux Officiel
+    # 1. BOSS (Vert)
     html_boss = check_single_rss_source(
         "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss",
         "BOSS",
         ("#d4edda", "#c3e6cb", "#155724") 
     )
     
-    # 2. Service-Public (Bleu) - Flux Officiel "Social & Santé"
+    # 2. Service-Public (Bleu)
     html_social = check_single_rss_source(
         "https://rss.service-public.fr/rss/pro-social-sante.xml",
         "Social & Loi",
         ("#d1ecf1", "#bee5eb", "#0c5460") 
     )
     
-    # 3. URSSAF (Orange) - HACK GOOGLE NEWS (Car flux officiel mort)
-    # On demande à Google : "Donne-moi en RSS tout ce qui sort sur le site urssaf.fr"
+    # 3. URSSAF (Orange - Hack Google News)
     html_urssaf = check_single_rss_source(
         "https://news.google.com/rss/search?q=site:urssaf.fr+when:15d&hl=fr&gl=FR&ceid=FR:fr",
-        "URSSAF (via Google)",
+        "URSSAF",
         ("#fff3cd", "#ffeeba", "#856404") 
     )
 
-    # Empilement des résultats
     full_html = html_boss + html_social + html_urssaf
     
     if full_html:
         c1, c2 = st.columns([0.95, 0.05])
         with c1: st.markdown(full_html, unsafe_allow_html=True)
         with c2: 
-            if st.button("✖️", key="btn_close_news", help="Masquer la veille"): 
+            if st.button("✖️", key="btn_close_news", help="Masquer"): 
                 st.session_state.news_closed = True
                 st.rerun()
 
