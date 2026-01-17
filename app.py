@@ -332,7 +332,7 @@ STRUCTURE RÉPONSE HTML :
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
     <li>
-        <strong>ÉNONCÉ :</strong> Explique clairement la règle ou le mécanisme.
+        Explique clairement la règle ou le mécanisme.
         <br><em>(Source : Cite l'article précis L.XXXX ou le chapitre du BOSS ici)</em>
     </li>
 </ul>
@@ -344,7 +344,7 @@ STRUCTURE RÉPONSE HTML :
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
-    <h3 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION DÉFINITIVE</h3>
+    <h3 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h3>
     <p style="font-size: 18px;"><strong>Résultat : [VALEUR FINALE]</strong></p>
 </div>
 
