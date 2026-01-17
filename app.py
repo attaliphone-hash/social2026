@@ -45,40 +45,28 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE (MULTI-URLS + CAMOUFLAGE)
+# MODULE DE VEILLE JURIDIQUE (MODE SCRAPING HTML DIRECT)
 # ==============================================================================
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 import streamlit as st
+import re
 
-# 1. OUTIL DE GESTION DE DATE (Compatible BOSS & Service-Public)
-def parse_date_intelligent(date_str):
-    try:
-        # Format Standard (ex: Sat, 17 Jan 2026...)
-        dt = parsedate_to_datetime(date_str)
-        if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
-        return dt
-    except:
-        try:
-            # Format ISO (ex: 2026-01-17T...)
-            clean_str = date_str.split('T')[0]
-            dt = datetime.strptime(clean_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-            return dt
-        except:
-            return None
+# Dictionnaire pour traduire les dates "16 janvier 2026" en chiffres
+FRENCH_MONTHS = {
+    "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
+    "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
+}
 
-# 2. HEADER DE CAMOUFLAGE (Crée l'illusion d'être un vrai PC Windows)
 def get_headers():
     return {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Referer": "https://www.google.com/"
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
     }
 
-# --- SOURCE 1 : BOSS (OFFICIEL) ---
+# --- SOURCE 1 : BOSS (RSS Standard) ---
 def get_boss_status_html():
     target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
     try:
@@ -89,68 +77,72 @@ def get_boss_status_html():
             content = response.content.decode('utf-8', errors='ignore')
             soup = BeautifulSoup(content, 'html.parser')
             item = soup.find('item')
-            
             if item:
                 title = item.find('title').text.strip()
                 date_tag = item.find('pubdate') or item.find('pubDate')
-                
                 if date_tag:
-                    pub_date = parse_date_intelligent(date_tag.text.strip())
-                    if pub_date:
-                        days = (datetime.now(timezone.utc) - pub_date).days
-                        date_str = pub_date.strftime("%d/%m")
-                        
-                        if days < 8:
-                            return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU BOSS ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
-                        else:
-                            return f"<div style='background-color:#d4edda; color:#155724; padding:10px; border-radius:6px; border:1px solid #c3e6cb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
-    except Exception:
-        pass
-    
+                    dt = parsedate_to_datetime(date_tag.text.strip())
+                    if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+                    
+                    days = (datetime.now(timezone.utc) - dt).days
+                    date_str = dt.strftime("%d/%m")
+                    
+                    if days < 8:
+                        return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU BOSS ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
+                    else:
+                        return f"<div style='background-color:#d4edda; color:#155724; padding:10px; border-radius:6px; border:1px solid #c3e6cb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
+    except: pass
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- SOURCE 2 : SERVICE-PUBLIC (STRATÉGIE MULTI-URLS) ---
+# --- SOURCE 2 : SERVICE-PUBLIC (MODE SCRAPING HTML) ---
+# Adapté spécifiquement au code source HTML que tu m'as fourni
 def get_service_public_status():
-    target_url = "https://entreprendre.service-public.fr/actualites"
-    
-    # Liste des flux à tester (du plus précis au plus robuste)
-    urls_to_try = [
-        "https://www.service-public.fr/abonnements/rss/actu-actualites-professionnels.rss", # Cible n°1
-        "https://www.service-public.fr/rss/actualites.xml", # Cible n°2 (Général)
-        "https://rss.service-public.fr/rss/pro-social-sante.xml" # Cible n°3 (Vieux serveur)
-    ]
-    
-    for url in urls_to_try:
-        try:
-            response = requests.get(url, headers=get_headers(), timeout=5) # Timeout court pour enchaîner vite
+    target_url = "https://entreprendre.service-public.gouv.fr/actualites"
+    try:
+        response = requests.get(target_url, headers=get_headers(), timeout=8)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
             
-            if response.status_code == 200:
-                content = response.content.decode('utf-8', errors='ignore')
-                soup = BeautifulSoup(content, 'html.parser')
-                item = soup.find('item') or soup.find('entry')
+            # On cherche la première "carte" d'actualité (fr-card)
+            # D'après ton code source : <div class="fr-card ...">
+            card = soup.find('div', class_='fr-card')
+            
+            if card:
+                # 1. TITRE : dans <h4 class="fr-card__title"><a ...>
+                title_tag = card.find(class_='fr-card__title')
+                title = title_tag.text.strip() if title_tag else "Actualité Service Public"
                 
-                if item:
-                    title = item.find('title').text.strip()
-                    date_tag = item.find('dc:date') or item.find('date') or item.find('pubDate')
-                    
-                    if date_tag:
-                        pub_date = parse_date_intelligent(date_tag.text.strip())
-                        if pub_date:
-                            days = (datetime.now(timezone.utc) - pub_date).days
-                            date_str = pub_date.strftime("%d/%m")
-                            
-                            # Si on a réussi, on retourne immédiatement le résultat
-                            if days < 8:
-                                return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU SERVICE-PUBLIC ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
-                            else:
-                                return f"<div style='background-color:#d1ecf1; color:#0c5460; padding:10px; border-radius:6px; border:1px solid #bee5eb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Service-Public (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
-        except Exception:
-            continue # Si ça plante, on passe à l'URL suivante
+                # 2. DATE : dans <p class="fr-card__desc">Publié le 16 janvier 2026</p>
+                desc_tag = card.find(class_='fr-card__desc')
+                pub_date = None
+                
+                if desc_tag:
+                    text_date = desc_tag.text.lower().replace("publié le", "").strip()
+                    # On découpe "16 janvier 2026"
+                    parts = text_date.split() # ['16', 'janvier', '2026']
+                    if len(parts) >= 3:
+                        day = int(parts[0])
+                        month_str = parts[1]
+                        year = int(parts[2])
+                        if month_str in FRENCH_MONTHS:
+                            month = FRENCH_MONTHS[month_str]
+                            pub_date = datetime(year, month, day, tzinfo=timezone.utc)
 
-    # Si AUCUNE des 3 URLs ne marche :
+                if pub_date:
+                    days = (datetime.now(timezone.utc) - pub_date).days
+                    date_str = pub_date.strftime("%d/%m")
+                    
+                    if days < 8:
+                        return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU SERVICE-PUBLIC ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
+                    else:
+                        return f"<div style='background-color:#d1ecf1; color:#0c5460; padding:10px; border-radius:6px; border:1px solid #bee5eb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Service-Public (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
+    except Exception:
+        pass
+
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- SOURCE 3 : NET-ENTREPRISES (OFFICIEL) ---
+# --- SOURCE 3 : NET-ENTREPRISES (RSS WordPress Standard) ---
 def get_net_entreprises_status():
     target_url = "https://www.net-entreprises.fr/actualites/"
     try:
@@ -158,27 +150,23 @@ def get_net_entreprises_status():
         response = requests.get(url, headers=get_headers(), timeout=6)
         
         if response.status_code == 200:
-            content = response.content.decode('utf-8', errors='ignore')
-            soup = BeautifulSoup(content, 'html.parser')
+            soup = BeautifulSoup(response.content, 'html.parser')
             item = soup.find('item')
-            
             if item:
                 title = item.find('title').text.strip()
                 date_tag = item.find('pubdate') or item.find('pubDate')
-                
                 if date_tag:
-                    pub_date = parse_date_intelligent(date_tag.text.strip())
-                    if pub_date:
-                        days = (datetime.now(timezone.utc) - pub_date).days
-                        date_str = pub_date.strftime("%d/%m")
-                        
-                        if days < 8:
-                            return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU NET-ENTREPRISES ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
-                        else:
-                            return f"<div style='background-color:#fff3cd; color:#856404; padding:10px; border-radius:6px; border:1px solid #ffeeba; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Net-Entreprises (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
-    except Exception:
-        pass
-
+                    dt = parsedate_to_datetime(date_tag.text.strip())
+                    if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+                    
+                    days = (datetime.now(timezone.utc) - dt).days
+                    date_str = dt.strftime("%d/%m")
+                    
+                    if days < 8:
+                        return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU NET-ENTREPRISES ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
+                    else:
+                        return f"<div style='background-color:#fff3cd; color:#856404; padding:10px; border-radius:6px; border:1px solid #ffeeba; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Net-Entreprises (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
+    except: pass
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- FONCTION PRINCIPALE ---
@@ -187,12 +175,10 @@ def show_legal_watch_bar():
     if st.session_state.news_closed: return
 
     c1, c2 = st.columns([0.95, 0.05])
-    
     with c1:
         st.markdown(get_boss_status_html(), unsafe_allow_html=True)
         st.markdown(get_service_public_status(), unsafe_allow_html=True)
         st.markdown(get_net_entreprises_status(), unsafe_allow_html=True)
-        
     with c2: 
         if st.button("✖️", key="btn_close_news", help="Masquer"): 
             st.session_state.news_closed = True
