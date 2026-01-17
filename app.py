@@ -179,7 +179,7 @@ def show_legal_watch_bar():
 @st.dialog("Mentions Légales")
 def modal_mentions():
     st.markdown("""
-    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
+    <div style='font-size: 11px; color: #333; line-height: 1.6;'>
         <strong>ÉDITEUR :</strong><br>
         Le site <em>socialexpertfrance.fr</em> est édité par la BUSINESS AGENT AI.<br>
         Contact : sylvain.attal@businessagent-ai.com<br><br>
@@ -189,10 +189,10 @@ def modal_mentions():
     </div>
     """, unsafe_allow_html=True)
 
-@st.dialog("Politique de Confidentialité (RGPD)")
+@st.dialog("Politique de Confidentialité")
 def modal_rgpd():
     st.markdown("""
-    <div style='font-size: 13px; color: #333; line-height: 1.6;'>
+    <div style='font-size: 11px; color: #333; line-height: 1.6;'>
         <strong>PROTECTION DES DONNÉES & COOKIES :</strong><br>
         1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé.<br>
         2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire.<br>
@@ -312,7 +312,7 @@ STRUCTURE RÉPONSE HTML :
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
     <li>
-        <strong>ÉNONCÉ D'ABORD :</strong> Explique clairement la règle ou le mécanisme en premier.
+        Explique clairement la règle ou le mécanisme en premier.
         <br><em>(Source : Cite l'article ou le BOSS ici, à la fin de l'explication)</em>
     </li>
 </ul>
@@ -325,7 +325,7 @@ STRUCTURE RÉPONSE HTML :
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
-    <h3 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION DÉFINITIVE</h3>
+    <h3 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h3>
     <p><strong>Résultat : [VALEUR]</strong></p>
 </div>
 
