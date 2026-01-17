@@ -1,3 +1,6 @@
+# ============================================================
+# FICHIER : app.py (VERSION FINALE - VEILLE ACTIVE + CHAT CORRIGÉ)
+# ============================================================
 import streamlit as st
 import os
 import pypdf
@@ -47,12 +50,6 @@ def manage_subscription_link(email):
 # ==============================================================================
 # MODULE DE VEILLE JURIDIQUE (MODE SCRAPING HTML DIRECT)
 # ==============================================================================
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
-import streamlit as st
-import re
 
 # Dictionnaire pour traduire les dates "16 janvier 2026" en chiffres
 FRENCH_MONTHS = {
@@ -95,7 +92,6 @@ def get_boss_status_html():
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- SOURCE 2 : SERVICE-PUBLIC (MODE SCRAPING HTML) ---
-# Adapté spécifiquement au code source HTML que tu m'as fourni
 def get_service_public_status():
     target_url = "https://entreprendre.service-public.gouv.fr/actualites"
     try:
@@ -103,24 +99,21 @@ def get_service_public_status():
         
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
-            
             # On cherche la première "carte" d'actualité (fr-card)
-            # D'après ton code source : <div class="fr-card ...">
             card = soup.find('div', class_='fr-card')
             
             if card:
-                # 1. TITRE : dans <h4 class="fr-card__title"><a ...>
+                # 1. TITRE
                 title_tag = card.find(class_='fr-card__title')
                 title = title_tag.text.strip() if title_tag else "Actualité Service Public"
                 
-                # 2. DATE : dans <p class="fr-card__desc">Publié le 16 janvier 2026</p>
+                # 2. DATE
                 desc_tag = card.find(class_='fr-card__desc')
                 pub_date = None
                 
                 if desc_tag:
                     text_date = desc_tag.text.lower().replace("publié le", "").strip()
-                    # On découpe "16 janvier 2026"
-                    parts = text_date.split() # ['16', 'janvier', '2026']
+                    parts = text_date.split() 
                     if len(parts) >= 3:
                         day = int(parts[0])
                         month_str = parts[1]
@@ -139,7 +132,6 @@ def get_service_public_status():
                         return f"<div style='background-color:#d1ecf1; color:#0c5460; padding:10px; border-radius:6px; border:1px solid #bee5eb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Service-Public (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
     except Exception:
         pass
-
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- SOURCE 3 : NET-ENTREPRISES (RSS WordPress Standard) ---
@@ -183,6 +175,7 @@ def show_legal_watch_bar():
         if st.button("✖️", key="btn_close_news", help="Masquer"): 
             st.session_state.news_closed = True
             st.rerun()
+
 # --- POPUPS ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
@@ -333,15 +326,14 @@ with c_line[2]:
 
 st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
 
-# 3. VEILLE MULTI-SOURCES (Visible uniquement par l'ADMIN pour l'instant)
+# 3. VEILLE (Seulement pour ADMIN si tu veux garder ça, sinon enlève la condition)
 if u_email == "ADMINISTRATEUR": 
     show_legal_watch_bar()
 
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
 
-# 4. ACTIONS (GAUCHE - METHODE FANTÔME)
+# 4. ACTIONS
 col_a, col_b, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
-
 with col_a:
     st.markdown('<div class="fake-upload-btn">Charger un document</div>', unsafe_allow_html=True)
     uploaded = st.file_uploader("Upload", type=["pdf", "txt"], label_visibility="collapsed", key=f"up_{st.session_state.uploader_key}")
@@ -363,10 +355,17 @@ if uploaded:
         st.toast(f"📎 {uploaded.name}", icon="✅")
     except: st.error("Erreur fichier")
 
+# --- ✅ ZONE D'AFFICHAGE AVEC CORRECTIF HTML (IMPORTANT) ---
 if "messages" not in st.session_state: st.session_state.messages = []
 for m in st.session_state.messages:
-    with st.chat_message(m["role"], avatar=("avatar-logo.png" if m["role"]=="assistant" else None)): st.markdown(m["content"], unsafe_allow_html=True)
+    with st.chat_message(m["role"], avatar=("avatar-logo.png" if m["role"]=="assistant" else None)): 
+        # C'EST ICI QUE JE NETTOIE LE CODE POUR AFFICHER LE HTML
+        content = m["content"]
+        if "```html" in content: content = content.replace("```html", "").replace("```", "")
+        elif "```" in content: content = content.replace("```", "")
+        st.markdown(content, unsafe_allow_html=True)
 
+# --- ZONE DE CHAT ---
 if q := st.chat_input("Votre question..."):
     st.session_state.messages.append({"role": "user", "content": q})
     with st.chat_message("user"): st.markdown(q)
@@ -376,9 +375,20 @@ if q := st.chat_input("Votre question..."):
         facts = engine.format_certified_facts(engine.match_rules(clean_q))
         ctx, srcs = build_ctx(q)
         full = ""
+        # Streaming avec nettoyage à la volée
         for chunk in get_stream(q, ctx, srcs, facts, user_text):
             full += chunk
-            ph.markdown(full + "▌", unsafe_allow_html=True)
+            display = full
+            if "```html" in display: display = display.replace("```html", "").replace("```", "")
+            ph.markdown(display + "▌", unsafe_allow_html=True)
+            
         if uploaded: full += f"\n* 📄 Doc: {uploaded.name}"
-        ph.markdown(full + "<br><br>", unsafe_allow_html=True)
+        
+        # Affichage final propre
+        final_display = full
+        if "```html" in final_display: final_display = final_display.replace("```html", "").replace("```", "")
+        elif "```" in final_display: final_display = final_display.replace("```", "")
+        
+        ph.markdown(final_display + "<br><br>", unsafe_allow_html=True)
+        
     st.session_state.messages.append({"role": "assistant", "content": full})
