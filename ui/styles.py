@@ -116,9 +116,9 @@ def apply_pro_design():
             text-decoration: underline !important;
         }
 
-        .assurance-text { font-size: 10px !important; color: #024c6f !important; line-height: 1.3; margin-bottom: 5px; }
-        .assurance-title { font-weight: bold; color: #024c6f; font-size: 10px !important; }
-        .assurance-desc { font-weight: normal; color: #444; font-size: 10px !important; }
+        .assurance-text { font-size: 11px !important; color: #024c6f !important; line-height: 1.3; margin-bottom: 5px; }
+        .assurance-title { font-weight: bold; color: #024c6f; font-size: 11px !important; }
+        .assurance-desc { font-weight: normal; color: #444; font-size: 11px !important; }
         
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
         .boss-alert-box { padding: 12px !important; border-radius: 8px !important; font-size: 14px !important; }
