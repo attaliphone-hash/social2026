@@ -221,7 +221,7 @@ def check_password():
         if st.button("RGPD & Cookies", key="top_r", type="tertiary"): modal_rgpd()
 
     st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
-    st.markdown("<h2>EXPERT SOCIAL PRO - ACCÈS</h2>", unsafe_allow_html=True)
+    st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
     
     t1, t2 = st.tabs(["🔐 Abonnés", "Découverte / Admin"])
     with t1:
