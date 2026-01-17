@@ -1,15 +1,12 @@
 streamlit
 requests
 beautifulsoup4
+lxml
 python-dotenv
-
 pypdf
-
 stripe
 supabase
-
 langchain-core
 langchain-google-genai
 langchain-pinecone
-
 pinecone
