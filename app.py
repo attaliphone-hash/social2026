@@ -45,72 +45,32 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE (CORRIGÉ PAR GPT - PARSEUR XML)
+# MODULE DE VEILLE JURIDIQUE (URLS VÉRIFIÉES & CORRIGÉES)
 # ==============================================================================
-
-def get_smart_date(item_soup):
-    """
-    Lit les dates RSS (pubDate) + Atom (updated/published) + ISO (dc:date).
-    Version robuste validée.
-    """
-    # 1) RSS standard
-    for tag_name in ("pubDate", "pubdate"):
-        t = item_soup.find(tag_name)
-        if t and t.get_text(strip=True):
-            try:
-                dt = parsedate_to_datetime(t.get_text(strip=True))
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt.astimezone(timezone.utc)
-            except Exception:
-                pass
-
-    # 2) Atom (Souvent utilisé par Service-Public)
-    for tag_name in ("updated", "published"):
-        t = item_soup.find(tag_name)
-        if t and t.get_text(strip=True):
-            try:
-                txt = t.get_text(strip=True)
-                clean_txt = txt.split("T")[0]  # YYYY-MM-DD
-                dt = datetime.strptime(clean_txt, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                return dt
-            except Exception:
-                pass
-
-    # 3) Dublin Core / ISO
-    for tag_name in ("dc:date", "date"):
-        t = item_soup.find(tag_name)
-        if t and t.get_text(strip=True):
-            try:
-                txt = t.get_text(strip=True)
-                clean_txt = txt.split("T")[0]
-                dt = datetime.strptime(clean_txt, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                return dt
-            except Exception:
-                pass
-
-    return None
 
 def check_rss_source(source_name, rss_url, target_link, colors):
     bg_col, border_col, txt_col = colors
 
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(rss_url, headers=headers, timeout=8)
+        # User-Agent pour éviter le blocage (Simule un navigateur)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        response = requests.get(rss_url, headers=headers, timeout=10)
 
+        # Si l'URL est morte (404, DNS error...), on arrête tout de suite
         if response.status_code != 200:
             return ""
 
         content = response.content.decode("utf-8", errors="ignore")
 
-        # ✅ XML parser (CRUCIAL : C'est la correction majeure)
-        # Nécessite que lxml soit installé, sinon mettre 'html.parser' mais on perd la fiabilité
+        # Tentative de parsing (XML prioritaire, puis HTML en secours)
         try:
             soup = BeautifulSoup(content, "xml")
         except:
-            soup = BeautifulSoup(content, "html.parser") # Fallback si lxml absent
+            soup = BeautifulSoup(content, "html.parser")
 
-        # RSS ou Atom (Gère les deux types de flux)
+        # Recherche des items (RSS standard ou Atom)
         item = soup.find("item")
         if not item:
             item = soup.find("entry")
@@ -118,14 +78,35 @@ def check_rss_source(source_name, rss_url, target_link, colors):
         if not item:
             return ""
 
-        # Gestion robuste du titre
+        # Récupération du titre
         title_tag = item.find("title")
         title = title_tag.get_text(strip=True) if title_tag else "(Actualité détectée)"
 
-        # Récupération intelligente de la date
-        pub_date = get_smart_date(item)
+        # Récupération intelligente de la date (Fonction locale pour être autonome)
+        pub_date = None
+        # 1. RSS Standard
+        for tag in ["pubDate", "pubdate"]:
+            t = item.find(tag)
+            if t:
+                try:
+                    pub_date = parsedate_to_datetime(t.get_text(strip=True))
+                    if pub_date.tzinfo is None: pub_date = pub_date.replace(tzinfo=timezone.utc)
+                    break
+                except: pass
         
-        # Si pas de date, on n'affiche rien (Sécurité demandée)
+        # 2. Atom / ISO (Service-Public utilise souvent dc:date ou updated)
+        if not pub_date:
+            for tag in ["dc:date", "date", "updated", "published"]:
+                t = item.find(tag)
+                if t:
+                    try:
+                        # On nettoie pour garder YYYY-MM-DD
+                        txt = t.get_text(strip=True).split("T")[0]
+                        pub_date = datetime.strptime(txt, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        break
+                    except: pass
+
+        # Si toujours pas de date, on abandonne
         if not pub_date:
             return ""
 
@@ -133,7 +114,7 @@ def check_rss_source(source_name, rss_url, target_link, colors):
         days_old = (now - pub_date).days
         date_str = pub_date.strftime("%d/%m")
 
-        # --- LOGIQUE D'AFFICHAGE (Rouge ou Couleur) ---
+        # --- AFFICHAGE ---
         if days_old < 8:
             return f"""
             <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
@@ -149,17 +130,16 @@ def check_rss_source(source_name, rss_url, target_link, colors):
             </div>
             """
 
-    except Exception as e:
-        # print(f"[RSS ERROR] {source_name}: {e}") # Debug
+    except Exception:
         return ""
-
+    
     return ""
 
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # 1. BOSS (Vert)
+    # 1. BOSS (URL Officielle Vérifiée)
     html_boss = check_rss_source(
         "BOSS",
         "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss",
@@ -167,15 +147,16 @@ def show_legal_watch_bar():
         ("#d4edda", "#c3e6cb", "#155724")
     )
     
-    # 2. Service-Public (Bleu) - DOIT FONCTIONNER AVEC PARSER XML
+    # 2. SERVICE-PUBLIC (NOUVELLE URL OFFICIELLE PRO)
+    # L'ancienne 'rss.service-public.fr' est morte.
     html_social = check_rss_source(
-        "Social & Loi",
-        "https://rss.service-public.fr/rss/pro-social-sante.xml",
+        "Service-Public Pro",
+        "https://www.service-public.fr/abonnements/rss/actu-actualites-professionnels.rss",
         "https://www.service-public.fr/professionnels-entreprises/actualites",
         ("#d1ecf1", "#bee5eb", "#0c5460")
     )
     
-    # 3. LégiSocial (Orange) - Flux RSS très propre
+    # 3. LÉGISOCIAL (URL Standard)
     html_legisocial = check_rss_source(
         "Social (LégiSocial)",
         "https://www.legisocial.fr/rss/actualites-sociales.xml",
