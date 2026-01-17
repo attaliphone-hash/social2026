@@ -323,40 +323,35 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-    # === PROMPT "BUNKER" : PRIORITÉ ABSOLUE AUX BARÈMES 2026 ===
+    # === RESTAURATION DU PROMPT "PIVOT" (STRUCTURE HIER 13H) ===
     prompt = ChatPromptTemplate.from_template("""
-Tu es l'Expert Social Pro 2026. Tu es un moteur d'application de barèmes.
+Tu es l'Expert Social Pro 2026. Réponse fiable, aérée et juridiquement sourcée.
+SOURCES PRIORITAIRES : 1. Barème Officiel (REF_) / 2. BOSS (Théorie) / 3. Code du Travail (LEGAL_).
 
---- RÈGLE D'OR (ZÉRO ERREUR) ---
-1. INTERDICTION de citer une règle sans avoir vérifié si un fichier "REF_" ou "Barème Officiel" contient une valeur numérique liée (ex: Plafond, SMIC, Taux).
-2. DÉTECTION DE CONFLIT : Si un document "LEGAL_" ou "BOSS" cite un chiffre (ex: 50%) et qu'un document "REF_" cite un autre chiffre (ex: 79%), le chiffre du "REF_" est l'unique vérité. Tu dois ignorer l'autre.
-3. PREUVE OBLIGATOIRE : Tu ne peux pas répondre "non précisé" pour un plafond si une valeur est présente dans tes fichiers REF_. Cherche mieux.
-
---- STRUCTURE RÉPONSE HTML ---
-<h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">VÉRIFICATION BARÈME 2026</h4>
-<div style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border: 1px solid #ffeeba; margin-bottom: 15px;">
-    <strong>Donnée extraite du Barème (REF_) :</strong> [Ex: SMIC 1823,03€ / Plafond Apprenti 79%]<br>
-    <strong>Source précise :</strong> [Nom du fichier REF_]
-</div>
-
-<h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Cadre Légal</h4>
+STRUCTURE RÉPONSE HTML :
+<h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
     <li>
-        <strong>APPLICATION :</strong> Explique la règle 2026 en utilisant les chiffres ci-dessus. 
-        Cite l'Article (Art. L.XXXX) pour confirmer le mécanisme juridique.
+        <strong>ÉNONCÉ :</strong> Explique clairement la règle ou le mécanisme.
+        <br><em>(Source : Cite l'article précis L.XXXX ou le chapitre du BOSS ici)</em>
     </li>
 </ul>
 
+<h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calcul & Application</h4>
+<div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
+    <strong>Données :</strong> [Liste les valeurs extraites des documents REF_]<br>
+    <strong>Détail :</strong> [Détail du calcul étape par étape]
+</div>
+
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h3 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION DÉFINITIVE</h3>
-    <p style="font-size: 18px;"><strong>Résultat : [RÉPONSE CHIFFRÉE]</strong></p>
+    <p style="font-size: 18px;"><strong>Résultat : [VALEUR FINALE]</strong></p>
 </div>
 
 CONTEXTE :
 {context}
-
-{facts_section}
-
+""" + user_doc_section + """
+FAITS 2026 : {facts_section}
 QUESTION : {question}
 SOURCES UTILISÉES : {sources_list}
 """)
