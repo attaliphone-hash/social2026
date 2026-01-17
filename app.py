@@ -45,76 +45,67 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE DE VEILLE JURIDIQUE (URLS VÉRIFIÉES & CORRIGÉES)
+# MODULE DE VEILLE JURIDIQUE (100% OFFICIEL - BOSS / SERVICE-PUBLIC / NET-ENT)
 # ==============================================================================
 
-def check_rss_source(source_name, rss_url, target_link, colors):
+def check_feed(source_name, rss_url, target_link, colors):
     bg_col, border_col, txt_col = colors
 
     try:
-        # User-Agent pour éviter le blocage (Simule un navigateur)
+        # Simulation Navigateur pour passer les sécurités de l'État
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
         response = requests.get(rss_url, headers=headers, timeout=10)
 
-        # Si l'URL est morte (404, DNS error...), on arrête tout de suite
         if response.status_code != 200:
             return ""
 
         content = response.content.decode("utf-8", errors="ignore")
+        
+        # Nettoyage préventif
+        content = content.replace("\x00", "")
 
-        # Tentative de parsing (XML prioritaire, puis HTML en secours)
+        # Parsing Hybride
         try:
             soup = BeautifulSoup(content, "xml")
         except:
             soup = BeautifulSoup(content, "html.parser")
 
-        # Recherche des items (RSS standard ou Atom)
-        item = soup.find("item")
-        if not item:
-            item = soup.find("entry")
+        # Recherche Item/Entry
+        item = soup.find("item") or soup.find("entry")
+        if not item: return ""
 
-        if not item:
-            return ""
-
-        # Récupération du titre
+        # Titre
         title_tag = item.find("title")
-        title = title_tag.get_text(strip=True) if title_tag else "(Actualité détectée)"
+        title = title_tag.get_text(strip=True) if title_tag else "Actualité Officielle"
 
-        # Récupération intelligente de la date (Fonction locale pour être autonome)
+        # Date (Extraction Robuste)
         pub_date = None
-        # 1. RSS Standard
-        for tag in ["pubDate", "pubdate"]:
+        for tag in ["pubDate", "pubdate", "updated", "published", "dc:date", "date"]:
             t = item.find(tag)
             if t:
+                txt = t.get_text(strip=True)
                 try:
-                    pub_date = parsedate_to_datetime(t.get_text(strip=True))
-                    if pub_date.tzinfo is None: pub_date = pub_date.replace(tzinfo=timezone.utc)
-                    break
+                    # ISO
+                    if "T" in txt or "-" in txt:
+                        clean = txt.split("T")[0]
+                        pub_date = datetime.strptime(clean, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                    # Standard
+                    else:
+                        pub_date = parsedate_to_datetime(txt)
+                        if pub_date.tzinfo is None: pub_date = pub_date.replace(tzinfo=timezone.utc)
+                    
+                    if pub_date: break
                 except: pass
-        
-        # 2. Atom / ISO (Service-Public utilise souvent dc:date ou updated)
-        if not pub_date:
-            for tag in ["dc:date", "date", "updated", "published"]:
-                t = item.find(tag)
-                if t:
-                    try:
-                        # On nettoie pour garder YYYY-MM-DD
-                        txt = t.get_text(strip=True).split("T")[0]
-                        pub_date = datetime.strptime(txt, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                        break
-                    except: pass
 
-        # Si toujours pas de date, on abandonne
-        if not pub_date:
-            return ""
+        if not pub_date: return ""
 
+        # Affichage
         now = datetime.now(timezone.utc)
         days_old = (now - pub_date).days
         date_str = pub_date.strftime("%d/%m")
 
-        # --- AFFICHAGE ---
         if days_old < 8:
             return f"""
             <div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>
@@ -129,42 +120,40 @@ def check_rss_source(source_name, rss_url, target_link, colors):
                 <a href='{target_link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a>
             </div>
             """
-
-    except Exception:
+    except:
         return ""
-    
     return ""
 
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
 
-    # 1. BOSS (URL Officielle Vérifiée)
-    html_boss = check_rss_source(
+    # 1. BOSS (Doctrine Officielle)
+    html_boss = check_feed(
         "BOSS",
         "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss",
         "https://boss.gouv.fr/portail/accueil/actualites.html",
         ("#d4edda", "#c3e6cb", "#155724")
     )
     
-    # 2. SERVICE-PUBLIC (NOUVELLE URL OFFICIELLE PRO)
-    # L'ancienne 'rss.service-public.fr' est morte.
-    html_social = check_rss_source(
-        "Service-Public Pro",
-        "https://www.service-public.fr/abonnements/rss/actu-actualites-professionnels.rss",
-        "https://www.service-public.fr/professionnels-entreprises/actualites",
+    # 2. SERVICE-PUBLIC (Rubrique RH/Social Officielle)
+    html_social = check_feed(
+        "Service-Public (RH)",
+        "https://rss.service-public.fr/rss/pro-social-sante.xml",
+        "https://entreprendre.service-public.fr/vosdroits/N24267", # Page RH directe
         ("#d1ecf1", "#bee5eb", "#0c5460")
     )
     
-    # 3. LÉGISOCIAL (URL Standard)
-    html_legisocial = check_rss_source(
-        "Social (LégiSocial)",
-        "https://www.legisocial.fr/rss/actualites-sociales.xml",
-        "https://www.legisocial.fr/actualites-sociales/",
+    # 3. NET-ENTREPRISES (Technique/DSN Officiel) - Remplace URSSAF
+    # Flux des actualités déclaratives (Arrêts de service, normes DSN, etc.)
+    html_net = check_feed(
+        "Net-Entreprises (DSN)",
+        "https://www.net-entreprises.fr/feed/", 
+        "https://www.net-entreprises.fr/actualites/",
         ("#fff3cd", "#ffeeba", "#856404")
     )
 
-    full_html = html_boss + html_social + html_legisocial
+    full_html = html_boss + html_social + html_net
     
     if full_html:
         c1, c2 = st.columns([0.95, 0.05])
