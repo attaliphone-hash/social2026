@@ -6,7 +6,7 @@
 # 1. CHIFFRES CLÉS & PLAFONDS (SOURCES : JO / BOSS / URSSAF)
 # -------------------------------------------------------------------------
 - id: PASS_2026
-  keywords: ["pass", "pmss", "plafond", "securite sociale", "sécurité sociale", "plafond mensuel"]
+  keywords: ["pass", "pmss", "plafond", "securite sociale", "sécurité sociale", "plafond mensuel", "plafond annuel"]
   valeurs:
     annuel: 48060
     mensuel: 4005
@@ -15,7 +15,7 @@
   text: "Le Plafond Mensuel de la Sécurité Sociale (PMSS) 2026 est officiellement de 4 005 € (48 060 € par an)."
 
 - id: SMIC_2026
-  keywords: ["smic", "smic horaire", "salaire minimum", "smic mensuel", "smic brut"]
+  keywords: ["smic", "smic horaire", "salaire minimum", "smic mensuel", "smic brut", "taux horaire smic"]
   valeurs:
     horaire: 12.02
     mensuel_35h: 1823.03
@@ -23,7 +23,7 @@
   text: "Au 1er janvier 2026, le SMIC est de 12,02 € brut/heure, soit 1 823,03 € brut mensuel (35h)."
 
 - id: MG_2026
-  keywords: ["mg", "minimum garanti", "valeur du mg"]
+  keywords: ["mg", "minimum garanti", "valeur du mg", "repas mg"]
   valeurs:
     montant: 4.25
   source: "Barème URSSAF 2026"
@@ -33,83 +33,97 @@
 # 2. AVANTAGES EN NATURE & FRAIS
 # -------------------------------------------------------------------------
 - id: AVN_REPAS_2026
-  keywords: ["repas", "nourriture", "avantage en nature repas", "avantage nourriture"]
+  keywords: ["repas", "nourriture", "avantage en nature repas", "avantage nourriture", "déjeuner", "dîner"]
   valeurs:
     un_repas: 5.50
     deux_repas: 11.00
+    hcr: 4.25
   source: "Barème URSSAF 2026"
-  text: "L'avantage en nature nourriture est maintenu à 5,50 € par repas en 2026 (sauf HCR : 4,25 €)."
+  text: "L'avantage en nature nourriture est de 5,50 € par repas en 2026 (11,00 € pour deux repas). Pour le secteur HCR, la valeur est fixée à 1 MG soit 4,25 €."
 
 - id: TICKET_RESTO_2026
-  keywords: ["ticket resto", "titre restaurant", "titres-restaurant", "cheque dejeuner"]
+  keywords: ["ticket resto", "titre restaurant", "titres-restaurant", "cheque dejeuner", "part patronale ticket"]
   valeurs:
     plafond_exonération: 7.32
   source: "Mise à jour URSSAF / BOSS Janvier 2026"
-  text: "La limite d'exonération de la part patronale des titres-restaurant est de 7,32 € en 2026."
+  text: "La limite d'exonération de la part patronale des titres-restaurant est fixée à 7,32 € en 2026 (pour une participation entre 50% et 60% de la valeur faciale)."
 
 - id: FRAIS_TELETRAVAIL_2026
-  keywords: ["teletravail", "télétravail", "indemnité télétravail", "frais télétravail", "allocation télétravail"]
+  keywords: ["teletravail", "télétravail", "indemnité télétravail", "frais télétravail", "allocation télétravail", "indemnité forfaitaire"]
   valeurs:
     par_jour: 2.80
     limite_mensuelle: 61.60
   source: "Barème URSSAF 2026 (Revalorisation 1,18%)"
-  text: "L'indemnité forfaitaire de télétravail est exonérée dans la limite de 2,80 € par jour (soit 61,60 € par mois pour 1 jour/semaine) en 2026." 
+  text: "L'indemnité forfaitaire de télétravail est exonérée dans la limite de 2,80 € par jour (soit 61,60 € par mois pour une base de 1 jour de télétravail par semaine) en 2026." 
 
 - id: AVN_VEHICULE_ELEC_2026
-  keywords: ["vehicule electrique", "véhicule électrique", "abattement electrique", "voiture electrique"]
+  keywords: ["vehicule electrique", "véhicule électrique", "abattement electrique", "voiture electrique", "recharge electrique"]
   valeurs:
     plafond_abattement: 2003.00
   source: "URSSAF 2026 (Plafond indexé sur le PASS)"
-  text: "L'abattement de 50% sur l'AN véhicule électrique est plafonné à 2 003,00 € par an en 2026."
+  text: "L'abattement de 50% sur l'avantage en nature véhicule électrique (plafond de 2 003,00 €) est maintenu pour l'année 2026."
 
 # -------------------------------------------------------------------------
 # 3. STAGES, APPRENTISSAGE & SAISIES
 # -------------------------------------------------------------------------
 - id: GRATIFICATION_STAGE_2026
-  keywords: ["stage", "stagiaire", "gratification minimale", "indemnité stage"]
+  keywords: ["stage", "stagiaire", "gratification minimale", "indemnité stage", "heure stage"]
   valeurs:
     taux_horaire: 4.50
   source: "Service-Public 2026 (15% du plafond horaire SS)"
-  text: "La gratification minimale des stagiaires passe à 4,50 € par heure au 1er janvier 2026."
+  text: "La gratification minimale des stagiaires est de 4,50 € par heure au 1er janvier 2026 (soit 15% du plafond horaire de la sécurité sociale)."
 
 - id: EXONERATION_APPRENTI_2026
-  keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond", "79%"]
+  keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond", "79%", "seuil apprenti"]
   source: "Loi de Financement de la Sécurité Sociale 2026 / BOSS"
   text: "VÉRITÉ SYSTÈME 2026 : Le plafond d'exonération des cotisations salariales pour les apprentis est de 79% du SMIC. Toute mention de 50% issue d'articles anciens est obsolète et doit être ignorée au profit de ce nouveau barème."
 
 - id: SBI_2026
-  keywords: ["sbi", "solde bancaire insaisissable", "solde bancaire", "saisie salaire"]
+  keywords: ["sbi", "solde bancaire insaisissable", "solde bancaire", "saisie salaire", "compte bancaire saisi"]
   valeurs:
     montant: 645.50
   source: "Barème Saisie 2026"
-  text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 645,50 € pour 2026."
+  text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 645,50 € pour l'année 2026."
 
 # -------------------------------------------------------------------------
 # 4. FRAIS DE SANTÉ (MUTUELLE) & PRÉVOYANCE
 # -------------------------------------------------------------------------
 - id: HCR_SANTE_2026
-  keywords: ["hcr", "mutuelle hcr", "frais de sante hcr"]
+  keywords: ["hcr", "mutuelle hcr", "frais de sante hcr", "cotisation hcr"]
   valeurs:
     cotisation_base: 52.00
   source: "Avenant HCR 2026"
-  text: "La cotisation de base Mutuelle HCR est de 52,00 € au 1er janvier 2026, répartie à 50/50."
+  text: "La cotisation de base Mutuelle HCR (Frais de santé) est de 52,00 € au 1er janvier 2026, financée à 50% par l'employeur."
 
 # -------------------------------------------------------------------------
 # 5. RUPTURE DU CONTRAT & INDEMNITÉS
 # -------------------------------------------------------------------------
 - id: INDEMNITE_LICENCIEMENT_2026
-  keywords: ["licenciement", "indemnite legale", "calcul licenciement"]
+  keywords: ["licenciement", "indemnite legale", "calcul licenciement", "rupture contrat", "fin de contrat"]
   valeurs:
     taux_base: "1/4 de mois par an"
   source: "Code du Travail 2026"
-  text: "L'indemnité légale de licenciement est de 1/4 de mois par an d'ancienneté (jusqu'à 10 ans) et 1/3 au-delà."
+  text: "L'indemnité légale de licenciement est calculée sur la base de 1/4 de mois de salaire par an d'ancienneté jusqu'à 10 ans, et 1/3 de mois au-delà."
 
 # -------------------------------------------------------------------------
 # 6. LOGEMENT (AVANTAGE EN NATURE)
 # -------------------------------------------------------------------------
 - id: AVN_LOGEMENT_2026
-  keywords: ["logement", "avantage logement", "loyer", "logement de fonction"]
+  keywords: ["logement", "avantage logement", "loyer", "logement de fonction", "frais logement"]
   valeurs:
     base: "Barème selon rémunération"
   source: "URSSAF 2026"
-  text: "L'évaluation de l'avantage logement est basée sur un barème de 8 tranches indexé sur le PASS."
+  text: "L'évaluation forfaitaire de l'avantage en nature logement s'effectue selon un barème de 8 tranches indexé sur le PASS et le nombre de pièces."
+
+# -------------------------------------------------------------------------
+# 7. RÉDUCTION GÉNÉRALE & TRANSPORT (AJOUTS EXHAUSTIFS)
+# -------------------------------------------------------------------------
+- id: VERSEMENT_MOBILITE_2026
+  keywords: ["versement mobilite", "versement transport", "taxe transport", "contribution mobilite"]
+  source: "URSSAF Janvier 2026"
+  text: "Le Versement Mobilité est dû par les employeurs de 11 salariés et plus. Les taux sont mis à jour au 1er janvier et au 1er juillet par l'URSSAF selon la zone géographique."
+
+- id: REDUCTION_GENERALE_2026
+  keywords: ["reduction generale", "ex-fillon", "fillon", "bas salaires", "1.6 smic"]
+  source: "Code de la Sécurité Sociale"
+  text: "La Réduction Générale des cotisations patronales s'applique aux salaires inférieurs à 1,6 SMIC. Le coefficient de réduction dépend de l'effectif de l'entreprise (seuil de 50 salariés)."
