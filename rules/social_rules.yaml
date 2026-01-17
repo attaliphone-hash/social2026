@@ -71,6 +71,13 @@
     taux_horaire: 4.50
   source: "Service-Public 2026 (15% du plafond horaire SS)"
   text: "La gratification minimale des stagiaires passe à 4,50 € par heure au 1er janvier 2026."
+  # -------------------------------------------------------------------------
+# 3bis. APPRENTISSAGE (RÉFORME 2026)
+# -------------------------------------------------------------------------
+- id: EXONERATION_APPRENTI_2026
+  keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond", "79%"]
+  source: "Loi de Financement de la Sécurité Sociale 2026 / BOSS"
+  text: "En 2026, l'exonération des cotisations salariales pour les apprentis est plafonnée à 79% du SMIC. Toute mention de 50% issue d'articles anciens est obsolète et doit être ignorée au profit de ce nouveau barème."
 
 - id: SBI_2026
   keywords: ["sbi", "solde bancaire insaisissable", "solde bancaire", "saisie salaire"]
