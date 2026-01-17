@@ -211,7 +211,27 @@ def check_password():
     # 1. ARGUMENTS EN HAUT
     render_top_columns()
     
-    # 2. LIGNE COPYRIGHT
+    # 2. LIGNE COPYRIGHT AVEC STYLE HARMONISE
+    st.markdown("""
+        <style>
+        .footer-text {
+            font-family: 'Open Sans', sans-serif !important;
+            font-size: 11px !important; 
+            color: #7A7A7A !important;
+        }
+        div[data-testid="column"] button[kind="tertiary"] p {
+            font-size: 11px !important;
+            font-family: 'Open Sans', sans-serif !important;
+            color: #7A7A7A !important;
+        }
+        div[data-testid="column"] button[kind="tertiary"] {
+            padding: 0px !important;
+            min-height: unset !important;
+            line-height: 1 !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
     st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
     c_line = st.columns([1.2, 0.8, 0.8, 3], vertical_alignment="center")
     with c_line[0]: st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
@@ -303,30 +323,36 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-    # === MODIFICATION DU PROMPT ICI ===
+    # === PROMPT EXPERT SOCIAL PRO 2026 RESTAURÉ ===
     prompt = ChatPromptTemplate.from_template("""
-Tu es l'Expert Social Pro 2026. Réponse fiable et aérée.
-SOURCES PRIORITAIRES : 1. Barème Officiel (URSSAF). 2. BOSS (Théorie).
+Tu es l'Expert Social Pro 2026, une intelligence juridique et conventionnelle de haut niveau. 
+Ta mission est de fournir des réponses d'une précision chirurgicale en utilisant EXCLUSIVEMENT les documents fournis.
 
-STRUCTURE RÉPONSE HTML :
-<h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
+--- CONSIGNE DE CALCUL CRITIQUE ---
+1. AVANT de donner un exemple, cherche impérativement les valeurs réelles dans les sources "Barème Officiel" ou fichiers commençant par "REF_".
+2. Si le SMIC, le PASS ou un taux est présent dans le contexte, utilise-le. NE FAIS JAMAIS d'exemple fictif (ex: "si le SMIC est à 1800€") si la valeur réelle est disponible.
+3. Détaille chaque étape du calcul pour permettre une vérification humaine.
+
+--- SOURCES ET HIÉRARCHIE ---
+- PRIORITÉ 1 : Fichiers "REF_" (Tes chiffres clés certifiés).
+- PRIORITÉ 2 : Fichiers "LEGAL_" (Code du travail et Sécurité Sociale 2026).
+- PRIORITÉ 3 : BOSS et Service-Public (Doctrine).
+
+--- STRUCTURE DE RÉPONSE (HTML) ---
+<h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Cadre Légal</h4>
 <ul>
-    <li>
-        Explique clairement la règle ou le mécanisme en premier.
-        <br><em>(Source : Cite l'article ou le BOSS ici, à la fin de l'explication)</em>
-    </li>
+    <li>Explique la règle en citant précisément les articles ou le BOSS.</li>
 </ul>
 
-<h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calcul</h4>
-<div>
-    <ul>
-        <li>Détail du calcul étape par étape...</li>
-    </ul>
+<h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calculs & Application</h4>
+<div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
+    <strong>Données utilisées :</strong> [Cite les chiffres extraits des REF_]<br>
+    <strong>Détail :</strong> [Équation claire]<br>
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h3 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h3>
-    <p><strong>Résultat : [VALEUR]</strong></p>
+    <p style="font-size: 18px;"><strong>[RÉSULTAT FINAL EN GRAS]</strong></p>
 </div>
 
 CONTEXTE :
@@ -353,7 +379,7 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
 # 1. ARGUMENTS
 render_top_columns()
 
-# 2. COPYRIGHT / LIENS (EN HAUT)
+# 2. COPYRIGHT / LIENS (EN HAUT) AVEC STYLE HARMONISE
 st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
 c_line = st.columns([1.2, 0.8, 0.8, 3], vertical_alignment="center")
 with c_line[0]: st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
@@ -364,7 +390,7 @@ with c_line[2]:
 
 st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
 
-# ✅ ICI LA MODIFICATION : ON APPELLE LA NOUVELLE FONCTION DE VEILLE (ET PAS L'ANCIENNE SHOW_BOSS_ALERT)
+# ✅ ICI LA MODIFICATION : ON APPELLE LA NOUVELLE FONCTION DE VEILLE
 if st.session_state.user_email == "ADMINISTRATEUR": show_legal_watch_bar()
 
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
@@ -373,9 +399,7 @@ if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
 col_act1, col_act2, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
 
 with col_act1:
-    # 1. Le Faux Bouton (HTML Visuel)
     st.markdown('<div class="fake-upload-btn">Charger un document</div>', unsafe_allow_html=True)
-    # 2. Le Vrai Uploader (Superposé via CSS)
     uploaded_file = st.file_uploader("Upload", type=["pdf", "txt"], label_visibility="collapsed", key=f"uploader_{st.session_state.uploader_key}")
 
 with col_act2:
