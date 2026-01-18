@@ -342,7 +342,7 @@ Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique
 --- 4. STRUCTURE DE LA RÉPONSE HTML ---
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li><strong>RÈGLE :</strong> [Explication]. ([NOM_DU_CODE_TRADUIT], Article XXXX)</li>
+    <li>[Explication]. NOM_DU_CODE_TRADUIT Article XXXX)</li>
 </ul>
 
 [CONSIGNE DE TRADUCTION DES SOURCES] : 
