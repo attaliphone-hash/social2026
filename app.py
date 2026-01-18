@@ -323,24 +323,38 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-    # === RESTAURATION DU PROMPT "PIVOT" (STRUCTURE HIER 13H) ===
+   # === PROMPT EXPERT SOCIAL PRO 2026 - VERSION SÉCURISÉE ===
     prompt = ChatPromptTemplate.from_template("""
-Tu es l'Expert Social Pro 2026. Réponse fiable, aérée et juridiquement sourcée.
-SOURCES PRIORITAIRES : 1. Barème Officiel (REF_) / 2. BOSS (Théorie) / 3. Code du Travail (LEGAL_).
+Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique et chiffrée d'une précision absolue.
 
-STRUCTURE RÉPONSE HTML :
+--- 1. HIÉRARCHIE DES DONNÉES (RÈGLE D'OR) ---
+- PRIORITÉ 1 : Les "FAITS CERTIFIÉS" ci-dessous. Ils contiennent les chiffres officiels. Ils écrasent TOUTE autre donnée.
+- PRIORITÉ 2 : Les documents "REF_" et "BOSS". Ils contiennent les barèmes et règles de calcul.
+- PRIORITÉ 3 : Les documents "LEGAL_". Ils servent uniquement à citer les articles de loi.
+
+--- 2. FAITS CERTIFIÉS (VÉRITÉ SYSTÈME) ---
+{certified_facts}
+
+--- 3. CONTEXTE DOCUMENTAIRE (RAG) ---
+{context}
+{user_doc_section}
+
+--- 4. STRUCTURE DE LA RÉPONSE HTML ---
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li>
-        Explique clairement la règle ou le mécanisme.
-        <br><em>(Source : Cite l'article précis L.XXXX ou le chapitre du BOSS ici)</em>
-    </li>
+    <li><strong>RÈGLE :</strong> [Explication]. (Source : [NOM_DU_CODE_TRADUIT], Article XXXX)</li>
 </ul>
+
+[CONSIGNE DE TRADUCTION DES SOURCES] : 
+- 'LEGAL_Code_du_Travail' -> "Code du travail"
+- 'LEGAL_Code_Securite_Sociale' -> "Code de la Sécurité sociale"
+- 'BOSS_' -> "BOSS"
+- Interdiction d'afficher les préfixes 'LEGAL_', 'REF_' ou '.pdf' dans l'analyse.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calcul & Application</h4>
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
-    <strong>Données :</strong> [Liste les valeurs extraites des documents REF_]<br>
-    <strong>Détail :</strong> [Détail du calcul étape par étape]
+    <strong>Données :</strong> [Chiffres issus des FAITS CERTIFIÉS]<br>
+    <strong>Détail :</strong> [Équation étape par étape]
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
@@ -348,20 +362,23 @@ STRUCTURE RÉPONSE HTML :
     <p style="font-size: 18px;"><strong>Résultat : [VALEUR FINALE]</strong></p>
 </div>
 
-CONTEXTE :
-{context}
-""" + user_doc_section + """
-FAITS 2026 : {facts_section}
-QUESTION : {question}
-SOURCES UTILISÉES : {sources_list}
-""")
+<hr>
+<footer style="font-size: 11px; color: #666; line-height: 1.5;">
+    <strong>Sources utilisées pour cette réponse :</strong> {sources_list}<br>
+    <em>Données chiffrées issues du référentiel interne (Dernière mise à jour : Janvier 2026). Les taux sociaux sont sujets à des variations législatives en cours d'année (notamment au 1er juillet).</em><br>
+    <span style="font-style: italic; color: #d9534f;">⚠️ Attention : Cette réponse est basée sur le droit commun. Une convention collective (CCN) peut prévoir des dispositions plus favorables pour le salarié. Vérifiez toujours votre CCN.</span>
+</footer>
 
+QUESTION : {question}
+""")
     chain = prompt | llm | StrOutputParser()
     return chain.stream({
-        "context": context, 
-        "question": query, 
-        "sources_list": ", ".join(sources_list) if sources_list else "Aucune", 
-        "facts_section": facts_section
+    "context": context, 
+    "question": query, 
+    "sources_list": ", ".join(sources_list) if sources_list else "Référentiel interne", 
+    "certified_facts": facts_section, # Ce qui vient de ton moteur Rules
+    "user_doc_section": user_doc_section
+})
     })
 # --- UI PRINCIPALE ---
 user_email = st.session_state.get("user_email", "")

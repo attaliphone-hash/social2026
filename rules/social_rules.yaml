@@ -11,6 +11,7 @@
     annuel: 48060
     mensuel: 4005
     horaire: 30
+  derniere_maj: "Janvier 2026"
   source: "Arrêté du 22 décembre 2025 (JO du 23/12)"
   text: "Le Plafond Mensuel de la Sécurité Sociale (PMSS) 2026 est officiellement de 4 005 € (48 060 € par an)."
 
@@ -19,13 +20,15 @@
   valeurs:
     horaire: 12.02
     mensuel_35h: 1823.03
-  source: "Décret de revalorisation (1,18%) au 01/01/2026"
+  derniere_maj: "Janvier 2026"
+  source: "Décret 2026 (Révision possible selon inflation)"
   text: "Au 1er janvier 2026, le SMIC est de 12,02 € brut/heure, soit 1 823,03 € brut mensuel (35h)."
 
 - id: MG_2026
   keywords: ["mg", "minimum", "garanti", "valeur", "repas"]
   valeurs:
     montant: 4.25
+  derniere_maj: "Janvier 2026"
   source: "Barème URSSAF 2026"
   text: "Le Minimum Garanti (MG) est de 4,25 € au 1er janvier 2026."
 
@@ -38,6 +41,7 @@
     un_repas: 5.50
     deux_repas: 11.00
     hcr: 4.25
+  derniere_maj: "Janvier 2026"
   source: "Barème URSSAF 2026"
   text: "L'avantage en nature nourriture est de 5,50 € par repas en 2026 (11,00 € pour deux repas). Pour le secteur HCR, la valeur est fixée à 1 MG soit 4,25 €."
 
@@ -45,6 +49,7 @@
   keywords: ["ticket", "resto", "titre", "restaurant", "cheque", "déjeuner", "patronale", "exonération"]
   valeurs:
     plafond_exonération: 7.32
+  derniere_maj: "Janvier 2026"
   source: "Mise à jour URSSAF / BOSS Janvier 2026"
   text: "La limite d'exonération de la part patronale des titres-restaurant est fixée à 7,32 € en 2026 (pour une participation entre 50% et 60% de la valeur faciale)."
 
@@ -53,13 +58,15 @@
   valeurs:
     par_jour: 2.80
     limite_mensuelle: 61.60
-  source: "Barème URSSAF 2026 (Revalorisation 1,18%)"
+  derniere_maj: "Janvier 2026"
+  source: "Barème URSSAF 2026"
   text: "L'indemnité forfaitaire de télétravail est exonérée dans la limite de 2,80 € par jour (soit 61,60 € par mois pour une base de 1 jour de télétravail par semaine) en 2026." 
 
 - id: AVN_VEHICULE_ELEC_2026
   keywords: ["vehicule", "véhicule", "electrique", "électrique", "abattement", "voiture", "recharge"]
   valeurs:
     plafond_abattement: 2003.00
+  derniere_maj: "Janvier 2026"
   source: "URSSAF 2026 (Plafond indexé sur le PASS)"
   text: "L'abattement de 50% sur l'avantage en nature véhicule électrique (plafond de 2 003,00 €) est maintenu pour l'année 2026."
 
@@ -70,18 +77,21 @@
   keywords: ["stage", "stagiaire", "gratification", "minimale", "indemnité", "heure"]
   valeurs:
     taux_horaire: 4.50
+  derniere_maj: "Janvier 2026"
   source: "Service-Public 2026 (15% du plafond horaire SS)"
   text: "La gratification minimale des stagiaires est de 4,50 € par heure au 1er janvier 2026 (soit 15% du plafond horaire de la sécurité sociale)."
 
 - id: EXONERATION_APPRENTI_2026
   keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond", "79%", "seuil"]
-  source: "Loi de Financement de la Sécurité Sociale 2026 / BOSS"
-  text: "VÉRITÉ SYSTÈME 2026 : Le plafond d'exonération des cotisations salariales pour les apprentis est de 79% du SMIC. Toute mention de 50% issue d'articles anciens est obsolète et doit être ignorée au profit de ce nouveau barème."
+  derniere_maj: "Janvier 2026"
+  source: "LFSS 2026 / BOSS"
+  text: "VÉRITÉ SYSTÈME 2026 : Le plafond d'exonération des cotisations salariales pour les apprentis est de 79% du SMIC. Toute mention de 50% issue d'articles anciens est obsolète."
 
 - id: SBI_2026
   keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie", "salaire", "compte", "saisi"]
   valeurs:
     montant: 645.50
+  derniere_maj: "Janvier 2026"
   source: "Barème Saisie 2026"
   text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 645,50 € pour l'année 2026."
 
@@ -92,6 +102,7 @@
   keywords: ["hcr", "mutuelle", "sante", "santé", "frais", "cotisation"]
   valeurs:
     cotisation_base: 52.00
+  derniere_maj: "Janvier 2026"
   source: "Avenant HCR 2026"
   text: "La cotisation de base Mutuelle HCR (Frais de santé) est de 52,00 € au 1er janvier 2026, financée à 50% par l'employeur."
 
@@ -102,6 +113,7 @@
   keywords: ["licenciement", "indemnite", "indemnité", "legale", "légale", "calcul", "rupture", "contrat", "fin"]
   valeurs:
     taux_base: "1/4 de mois par an"
+  derniere_maj: "Janvier 2026"
   source: "Code du Travail 2026"
   text: "L'indemnité légale de licenciement est calculée sur la base de 1/4 de mois de salaire par an d'ancienneté jusqu'à 10 ans, et 1/3 de mois au-delà."
 
@@ -112,18 +124,21 @@
   keywords: ["logement", "avantage", "nature", "loyer", "fonction", "frais"]
   valeurs:
     base: "Barème selon rémunération"
+  derniere_maj: "Janvier 2026"
   source: "URSSAF 2026"
-  text: "L'évaluation forfaitaire de l'avantage en nature logement s'effectue selon un barème de 8 tranches indexé sur le PASS et le nombre de pièces."
+  text: "L'évaluation forfaitaire de l'avantage en nature logement s'effectue selon un barème de 8 tranches indexé sur le PASS."
 
 # -------------------------------------------------------------------------
-# 7. RÉDUCTION GÉNÉRALE & TRANSPORT (AJOUTS EXHAUSTIFS)
+# 7. RÉDUCTION GÉNÉRALE & TRANSPORT
 # -------------------------------------------------------------------------
 - id: VERSEMENT_MOBILITE_2026
   keywords: ["versement", "mobilite", "mobilité", "transport", "taxe", "contribution"]
-  source: "URSSAF Janvier 2026"
-  text: "Le Versement Mobilité est dû par les employeurs de 11 salariés et plus. Les taux sont mis à jour au 1er janvier et au 1er juillet par l'URSSAF selon la zone géographique."
+  derniere_maj: "Janvier 2026"
+  source: "URSSAF (Révision semestrielle : Janvier / Juillet)"
+  text: "Le Versement Mobilité est dû par les employeurs de 11 salariés et plus. Les taux sont mis à jour au 1er janvier et au 1er juillet."
 
 - id: REDUCTION_GENERALE_2026
   keywords: ["reduction", "réduction", "generale", "générale", "fillon", "bas", "salaires", "smic"]
-  source: "Code de la Sécurité Sociale"
-  text: "La Réduction Générale des cotisations patronales s'applique aux salaires inférieurs à 1,6 SMIC. Le coefficient de réduction dépend de l'effectif de l'entreprise (seuil de 50 salariés)."
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale 2026"
+  text: "La Réduction Générale des cotisations patronales s'applique aux salaires inférieurs à 1,6 SMIC."
