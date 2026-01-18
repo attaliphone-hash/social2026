@@ -185,17 +185,14 @@ def modal_mentions():
         Le site <em>socialexpertfrance.fr</em> est édité par <strong>Sylvain Attal EI (BUSINESS AGENT AI)</strong>.<br>
         SIREN : 948253711 | Directeur : Sylvain ATTAL<br>
         Contact : sylvain.attal@businessagent-ai.com</p>
-
-        <p><strong>2. HÉBERGEMENT</strong><br>
-        <strong>Google Cloud EMEA Limited</strong><br>
+        HÉBERGEMENT
+        Google Cloud EMEA Limited<br>
         70 Sir John Rogerson’s Quay, Dublin 2, Irlande</p>
-
-        <p><strong>3. LIMITATION DE RESPONSABILITÉ (IA)</strong><br>
+        LIMITATION DE RESPONSABILITÉ (IA)<br>
         Les réponses sont générées par une Intelligence Artificielle (Gemini 2.0 Flash Exp). 
         Ces informations sont indicatives et <strong>ne remplacent pas une consultation juridique</strong> 
         auprès d'un professionnel du droit. L'éditeur ne saurait être tenu responsable des erreurs.</p>
-
-        <p><strong>4. PROPRIÉTÉ</strong><br>
+        PROPRIÉTÉ<br>
         Code source et design : Propriété exclusive de BUSINESS AGENT AI®.</p>
     </div>
     """, unsafe_allow_html=True)
