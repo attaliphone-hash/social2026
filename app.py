@@ -194,9 +194,9 @@ def modal_rgpd():
     st.markdown("""
     <div style='font-size: 11px; color: #333; line-height: 1.6;'>
         <strong>PROTECTION DES DONNÉES & COOKIES :</strong><br>
-        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé.<br>
+        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé afin de maintenir votre session ouverte.<br>
         2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire.<br>
-        3. <strong>Données Volatiles :</strong> Traitement en RAM uniquement.
+        3. <strong>Données Volatiles :</strong> Traitement en mémoire vive uniquement. Les données ne sont pas stockées et ne servent pas à entrainer des modèles IA
     </div>
     """, unsafe_allow_html=True)
 
@@ -243,7 +243,7 @@ def check_password():
     st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
     st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
     
-    t1, t2 = st.tabs(["🔐 Abonnés", "Découverte / Admin"])
+    t1, t2 = st.tabs(["🔐 Abonnés", "Découverte"])
     with t1:
         email = st.text_input("Email", key="e")
         pwd = st.text_input("Mot de passe", type="password", key="p")
@@ -406,7 +406,7 @@ with c_line[0]: st.markdown("<span class='footer-text'>© 2026 socialexpertfranc
 with c_line[1]: 
     if st.button("Mentions Légales", key="top_mentions", type="tertiary"): modal_mentions()
 with c_line[2]: 
-    if st.button("RGPD & Cookies", key="top_rgpd", type="tertiary"): modal_rgpd()
+    if st.button("Confidentialité", key="top_rgpd", type="tertiary"): modal_rgpd()
 
 st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
 
@@ -429,7 +429,7 @@ with col_act2:
         st.rerun()
 
 # 4. TITRE
-st.markdown("<h1>EXPERT SOCIAL PRO ABONNÉS</h1>", unsafe_allow_html=True)
+st.markdown("<h1>EXPERT SOCIAL PRO ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
 
 # LOGIQUE
 user_text = None
@@ -447,7 +447,7 @@ if "messages" not in st.session_state: st.session_state.messages = []
 for m in st.session_state.messages:
     with st.chat_message(m["role"], avatar=("avatar-logo.png" if m["role"]=="assistant" else None)): st.markdown(m["content"], unsafe_allow_html=True)
 
-if q := st.chat_input("Votre question..."):
+if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pour les documents à analyser)"):
     st.session_state.messages.append({"role": "user", "content": q})
     with st.chat_message("user"): st.markdown(q)
     with st.chat_message("assistant", avatar="avatar-logo.png"):
