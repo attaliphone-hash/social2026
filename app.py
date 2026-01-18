@@ -181,10 +181,10 @@ def modal_mentions():
     st.markdown("""
     <div style='font-size: 11px; color: #333; line-height: 1.6;'>
         <strong>1. ÉDITEUR DU SITE</strong><br>
-        Le site <em>socialexpertfrance.fr</em> est édité par <strong>BUSINESS AGENT AI</strong>.<br>
+        Le site <em>socialexpertfrance.fr</em> est édité par <strong>Sylvain Attal EI (BUSINESS AGENT AI)</strong>.<br>
         NUMÉRO SIREN 948253711<br>
         Directeur de la publication : Sylvain ATTAL<br>
-        Contact : [sylvain.attal@businessagent-ai.com<br><br>
+        Contact : sylvain.attal@businessagent-ai.com<br><br>
 
         <strong>2. HÉBERGEMENT</strong><br>
         Ce site est hébergé sur l'infrastructure Cloud de :<br>
@@ -195,7 +195,7 @@ def modal_mentions():
 
         <strong>3. LIMITATION DE RESPONSABILITÉ (IA)</strong><br>
         Les réponses fournies par l'Expert Social Pro sont générées par une Intelligence Artificielle sur la base de sources officielles (Code du Travail, Code de la Sécurité Sociale,BOSS).<br>
-        Bien que nous nous efforcions d'assurer l'exactitude des données (mises à jour régulièrement), ces informations sont données à titre indicatif et <strong>ne sauraient remplacer une consultation juridique personnalisée</strong> auprès d'un avocat ou d'un expert-comptable. L'éditeur décline toute responsabilité quant à l'utilisation qui pourrait être faite des informations et analyses fournies par l'outil.<br><br>
+        Bien que nous nous efforcions d'assurer l'exactitude des données (mises à jour régulièrement), ces informations sont données à titre indicatif et <strong>ne sauraient remplacer une consultation juridique personnalisée</strong> auprès d'un avocat ou d'un expert-comptable. L'utilisateur doit, en toute circonstance, vérifier les informations obtenues qui n'engagent pas l'éditeur.<br><br>
 
         <strong>4. PROPRIÉTÉ INTELLECTUELLE</strong><br>
         L'architecture, le code source, les bases de données et le design de ce site sont la propriété exclusive de BUSINESS AGENT AI®.<br>
