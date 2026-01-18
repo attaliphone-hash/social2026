@@ -364,8 +364,8 @@ Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; line-height: 1.5;">
     <strong>Sources utilisées :</strong> {sources_list}<br>
-    <em>Données chiffrées issues du référentiel interne (Mise à jour : {date_maj}). Taux sujets à variations (notamment au 1er juillet).</em><br>
-    <span style="font-style: italic; color: #d9534f;">⚠️ Attention : Cette réponse est basée sur le droit commun. Une convention collective (CCN) peut être plus favorable. Vérifiez toujours votre CCN.</span>
+    <em>Données chiffrées issues de la mise à jour : {date_maj}.</em><br>
+    <span style="font-style: italic; color: #626267;">Attention : Cette réponse est basée sur le droit commun. Une convention collective (CCN) peut être plus favorable. Vérifiez toujours votre CCN.</span>
 </div>
 
 QUESTION : {question}
