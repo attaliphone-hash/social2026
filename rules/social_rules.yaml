@@ -145,6 +145,6 @@
     smic_annuel: 21876.36
   derniere_maj: "Janvier 2026"
   source: "Décret 2026 / Code de la Sécurité Sociale"
-  text: "Le coefficient T de la Réduction Générale (Fillon) dépend de l'effectif. Pour 2026, la valeur maximale est de 0,3194 (entreprises < 50 salariés) et de 0,3154 (entreprises ≥ 50 salariés, soumises au FNAL 0,50%)."
+  text: "RÈGLE IMPÉRATIVE 2026 : Ne recalculez pas le coefficient T. Utilisez STRICTEMENT les valeurs suivantes : Pour une entreprise < 50 salariés, T = 0,3194. Pour une entreprise ≥ 50 salariés, T = 0,3154. Appliquez ces coefficients directement."
 
 # FORCE UPDATE
