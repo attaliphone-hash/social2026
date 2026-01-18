@@ -39,6 +39,17 @@ def apply_pro_design():
             margin-bottom: 20px !important; 
             text-align: left !important;
         }
+        /* ---H2 --- */
+        h2 {
+            font-family: 'Open Sans', sans-serif!important;
+            color: #253E92 !important;
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important; 
+            margin-top: 10px !important;
+            margin-bottom: 20px !important; 
+            text-align: left !important;
+        }
 
         /* --- LE FAUX BOUTON UPLOAD (Visuel uniquement) --- */
         .fake-upload-btn {
