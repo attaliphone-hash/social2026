@@ -194,7 +194,7 @@ def modal_mentions():
         <i>(Les données sont stockées et sécurisées sur des serveurs situés dans l'Union Européenne)</i><br><br>
 
         <strong>3. LIMITATION DE RESPONSABILITÉ (IA)</strong><br>
-        Les réponses fournies par l'Expert Social Pro sont générées par une Intelligence Artificielle sur la base de sources officielles (Code du Travail, Code de la Sécurité Sociale,BOSS).<br>
+        Les réponses fournies par l'Expert Social Pro sont générées par une Intelligence Artificielle sur la base de sources officielles (Code du Travail, Code de la Sécurité Sociale, BOSS).<br>
         Bien que nous nous efforcions d'assurer l'exactitude des données (mises à jour régulièrement), ces informations sont données à titre indicatif et <strong>ne sauraient remplacer une consultation juridique personnalisée</strong> auprès d'un avocat ou d'un expert-comptable. L'utilisateur doit, en toute circonstance, vérifier les informations obtenues qui n'engagent pas l'éditeur.<br><br>
 
         <strong>4. PROPRIÉTÉ INTELLECTUELLE</strong><br>
