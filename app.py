@@ -238,7 +238,7 @@ def check_password():
     with c_line[1]: 
         if st.button("Mentions Légales", key="top_m", type="tertiary"): modal_mentions()
     with c_line[2]: 
-        if st.button("RGPD & Cookies", key="top_r", type="tertiary"): modal_rgpd()
+        if st.button("Confidentialité", key="top_r", type="tertiary"): modal_rgpd()
 
     st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
     st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
