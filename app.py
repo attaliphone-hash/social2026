@@ -372,6 +372,10 @@ Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique
 
 QUESTION : {question}
 """)
+   # 1. AJOUTE CETTE LIGNE JUSTE ICI (elle définit la variable manquante)
+    date_ref = engine.get_yaml_update_date()
+
+    # 2. ENSUITE TON BLOC DE RETOUR EXISTANT
     chain = prompt | llm | StrOutputParser()
     return chain.stream({
         "context": context, 
@@ -379,7 +383,7 @@ QUESTION : {question}
         "sources_list": ", ".join(sources_list) if sources_list else "Référentiel interne", 
         "certified_facts": facts_section,
         "user_doc_section": user_doc_section,
-        "date_maj": date_ref  # <--- AJOUT INDISPENSABLE ICI
+        "date_maj": date_ref  # Maintenant, 'date_ref' est bien défini !
     })
 # --- UI PRINCIPALE ---
 user_email = st.session_state.get("user_email", "")
