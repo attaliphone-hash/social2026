@@ -379,7 +379,6 @@ QUESTION : {question}
     "certified_facts": facts_section, # Ce qui vient de ton moteur Rules
     "user_doc_section": user_doc_section
 })
-    })
 # --- UI PRINCIPALE ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
