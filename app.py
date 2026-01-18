@@ -181,7 +181,7 @@ def modal_mentions():
     # On utilise st.html pour le contenu technique ou st.markdown avec des balises simples
     st.markdown(f"""
     <div style='font-size: 12px; color: #1e293b; font-family: sans-serif;'>
-        <p><strong>1. ÉDITEUR DU SITE</strong><br>
+        <p>ÉDITEUR DU SITE<br>
         Le site <em>socialexpertfrance.fr</em> est édité par <strong>Sylvain Attal EI (BUSINESS AGENT AI)</strong>.<br>
         SIREN : 948253711 | Directeur : Sylvain ATTAL<br>
         Contact : sylvain.attal@businessagent-ai.com</p>
@@ -203,8 +203,8 @@ def modal_rgpd():
     <div style='font-size: 13px; color: #1e293b; font-family: sans-serif;'>
         <p><strong>PROTECTION DES DONNÉES :</strong></p>
         <ul>
-            <li><strong>Cookies :</strong> Uniquement technique pour la session.</li>
-            <li><strong>Traçage :</strong> Aucun cookie publicitaire ou analytique tiers.</li>
+            <li><strong>Cookies :</strong> Uniquement technique pour maintenir votre session.</li>
+            <li><strong>Traçage :</strong> Aucun cookie publicitaire ou analytique tiers n'est déposé.</li>
             <li><strong>Données :</strong> Vos saisies sont traitées en mémoire vive et ne sont pas stockées ni utilisées pour l'entraînement de l'IA.</li>
         </ul>
     </div>
