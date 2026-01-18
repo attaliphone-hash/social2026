@@ -1,81 +1,148 @@
-import os
-import zipfile
-import shutil
-import datetime
+# ==============================================================================
+# RÈGLES MÉTIER PAIE & SOCIAL 2026 - OFFICIEL JANVIER 2026
+# ==============================================================================
 
-# --- CONFIGURATION ---
-IGNORE_FOLDERS = {'venv', '__pycache__', '.git', '.idea', '.vscode', '.DS_Store', 'chroma_db', 'data_clean'}
-EXTENSIONS_TEXTE = {'.py', '.txt', '.md', '.css', '.toml', '.yaml', '.json'}
+# -------------------------------------------------------------------------
+# 1. CHIFFRES CLÉS & PLAFONDS (SOURCES : JO / BOSS / URSSAF)
+# -------------------------------------------------------------------------
+- id: PASS_2026
+  keywords: ["pass", "pmss", "plafond", "securite", "sécurité", "sociale", "mensuel", "annuel"]
+  valeurs:
+    annuel: 48060
+    mensuel: 4005
+    horaire: 30
+  derniere_maj: "Janvier 2026"
+  source: "Arrêté du 22 décembre 2025 (JO du 23/12)"
+  text: "Le Plafond Mensuel de la Sécurité Sociale (PMSS) 2026 est officiellement de 4 005 € (48 060 € par an)."
 
-def get_desktop_path():
-    return os.path.join(os.path.expanduser("~"), "Desktop")
+- id: SMIC_2026
+  keywords: ["smic", "horaire", "salaire", "minimum", "mensuel", "brut", "taux"]
+  valeurs:
+    horaire: 12.02
+    mensuel_35h: 1823.03
+  derniere_maj: "Janvier 2026"
+  source: "Décret 2026 (Révision possible selon inflation)"
+  text: "Au 1er janvier 2026, le SMIC est de 12,02 € brut/heure, soit 1 823,03 € brut mensuel (35h)."
 
-def create_backup():
-    desktop = get_desktop_path()
-    
-    # 1. Nom du dossier sur le bureau
-    backup_dir = os.path.join(desktop, "LATEST_BACKUP_SOCIAL_EXPERT")
-    
-    # NETTOYAGE : Si le dossier existe déjà, on le supprime pour repartir à neuf
-    if os.path.exists(backup_dir):
-        try:
-            shutil.rmtree(backup_dir)
-        except Exception as e:
-            print(f"⚠️ Impossible de supprimer l'ancien dossier (il est peut-être ouvert) : {e}")
-            return
-    
-    os.makedirs(backup_dir, exist_ok=True)
-    
-    # Noms des fichiers à l'intérieur
-    zip_filename = os.path.join(backup_dir, "social_expert_source.zip")
-    txt_filename = os.path.join(backup_dir, "CONTEXTE_IA_SOCIAL_EXPERT.txt")
-    
-    print(f"🚀 Création du backup Social Expert sur le Bureau...")
+- id: MG_2026
+  keywords: ["mg", "minimum", "garanti", "valeur", "repas"]
+  valeurs:
+    montant: 4.25
+  derniere_maj: "Janvier 2026"
+  source: "Barème URSSAF 2026"
+  text: "Le Minimum Garanti (MG) est de 4,25 € au 1er janvier 2026."
 
-    project_root = os.getcwd()
-    files_to_process = []
+# -------------------------------------------------------------------------
+# 2. AVANTAGES EN NATURE & FRAIS
+# -------------------------------------------------------------------------
+- id: AVN_REPAS_2026
+  keywords: ["repas", "nourriture", "avantage", "nature", "déjeuner", "dîner", "hcr"]
+  valeurs:
+    un_repas: 5.50
+    deux_repas: 11.00
+    hcr: 4.25
+  derniere_maj: "Janvier 2026"
+  source: "Barème URSSAF 2026"
+  text: "L'avantage en nature nourriture est de 5,50 € par repas en 2026 (11,00 € pour deux repas). Pour le secteur HCR, la valeur est fixée à 1 MG soit 4,25 €."
 
-    # Parcours des fichiers
-    for root, dirs, files in os.walk(project_root):
-        # Filtrage des dossiers ignorés
-        dirs[:] = [d for d in dirs if d not in IGNORE_FOLDERS]
-        
-        for file in files:
-            # On ne se backup pas soi-même et on ignore les fichiers cachés
-            if file == "backup_project.py" or file.startswith("."):
-                continue
-                
-            file_path = os.path.join(root, file)
-            rel_path = os.path.relpath(file_path, project_root)
-            files_to_process.append((file_path, rel_path))
+- id: TICKET_RESTO_2026
+  keywords: ["ticket", "resto", "titre", "restaurant", "cheque", "déjeuner", "patronale", "exonération"]
+  valeurs:
+    plafond_exonération: 7.32
+  derniere_maj: "Janvier 2026"
+  source: "Mise à jour URSSAF / BOSS Janvier 2026"
+  text: "La limite d'exonération de la part patronale des titres-restaurant est fixée à 7,32 € en 2026 (pour une participation entre 50% et 60% de la valeur faciale)."
 
-    # 2. Création du ZIP (Pour archivage/déploiement)
-    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for file_path, rel_path in files_to_process:
-            zipf.write(file_path, rel_path)
-    print("📦 Archive ZIP créée.")
+- id: FRAIS_TELETRAVAIL_2026
+  keywords: ["teletravail", "télétravail", "indemnité", "frais", "allocation", "forfaitaire", "domicile", "jour"]
+  valeurs:
+    par_jour: 2.80
+    limite_mensuelle_1j_semaine: 11.20
+  derniere_maj: "Janvier 2026"
+  source: "Barème URSSAF 2026"
+  text: "L'indemnité de télétravail est exonérée à hauteur de 2,80 € par jour télétravaillé. La limite mensuelle s'apprécie en fonction du nombre de jours réels (ex: ~11,20 €/mois pour 1 jour/semaine)."
 
-    # 3. Création du fichier TEXTE (Pour l'IA)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d à %Hh%M")
-    with open(txt_filename, 'w', encoding='utf-8') as outfile:
-        outfile.write(f"# DERNIÈRE VERSION STABLE - SOCIAL EXPERT ({timestamp})\n")
-        outfile.write("# Ce fichier contient tout le code source pour l'IA.\n\n")
-        
-        for file_path, rel_path in files_to_process:
-            _, ext = os.path.splitext(file_path)
-            if ext.lower() in EXTENSIONS_TEXTE:
-                outfile.write("="*60 + "\n")
-                outfile.write(f"FICHIER : {rel_path}\n")
-                outfile.write("="*60 + "\n")
-                try:
-                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
-                        outfile.write(infile.read())
-                    outfile.write("\n\n")
-                except Exception as e:
-                    outfile.write(f"[Erreur de lecture : {e}]\n\n")
-    print("🧠 Fichier de contexte IA créé.")
+- id: AVN_VEHICULE_ELEC_2026
+  keywords: ["vehicule", "véhicule", "electrique", "électrique", "abattement", "voiture", "recharge"]
+  valeurs:
+    plafond_abattement: 2003.00
+  derniere_maj: "Janvier 2026"
+  source: "URSSAF 2026 (Plafond indexé sur le PASS)"
+  text: "L'abattement de 50% sur l'avantage en nature véhicule électrique (plafond de 2 003,00 €) est maintenu pour l'année 2026."
 
-    print(f"✅ TERMINÉ ! Le dossier 'LATEST_BACKUP_SOCIAL_EXPERT' est prêt sur ton Bureau.")
+# -------------------------------------------------------------------------
+# 3. STAGES, APPRENTISSAGE & SAISIES
+# -------------------------------------------------------------------------
+- id: GRATIFICATION_STAGE_2026
+  keywords: ["stage", "stagiaire", "gratification", "minimale", "indemnité", "heure"]
+  valeurs:
+    taux_horaire: 4.50
+  derniere_maj: "Janvier 2026"
+  source: "Service-Public 2026 (15% du plafond horaire SS)"
+  text: "La gratification minimale des stagiaires est de 4,50 € par heure au 1er janvier 2026 (soit 15% du plafond horaire de la sécurité sociale)."
 
-if __name__ == "__main__":
-    create_backup()
+- id: EXONERATION_APPRENTI_2026
+  keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond", "79%", "seuil"]
+  derniere_maj: "Janvier 2026"
+  source: "LFSS 2026 / BOSS"
+  text: "VÉRITÉ SYSTÈME 2026 : Le plafond d'exonération des cotisations salariales pour les apprentis est de 79% du SMIC. Toute mention de 50% issue d'articles anciens est obsolète."
+
+- id: SBI_2026
+  keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie", "salaire", "compte", "saisi"]
+  valeurs:
+    montant: 645.50
+  derniere_maj: "Janvier 2026"
+  source: "Barème Saisie 2026"
+  text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 645,50 € pour l'année 2026."
+
+# -------------------------------------------------------------------------
+# 4. FRAIS DE SANTÉ (MUTUELLE) & PRÉVOYANCE
+# -------------------------------------------------------------------------
+- id: HCR_SANTE_2026
+  keywords: ["hcr", "mutuelle", "sante", "santé", "frais", "cotisation"]
+  valeurs:
+    cotisation_base: 52.00
+  derniere_maj: "Janvier 2026"
+  source: "Avenant HCR 2026"
+  text: "La cotisation de base Mutuelle HCR (Frais de santé) est de 52,00 € au 1er janvier 2026, financée à 50% par l'employeur."
+
+# -------------------------------------------------------------------------
+# 5. RUPTURE DU CONTRAT & INDEMNITÉS
+# -------------------------------------------------------------------------
+- id: INDEMNITE_LICENCIEMENT_2026
+  keywords: ["licenciement", "indemnite", "indemnité", "legale", "légale", "calcul", "rupture", "contrat", "fin"]
+  valeurs:
+    taux_base: "1/4 de mois par an"
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail 2026"
+  text: "L'indemnité légale de licenciement est calculée sur la base de 1/4 de mois de salaire par an d'ancienneté jusqu'à 10 ans, et 1/3 de mois au-delà."
+
+# -------------------------------------------------------------------------
+# 6. LOGEMENT (AVANTAGE EN NATURE)
+# -------------------------------------------------------------------------
+- id: AVN_LOGEMENT_2026
+  keywords: ["logement", "avantage", "nature", "loyer", "fonction", "frais"]
+  valeurs:
+    base: "Barème selon rémunération"
+  derniere_maj: "Janvier 2026"
+  source: "URSSAF 2026"
+  text: "L'évaluation forfaitaire de l'avantage en nature logement s'effectue selon un barème de 8 tranches indexé sur le PASS."
+
+# -------------------------------------------------------------------------
+# 7. RÉDUCTION GÉNÉRALE & TRANSPORT
+# -------------------------------------------------------------------------
+- id: VERSEMENT_MOBILITE_2026
+  keywords: ["versement", "mobilite", "mobilité", "transport", "taxe", "contribution"]
+  derniere_maj: "Janvier 2026"
+  source: "URSSAF (Révision semestrielle : Janvier / Juillet)"
+  text: "Le Versement Mobilité est dû par les employeurs de 11 salariés et plus. Les taux sont mis à jour au 1er janvier et au 1er juillet."
+
+- id: REDUCTION_GENERALE_2026
+  keywords: ["reduction", "réduction", "generale", "générale", "fillon", "bas", "salaires", "smic", "coefficient", "t"]
+  valeurs:
+    T_moins_50: 0.3194
+    T_plus_50: 0.3154
+    smic_annuel: 21876.36
+  derniere_maj: "Janvier 2026"
+  source: "Décret 2026 / Code de la Sécurité Sociale"
+  text: "Le coefficient T de la Réduction Générale (Fillon) dépend de l'effectif. Pour 2026, la valeur maximale est de 0,3194 (entreprises < 50 salariés) et de 0,3154 (entreprises ≥ 50 salariés, soumises au FNAL 0,50%)."
