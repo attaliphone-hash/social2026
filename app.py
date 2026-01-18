@@ -323,12 +323,12 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-   # === PROMPT EXPERT SOCIAL PRO 2026 - VERSION SÉCURISÉE ===
+   # === PROMPT EXPERT SOCIAL PRO 2026 - VERSION AFFICHAGE FORCÉ ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique et chiffrée d'une précision absolue.
 
 --- 1. HIÉRARCHIE DES DONNÉES (RÈGLE D'OR) ---
-- PRIORITÉ 1 : Les "FAITS CERTIFIÉS" ci-dessous. Ils contiennent les chiffres officiels. Ils écrasent TOUTE autre donnée.
+- PRIORITÉ 1 : Les "FAITS CERTIFIÉS" (YAML). Ils écrasent TOUTE autre donnée.
 - PRIORITÉ 2 : Les documents "REF_" et "BOSS".
 - PRIORITÉ 3 : Les documents "LEGAL_".
 
@@ -342,7 +342,7 @@ Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique
 --- 4. STRUCTURE DE LA RÉPONSE HTML ---
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li>[Explication]. NOM_DU_CODE_TRADUIT Article XXXX)</li>
+    <li> [Explication]. (NOM_DU_CODE_TRADUIT Article XXXX)</li>
 </ul>
 
 [CONSIGNE DE TRADUCTION DES SOURCES] : 
@@ -362,13 +362,11 @@ Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique
     <p style="font-size: 18px;"><strong>Résultat : [VALEUR FINALE]</strong></p>
 </div>
 
-[INSTRUCTION CRITIQUE : GÉNÈRE SYSTÉMATIQUEMENT LE BLOC SUIVANT APRÈS LA CONCLUSION]
-<hr>
-<footer style="font-size: 11px; color: #666; line-height: 1.5;">
-    <strong>Sources utilisées pour cette réponse :</strong> {sources_list}<br>
-    <em>Données chiffrées issues du référentiel interne (Dernière mise à jour : {date_maj}). Les taux sociaux sont sujets à des variations législatives en cours d'année (notamment au 1er juillet).</em><br>
-    <span style="font-style: italic; color: #d9534f;">⚠️ Attention : Cette réponse est basée sur le droit commun. Une convention collective (CCN) peut prévoir des dispositions plus favorables. Vérifiez toujours votre CCN.</span>
-</footer>
+<div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; line-height: 1.5;">
+    <strong>Sources utilisées :</strong> {sources_list}<br>
+    <em>Données chiffrées issues du référentiel interne (Mise à jour : {date_maj}). Taux sujets à variations (notamment au 1er juillet).</em><br>
+    <span style="font-style: italic; color: #d9534f;">⚠️ Attention : Cette réponse est basée sur le droit commun. Une convention collective (CCN) peut être plus favorable. Vérifiez toujours votre CCN.</span>
+</div>
 
 QUESTION : {question}
 """)
