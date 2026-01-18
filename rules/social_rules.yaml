@@ -54,13 +54,13 @@
   text: "La limite d'exonération de la part patronale des titres-restaurant est fixée à 7,32 € en 2026 (pour une participation entre 50% et 60% de la valeur faciale)."
 
 - id: FRAIS_TELETRAVAIL_2026
-  keywords: ["teletravail", "télétravail", "indemnité", "frais", "allocation", "forfaitaire", "domicile"]
+  keywords: ["teletravail", "télétravail", "indemnité", "frais", "allocation", "forfaitaire", "domicile", "jour"]
   valeurs:
     par_jour: 2.80
-    limite_mensuelle: 61.60
+    limite_mensuelle_1j_semaine: 11.20
   derniere_maj: "Janvier 2026"
   source: "Barème URSSAF 2026"
-  text: "L'indemnité forfaitaire de télétravail est exonérée dans la limite de 2,80 € par jour (soit 61,60 € par mois pour une base de 1 jour de télétravail par semaine) en 2026." 
+  text: "L'indemnité de télétravail est exonérée à hauteur de 2,80 € par jour télétravaillé. La limite mensuelle s'apprécie en fonction du nombre de jours réels (ex: ~11,20 €/mois pour 1 jour/semaine)."
 
 - id: AVN_VEHICULE_ELEC_2026
   keywords: ["vehicule", "véhicule", "electrique", "électrique", "abattement", "voiture", "recharge"]
@@ -138,7 +138,13 @@
   text: "Le Versement Mobilité est dû par les employeurs de 11 salariés et plus. Les taux sont mis à jour au 1er janvier et au 1er juillet."
 
 - id: REDUCTION_GENERALE_2026
-  keywords: ["reduction", "réduction", "generale", "générale", "fillon", "bas", "salaires", "smic"]
+  keywords: ["reduction", "réduction", "generale", "générale", "fillon", "bas", "salaires", "smic", "coefficient", "t"]
+  valeurs:
+    T_moins_50: 0.3194
+    T_plus_50: 0.3154
+    smic_annuel: 21876.36
   derniere_maj: "Janvier 2026"
-  source: "Code de la Sécurité Sociale 2026"
-  text: "La Réduction Générale des cotisations patronales s'applique aux salaires inférieurs à 1,6 SMIC."
+  source: "Décret 2026 / Code de la Sécurité Sociale"
+  text: "Le coefficient T de la Réduction Générale (Fillon) dépend de l'effectif. Pour 2026, la valeur maximale est de 0,3194 (entreprises < 50 salariés) et de 0,3154 (entreprises ≥ 50 salariés, soumises au FNAL 0,50%)."
+
+# FORCE UPDATE
