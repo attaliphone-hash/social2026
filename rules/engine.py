@@ -87,3 +87,13 @@ class SocialRuleEngine:
                 lines.append(f"- {text} (Source : {src})")
 
         return "\n".join(lines).strip()
+
+    # --- AJOUT UNIQUE POUR LA GESTION DU FOOTER ---
+    def get_yaml_update_date(self):
+        """Récupère la date de dernière mise à jour définie dans le YAML."""
+        if not self.rules:
+            return "Janvier 2026"
+        for r in self.rules:
+            if r.get("derniere_maj"):
+                return r.get("derniere_maj")
+        return "Janvier 2026"
