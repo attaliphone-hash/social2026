@@ -178,42 +178,40 @@ def show_legal_watch_bar():
 # --- POPUPS ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
-    st.markdown("""
-    <div style='font-size: 11px; color: #333; line-height: 1.6;'>
-        <strong>1. ÉDITEUR DU SITE</strong><br>
+    # On utilise st.html pour le contenu technique ou st.markdown avec des balises simples
+    st.markdown(f"""
+    <div style='font-size: 12px; color: #1e293b; font-family: sans-serif;'>
+        <p><strong>1. ÉDITEUR DU SITE</strong><br>
         Le site <em>socialexpertfrance.fr</em> est édité par <strong>Sylvain Attal EI (BUSINESS AGENT AI)</strong>.<br>
-        NUMÉRO SIREN 948253711<br>
-        Directeur de la publication : Sylvain ATTAL<br>
-        Contact : sylvain.attal@businessagent-ai.com<br><br>
+        SIREN : 948253711 | Directeur : Sylvain ATTAL<br>
+        Contact : sylvain.attal@businessagent-ai.com</p>
 
-        <strong>2. HÉBERGEMENT</strong><br>
-        Ce site est hébergé sur l'infrastructure Cloud de :<br>
+        <p><strong>2. HÉBERGEMENT</strong><br>
         <strong>Google Cloud EMEA Limited</strong><br>
-        70 Sir John Rogerson’s Quay, Dublin 2, Irlande<br>
-        Site web : <a href="https://cloud.google.com" target="_blank">cloud.google.com</a><br>
-        <i>(Les données sont stockées et sécurisées sur des serveurs situés dans l'Union Européenne)</i><br><br>
+        70 Sir John Rogerson’s Quay, Dublin 2, Irlande</p>
 
-        <strong>3. LIMITATION DE RESPONSABILITÉ (IA)</strong><br>
-        Les réponses fournies par l'Expert Social Pro sont générées par une Intelligence Artificielle sur la base de sources officielles (Code du Travail, Code de la Sécurité Sociale, BOSS).<br>
-        Bien que nous nous efforcions d'assurer l'exactitude des données (mises à jour régulièrement), ces informations sont données à titre indicatif et <strong>ne sauraient remplacer une consultation juridique personnalisée</strong> auprès d'un avocat ou d'un expert-comptable. L'utilisateur doit, en toute circonstance, vérifier les informations obtenues qui n'engagent pas l'éditeur.<br><br>
+        <p><strong>3. LIMITATION DE RESPONSABILITÉ (IA)</strong><br>
+        Les réponses sont générées par une Intelligence Artificielle (Gemini 2.0 Flash Exp). 
+        Ces informations sont indicatives et <strong>ne remplacent pas une consultation juridique</strong> 
+        auprès d'un professionnel du droit. L'éditeur ne saurait être tenu responsable des erreurs.</p>
 
-        <strong>4. PROPRIÉTÉ INTELLECTUELLE</strong><br>
-        L'architecture, le code source, les bases de données et le design de ce site sont la propriété exclusive de BUSINESS AGENT AI®.<br>
-        Toute reproduction ou représentation, totale ou partielle, sans autorisation expresse est interdite et constituerait une contrefaçon sanctionnée par le Code de la propriété intellectuelle.
+        <p><strong>4. PROPRIÉTÉ</strong><br>
+        Code source et design : Propriété exclusive de BUSINESS AGENT AI®.</p>
     </div>
     """, unsafe_allow_html=True)
 
 @st.dialog("Politique de Confidentialité")
 def modal_rgpd():
-    st.markdown("""
-    <div style='font-size: 11px; color: #333; line-height: 1.6;'>
-        <strong>PROTECTION DES DONNÉES & COOKIES :</strong><br>
-        1. <strong>Gestion des Cookies :</strong> Un unique cookie technique est déposé afin de maintenir votre session ouverte.<br>
-        2. <strong>Absence de Traçage :</strong> Aucun cookie publicitaire.<br>
-        3. <strong>Données Volatiles :</strong> Traitement en mémoire vive uniquement. Les données ne sont pas stockées et ne servent pas à entrainer des modèles IA
+    st.markdown(f"""
+    <div style='font-size: 13px; color: #1e293b; font-family: sans-serif;'>
+        <p><strong>PROTECTION DES DONNÉES :</strong></p>
+        <ul>
+            <li><strong>Cookies :</strong> Uniquement technique pour la session.</li>
+            <li><strong>Traçage :</strong> Aucun cookie publicitaire ou analytique tiers.</li>
+            <li><strong>Données :</strong> Vos saisies sont traitées en mémoire vive et ne sont pas stockées ni utilisées pour l'entraînement de l'IA.</li>
+        </ul>
     </div>
     """, unsafe_allow_html=True)
-
 # --- 2. AUTHENTIFICATION ---
 def check_password():
     if "authenticated" not in st.session_state:
