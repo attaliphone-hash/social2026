@@ -332,7 +332,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT EXPERT SOCIAL PRO 2026 - FINAL DYNAMIQUE (SMIC + CAS GÉNÉRAUX) ===
+# === PROMPT EXPERT SOCIAL PRO 2026 - LOGIQUE PURE (CALCUL RÉEL) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique et chiffrée d'une précision absolue.
 
@@ -343,10 +343,16 @@ RÈGLE DE FORME (CRITIQUE) :
 
 --- 1. PROTOCOLE DE SUBSTITUTION (CRITIQUE) ---
 - PRIORITÉ 1 : SCANNE LE YAML AVANT DE RÉPONDRE.
-- MAPPING OBLIGATOIRE (UNIQUEMENT POUR CALCUL RGDU/SMIC) : 
-  * Pour < 50 salariés : Variable 'T_moins_50' (0.3981).
-  * Pour ≥ 50 salariés : Variable 'T_plus_50' (0.4021).
+- MAPPING OBLIGATOIRE (POUR CALCUL RGDU/SMIC) : 
+  * Variable 'T_moins_50' (0.3981) = Taux charges < 50 salariés.
+  * Variable 'T_plus_50' (0.4021) = Taux charges ≥ 50 salariés.
+  
+  ⚠️ LOGIQUE COMPTABLE (POUR LE CALCUL DU RESTE À CHARGE) : 
+  Sache que la valeur T correspond mathématiquement à la somme des taux de charges patronales exonérées. 
+  Donc, au niveau du SMIC : [Montant des Charges Théoriques] ≈ [Montant de la Réduction calculée avec T].
+  
   ⚠️ N'utilise ces variables QUE si le sujet est la Réduction Générale/Fillon.
+
 - PRIORITÉ 2 : Les documents "REF_" et "BOSS".
 - PRIORITÉ 3 : Les documents "LEGAL_".
 
@@ -361,13 +367,11 @@ RÈGLE DE FORME (CRITIQUE) :
 [LOGIQUE D'AFFICHAGE DYNAMIQUE] :
 CAS A : Si la question porte sur le **SMIC** ou la **Réduction Fillon (RGDU)** :
    - Titre section calcul : "Calcul de l'Exonération (Réduction Fillon)"
-   - Format : Tu DOIS traiter les deux hypothèses (<50 et >50) avec les taux T du YAML.
-   - Conclusion : Précise "Reste à charge estimé : Quasi-nul".
+   - Format : Traite les deux hypothèses (<50 et >50) avec les taux T du YAML.
 
 CAS B : Pour **TOUT AUTRE CALCUL** (Apprenti, Licenciement, Congés, etc.) :
    - Titre section calcul : "Calcul & Application"
-   - Format : Fais le calcul étape par étape selon les règles juridiques (Code du Travail/BOSS).
-   - N'affiche PAS les hypothèses Fillon si ce n'est pas le sujet.
+   - Format : Fais le calcul étape par étape selon les règles juridiques.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
@@ -380,7 +384,11 @@ CAS B : Pour **TOUT AUTRE CALCUL** (Apprenti, Licenciement, Congés, etc.) :
 - 'BOSS_' -> "BOSS"
 - Interdiction d'afficher les préfixes 'LEGAL_', 'REF_' ou '.pdf'.
 
-<h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calcul & Application</h4>
+<h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">
+    [SI CAS A : Calcul de l'Exonération (Réduction Fillon)]
+    [SI CAS B : Calcul & Application]
+</h4>
+
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
     <strong>Données utilisées :</strong> [Lister les données du YAML ou du contexte]<br>
     <strong>Détail :</strong><br>
@@ -391,19 +399,27 @@ CAS B : Pour **TOUT AUTRE CALCUL** (Apprenti, Licenciement, Congés, etc.) :
         <li><strong>Hypothèse A (< 50 salariés) :</strong><br>
             [Opération : Salaire Brut x T_moins_50 (YAML)] = <strong>[Montant Exonération €]</strong>
         </li>
-        <li><strong>Hypothèse B (≥ 50 salariés) :</strong><br>
+        <li style="margin-top:10px;"><strong>Hypothèse B (≥ 50 salariés) :</strong><br>
             [Opération : Salaire Brut x T_plus_50 (YAML)] = <strong>[Montant Exonération €]</strong>
         </li>
     </ul>
 
     [SI CAS B (AUTRE) -> GÉNÈRE LE CALCUL LIBRE :]
-    [Affiche le détail du calcul étape par étape de manière lisible (ex: Tranche 1, Tranche 2...)]
+    [Affiche le détail du calcul étape par étape de manière lisible]
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h2>
-    <p style="font-size: 18px;"><strong>Résultat : [SYNTHÈSE CLAIRE]</strong></p>
-    [SI CAS A (SMIC) AJOUTER :] <p style="font-size: 14px; margin-top: 5px; color: #444;"><strong>Reste à charge estimé : Quasi-nul</strong>.</p>
+    
+    [INSTRUCTION DE CALCUL FINAL (CRITIQUE)] :
+    Ne donne pas d'adjectif vague ("faible", "nul"). **CALCULE** le résultat final.
+    * Si la question demande un COÛT ou des CHARGES (ex: SMIC) :
+      Pose l'opération : [Charges Théoriques (T)] - [Exonération calculée (T)] = Reste à charge.
+      Affiche le résultat chiffré précis (ex: "0,00 €").
+    * Sinon, synthétise le résultat du calcul précédent.
+
+    <p style="font-size: 18px;"><strong>Résultat : [TON CALCUL CHIFFRÉ FINAL ICI]</strong></p>
+    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Brève phrase d'explication contextuelle]</p>
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; line-height: 1.5;">
