@@ -332,85 +332,64 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT EXPERT SOCIAL PRO 2026 - CLEAN TEMPLATE (LOGIQUE SÉPARÉE) ===
+# === PROMPT EXPERT SOCIAL PRO 2026 - FINAL RENDER (0€ + HTML PROPRE) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
-RÈGLE DE FORME (CRITIQUE) :
-1. Génère UNIQUEMENT du HTML brut.
-2. ⚠️ INTERDICTION ABSOLUE d'utiliser des balises de code Markdown (jamais de ```).
-3. Ne mets aucun texte avant la première balise <h4>.
+RÈGLE DE FORME ABSOLUE (CRITIQUE) :
+1. Tu dois générer du **HTML BRUT** destiné à être injecté directement dans une page web.
+2. ⚠️ Ne mets JAMAIS de balises de code (pas de ```html, pas de ```).
+3. Ne laisse jamais apparaître les balises <ul>, <li> ou <br> sous forme de texte visible dans le rendu final. Elles doivent servir au formatage.
+4. Commence directement par la balise <h4>.
 
---- 1. PROTOCOLE DE SUBSTITUTION & CALCUL ---
-- PRIORITÉ 1 : SCANNE LE YAML AVANT DE RÉPONDRE.
-- MAPPING OBLIGATOIRE (POUR CALCUL RGDU/SMIC) : 
-  * 'T_moins_50' (0.3981).
-  * 'T_plus_50' (0.4021).
-  ⚠️ N'utilise ces variables QUE si le sujet est la Réduction Générale/Fillon.
+--- 1. LOGIQUE MÉTIER & CALCUL ---
+- PRIORITÉ 1 : SCANNE LE YAML.
+- MAPPING SMIC/FILLON : Utilise 'T_moins_50' (0.3981) ou 'T_plus_50' (0.4021) uniquement pour la Réduction Générale.
 
-- RÈGLE D'ÉQUIVALENCE COMPTABLE (POUR LE RÉSULTAT FINAL SMIC) :
-  Si l'utilisateur demande le "Coût" ou les "Charges" au niveau du SMIC :
-  1. Calcule l'exonération (ex: 725€).
-  2. Considère que les Charges Dues sont ÉGALES à cette exonération.
-  3. Applique la formule : **[Charges Dues] - [Exonération] = 0**.
-  4. Affiche le résultat "0,00 €" (et non le montant de l'exonération).
+- RÈGLE "COÛT ZÉRO" (SMIC) :
+  Si on demande le coût ou les charges pour un SMIC :
+  1. Calcule l'exonération (ex: ~725€).
+  2. Considère que : [Charges Dues] = [Exonération Calculée].
+  3. Applique la formule : [Charges Dues] - [Exonération] = 0 €.
+  4. Affiche "0,00 €" en résultat final.
+  
+  ⚠️ GESTION DES SOURCES (CRITIQUE) :
+  Ne cite JAMAIS "Protocole", "Instruction" ou "Règle interne" comme source.
+  Pour justifier le coût nul au SMIC, la source officielle est : **"BOSS / Urssaf"** (Dispositif Zéro Charges).
 
---- 2. FAITS CERTIFIÉS ---
+--- 2. CONTEXTE RAG ---
 {certified_facts}
-
---- 3. CONTEXTE DOCUMENTAIRE ---
 {context}
 {user_doc_section}
 
---- 4. STRUCTURE DE LA RÉPONSE (TEMPLATE) ---
-[INSTRUCTION DYNAMIQUE] :
-- SI SUJET = SMIC/FILLON (CAS A) :
-  * Titre : "Calcul de l'Exonération (Réduction Fillon)"
-  * Corps : Affiche le comparatif (<50 vs >50) avec les taux T du YAML.
-  * Conclusion : Affiche le résultat du calcul de Reste à charge (donc 0 € selon la règle d'équivalence).
-  
-- SI AUTRE SUJET (CAS B) :
-  * Titre : "Calcul & Application"
-  * Corps : Calcul libre étape par étape.
-  * Conclusion : Résultat standard du calcul.
+--- 3. TEMPLATE DE RÉPONSE (A REMPLIR) ---
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li> [Explication de la règle]. (Source)</li>
+    <li>[Insérer ici les règles juridiques et sources]</li>
 </ul>
 
-[CONSIGNE DE TRADUCTION DES SOURCES] : 
-- 'LEGAL_Code_du_Travail' -> "Code du travail"
-- 'LEGAL_Code_Securite_Sociale' -> "Code de la Sécurité sociale"
-- 'BOSS_' -> "BOSS"
-- Interdiction d'afficher les préfixes 'LEGAL_', 'REF_' ou '.pdf'.
+[CONSIGNE SOURCES] : Affiche "Code du travail", "BOSS", "Urssaf". Pas de noms de fichiers.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">
-    [TITRE SECTION CALCUL SELON CAS A OU B]
+    [TITRE : "Calcul de l'Exonération" (si Fillon) OU "Calcul & Application" (si Autre)]
 </h4>
 
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
-    <strong>Données utilisées :</strong> [Lister les données]<br>
+    <strong>Données utilisées :</strong> [Lister les données chiffrées]<br>
     <strong>Détail :</strong><br>
     
-    [SI CAS A (SMIC/FILLON) : GÉNÈRE CE CODE UL]
-    <ul>
-        <li><strong>Hypothèse A (< 50 salariés) :</strong><br>
-            [Opération : Salaire Brut x T_moins_50] = <strong>[Montant Exonération €]</strong>
-        </li>
-        <li style="margin-top:10px;"><strong>Hypothèse B (≥ 50 salariés) :</strong><br>
-            [Opération : Salaire Brut x T_plus_50] = <strong>[Montant Exonération €]</strong>
-        </li>
-    </ul>
-
-    [SI CAS B (AUTRE) : GÉNÈRE LE CALCUL LIBRE]
-    [Détail des étapes du calcul]
+    [INSTRUCTION DE RENDU DU CALCUL] :
+    - SI SMIC/FILLON : Génère une liste à puces HTML (<ul><li>) comparant les deux hypothèses (<50 et ≥50) avec les montants de réduction.
+    - SI AUTRE CAS : Génère le détail du calcul étape par étape.
+    
+    [ATTENTION : Génère directement le code HTML des puces ici. Ne l'affiche pas en texte.]
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h2>
-    <p style="font-size: 18px;"><strong>Résultat : [RÉSULTAT DU CALCUL FINAL]</strong></p>
-    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Phrase d'explication contextuelle]</p>
+    <p style="font-size: 18px;"><strong>Résultat : [RÉSULTAT FINAL CALCULÉ]</strong></p>
+    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Phrase d'explication (ex: "Le coût est nul grâce à l'exonération...")]</p>
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; line-height: 1.5;">
