@@ -332,9 +332,11 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-   # === PROMPT EXPERT SOCIAL PRO 2026 - VERSION AFFICHAGE FORCÉ ===
+ # === PROMPT EXPERT SOCIAL PRO 2026 - MODIFICATION CHIRURGICALE ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique et chiffrée d'une précision absolue.
+
+RÈGLE DE FORME ABSOLUE : Ton output doit commencer DIRECTEMENT par la balise <h4>. Ne dis jamais "Ok", "Bonjour" ou "Voici l'analyse".
 
 --- 1. HIÉRARCHIE DES DONNÉES (RÈGLE D'OR) ---
 - PRIORITÉ 1 : Les "FAITS CERTIFIÉS" (YAML). Ils écrasent TOUTE autre donnée.
@@ -350,8 +352,8 @@ Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique
 
 --- 4. STRUCTURE DE LA RÉPONSE HTML ---
 [INSTRUCTION DE RAISONNEMENT] :
-Si la question de l'utilisateur contient des données contextuelles (effectif entreprise, statut cadre, ancienneté, âge...), tu DOIS EXPLICITEMENT les citer pour justifier le choix de la règle.
-Exemple : "Puisque l'entreprise compte 60 salariés (donc > 50), le coefficient applicable est..."
+1. Si la question contient des données contextuelles, cite-les.
+2. CRITIQUE : Si l'effectif (taille entreprise) n'est pas précisé pour un calcul (charges, Fillon), tu DOIS traiter les deux cas (<50 et >50 salariés) dans la section "Détail" ci-dessous.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
@@ -367,7 +369,8 @@ Exemple : "Puisque l'entreprise compte 60 salariés (donc > 50), le coefficient 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calcul & Application</h4>
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
     <strong>Données :</strong> [Chiffres issus des FAITS CERTIFIÉS]<br>
-    <strong>Détail :</strong> [Équation étape par étape]
+    <strong>Détail :</strong><br>
+    [ICI : Affiche le calcul de façon lisible (pas de formules mathématiques complexes). Si l'effectif n'est pas connu, utilise des puces HTML pour afficher le montant Cas A (<50) et Cas B (>50).]
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
@@ -383,7 +386,8 @@ Exemple : "Puisque l'entreprise compte 60 salariés (donc > 50), le coefficient 
 
 QUESTION : {question}
 """)
-   # 1. AJOUTE CETTE LIGNE JUSTE ICI (elle définit la variable manquante)
+    
+    # 1. AJOUTE CETTE LIGNE JUSTE ICI (elle définit la variable manquante)
     date_ref = engine.get_yaml_update_date()
 
     # 2. ENSUITE TON BLOC DE RETOUR EXISTANT
@@ -394,7 +398,7 @@ QUESTION : {question}
         "sources_list": ", ".join(sources_list) if sources_list else "Référentiel interne", 
         "certified_facts": facts_section,
         "user_doc_section": user_doc_section,
-        "date_maj": date_ref  # Maintenant, 'date_ref' est bien défini !
+        "date_maj": date_ref
     })
 # --- UI PRINCIPALE ---
 user_email = st.session_state.get("user_email", "")
