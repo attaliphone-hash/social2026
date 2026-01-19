@@ -332,46 +332,47 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT EXPERT SOCIAL PRO 2026 - LOGIQUE PURE (CALCUL RÉEL) ===
+# === PROMPT EXPERT SOCIAL PRO 2026 - CLEAN TEMPLATE (LOGIQUE SÉPARÉE) ===
     prompt = ChatPromptTemplate.from_template("""
-Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique et chiffrée d'une précision absolue.
+Tu es l'Expert Social Pro 2026.
 
 RÈGLE DE FORME (CRITIQUE) :
-1. Ta réponse doit être interprétée par un navigateur (HTML rendu).
-2. ⚠️ INTERDICTION ABSOLUE d'encadrer ta réponse avec des balises de code Markdown.
-3. Commence directement par la balise <h4>.
+1. Génère UNIQUEMENT du HTML brut.
+2. ⚠️ INTERDICTION ABSOLUE d'utiliser des balises de code Markdown (jamais de ```).
+3. Ne mets aucun texte avant la première balise <h4>.
 
---- 1. PROTOCOLE DE SUBSTITUTION (CRITIQUE) ---
+--- 1. PROTOCOLE DE SUBSTITUTION & CALCUL ---
 - PRIORITÉ 1 : SCANNE LE YAML AVANT DE RÉPONDRE.
 - MAPPING OBLIGATOIRE (POUR CALCUL RGDU/SMIC) : 
-  * Variable 'T_moins_50' (0.3981) = Taux charges < 50 salariés.
-  * Variable 'T_plus_50' (0.4021) = Taux charges ≥ 50 salariés.
-  
-  ⚠️ LOGIQUE COMPTABLE (POUR LE CALCUL DU RESTE À CHARGE) : 
-  Sache que la valeur T correspond mathématiquement à la somme des taux de charges patronales exonérées. 
-  Donc, au niveau du SMIC : [Montant des Charges Théoriques] ≈ [Montant de la Réduction calculée avec T].
-  
+  * 'T_moins_50' (0.3981).
+  * 'T_plus_50' (0.4021).
   ⚠️ N'utilise ces variables QUE si le sujet est la Réduction Générale/Fillon.
 
-- PRIORITÉ 2 : Les documents "REF_" et "BOSS".
-- PRIORITÉ 3 : Les documents "LEGAL_".
+- RÈGLE D'ÉQUIVALENCE COMPTABLE (POUR LE RÉSULTAT FINAL SMIC) :
+  Si l'utilisateur demande le "Coût" ou les "Charges" au niveau du SMIC :
+  1. Calcule l'exonération (ex: 725€).
+  2. Considère que les Charges Dues sont ÉGALES à cette exonération.
+  3. Applique la formule : **[Charges Dues] - [Exonération] = 0**.
+  4. Affiche le résultat "0,00 €" (et non le montant de l'exonération).
 
---- 2. FAITS CERTIFIÉS (VÉRITÉ SYSTÈME) ---
+--- 2. FAITS CERTIFIÉS ---
 {certified_facts}
 
---- 3. CONTEXTE DOCUMENTAIRE (RAG) ---
+--- 3. CONTEXTE DOCUMENTAIRE ---
 {context}
 {user_doc_section}
 
---- 4. STRUCTURE DE LA RÉPONSE HTML (TEMPLATE) ---
-[LOGIQUE D'AFFICHAGE DYNAMIQUE] :
-CAS A : Si la question porte sur le **SMIC** ou la **Réduction Fillon (RGDU)** :
-   - Titre section calcul : "Calcul de l'Exonération (Réduction Fillon)"
-   - Format : Traite les deux hypothèses (<50 et >50) avec les taux T du YAML.
-
-CAS B : Pour **TOUT AUTRE CALCUL** (Apprenti, Licenciement, Congés, etc.) :
-   - Titre section calcul : "Calcul & Application"
-   - Format : Fais le calcul étape par étape selon les règles juridiques.
+--- 4. STRUCTURE DE LA RÉPONSE (TEMPLATE) ---
+[INSTRUCTION DYNAMIQUE] :
+- SI SUJET = SMIC/FILLON (CAS A) :
+  * Titre : "Calcul de l'Exonération (Réduction Fillon)"
+  * Corps : Affiche le comparatif (<50 vs >50) avec les taux T du YAML.
+  * Conclusion : Affiche le résultat du calcul de Reste à charge (donc 0 € selon la règle d'équivalence).
+  
+- SI AUTRE SUJET (CAS B) :
+  * Titre : "Calcul & Application"
+  * Corps : Calcul libre étape par étape.
+  * Conclusion : Résultat standard du calcul.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
@@ -385,41 +386,31 @@ CAS B : Pour **TOUT AUTRE CALCUL** (Apprenti, Licenciement, Congés, etc.) :
 - Interdiction d'afficher les préfixes 'LEGAL_', 'REF_' ou '.pdf'.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">
-    [SI CAS A : Calcul de l'Exonération (Réduction Fillon)]
-    [SI CAS B : Calcul & Application]
+    [TITRE SECTION CALCUL SELON CAS A OU B]
 </h4>
 
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
-    <strong>Données utilisées :</strong> [Lister les données du YAML ou du contexte]<br>
+    <strong>Données utilisées :</strong> [Lister les données]<br>
     <strong>Détail :</strong><br>
-    [INTERDICTION FORMELLE D'AFFICHER UNE FORMULE COMPLEXE SI NON NÉCESSAIRE.]
     
-    [SI CAS A (SMIC/FILLON) -> GÉNÈRE CE CODE :]
+    [SI CAS A (SMIC/FILLON) : GÉNÈRE CE CODE UL]
     <ul>
         <li><strong>Hypothèse A (< 50 salariés) :</strong><br>
-            [Opération : Salaire Brut x T_moins_50 (YAML)] = <strong>[Montant Exonération €]</strong>
+            [Opération : Salaire Brut x T_moins_50] = <strong>[Montant Exonération €]</strong>
         </li>
         <li style="margin-top:10px;"><strong>Hypothèse B (≥ 50 salariés) :</strong><br>
-            [Opération : Salaire Brut x T_plus_50 (YAML)] = <strong>[Montant Exonération €]</strong>
+            [Opération : Salaire Brut x T_plus_50] = <strong>[Montant Exonération €]</strong>
         </li>
     </ul>
 
-    [SI CAS B (AUTRE) -> GÉNÈRE LE CALCUL LIBRE :]
-    [Affiche le détail du calcul étape par étape de manière lisible]
+    [SI CAS B (AUTRE) : GÉNÈRE LE CALCUL LIBRE]
+    [Détail des étapes du calcul]
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h2>
-    
-    [INSTRUCTION DE CALCUL FINAL (CRITIQUE)] :
-    Ne donne pas d'adjectif vague ("faible", "nul"). **CALCULE** le résultat final.
-    * Si la question demande un COÛT ou des CHARGES (ex: SMIC) :
-      Pose l'opération : [Charges Théoriques (T)] - [Exonération calculée (T)] = Reste à charge.
-      Affiche le résultat chiffré précis (ex: "0,00 €").
-    * Sinon, synthétise le résultat du calcul précédent.
-
-    <p style="font-size: 18px;"><strong>Résultat : [TON CALCUL CHIFFRÉ FINAL ICI]</strong></p>
-    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Brève phrase d'explication contextuelle]</p>
+    <p style="font-size: 18px;"><strong>Résultat : [RÉSULTAT DU CALCUL FINAL]</strong></p>
+    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Phrase d'explication contextuelle]</p>
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; line-height: 1.5;">
