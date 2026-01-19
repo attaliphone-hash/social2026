@@ -138,13 +138,13 @@
   text: "Le Versement Mobilité est dû par les employeurs de 11 salariés et plus. Les taux sont mis à jour au 1er janvier et au 1er juillet."
 
 - id: REDUCTION_GENERALE_2026
-  keywords: ["reduction", "réduction", "generale", "générale", "fillon", "bas", "salaires", "smic", "coefficient", "t"]
+  keywords: ["reduction", "réduction", "generale", "générale", "fillon", "rgdu", "bas", "salaires", "smic", "coefficient", "t"]
   valeurs:
-    T_moins_50: 0.3194
-    T_plus_50: 0.3154
+    # NOUVEAUX TAUX RGDU 2026 (Fusion Fillon + Maladie + Famille)
+    T_moins_50: 0.3981
+    T_plus_50: 0.4021
     smic_annuel: 21876.36
   derniere_maj: "Janvier 2026"
-  source: "Décret 2026 / Code de la Sécurité Sociale"
-  text: "RÈGLE IMPÉRATIVE 2026 : Ne recalculez pas le coefficient T. Utilisez STRICTEMENT les valeurs suivantes : Pour une entreprise < 50 salariés, T = 0,3194. Pour une entreprise ≥ 50 salariés, T = 0,3154. Appliquez ces coefficients directement."
-
+  source: "Décret 2025-1446 (RGDU)"
+  text: "RÈGLE IMPÉRATIVE 2026 (RGDU) : La Réduction Fillon est remplacée par la RGDU. Utilisez STRICTEMENT ces coefficients maximaux : Pour < 50 salariés (FNAL 0,10%), T = 0,3981. Pour ≥ 50 salariés (FNAL 0,50%), T = 0,4021. Au niveau du SMIC, l'exonération est maximale."
 # FORCE UPDATE
