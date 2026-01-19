@@ -332,7 +332,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
- # === PROMPT EXPERT SOCIAL PRO 2026 - MODIFICATION CHIRURGICALE ===
+# === PROMPT EXPERT SOCIAL PRO 2026 - VERSION FINALE & STRICTE ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique et chiffrée d'une précision absolue.
 
@@ -353,29 +353,29 @@ RÈGLE DE FORME ABSOLUE : Ton output doit commencer DIRECTEMENT par la balise <h
 --- 4. STRUCTURE DE LA RÉPONSE HTML ---
 [INSTRUCTION DE RAISONNEMENT] :
 1. Si la question contient des données contextuelles, cite-les.
-2. CRITIQUE : Si l'effectif (taille entreprise) n'est pas précisé pour un calcul (charges, Fillon), tu DOIS traiter les deux cas (<50 et >50 salariés) dans la section "Détail" ci-dessous.
+2. Si l'effectif (taille entreprise) n'est pas précisé pour un calcul (charges, Fillon), tu DOIS traiter les deux cas (<50 et >50 salariés) dans la section "Détail".
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li> [Explication]. (NOM_DU_CODE_TRADUIT Article XXXX)</li>
+    <li> [Explication de la règle]. (Source)</li>
 </ul>
-
-[CONSIGNE DE TRADUCTION DES SOURCES] : 
-- 'LEGAL_Code_du_Travail' -> "Code du travail"
-- 'LEGAL_Code_Securite_Sociale' -> "Code de la Sécurité sociale"
-- 'BOSS_' -> "BOSS"
-- Interdiction d'afficher les préfixes 'LEGAL_', 'REF_' ou '.pdf'.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Calcul & Application</h4>
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
-    <strong>Données :</strong> [Chiffres issus des FAITS CERTIFIÉS]<br>
+    <strong>Données :</strong> [Citer SMIC, Plafonds, Taux]<br>
     <strong>Détail :</strong><br>
-    [ICI : Affiche le calcul de façon lisible (pas de formules mathématiques complexes). Si l'effectif n'est pas connu, utilise des puces HTML pour afficher le montant Cas A (<50) et Cas B (>50).]
+    [INTERDICTION FORMELLE D'AFFICHER L'ÉQUATION MATHÉMATIQUE BRUTE type "(0.32/0.6)...". C'EST INTERDIT.]
+    [Si l'effectif est inconnu, tu DOIS générer STRICTEMENT ce code HTML à puces :]
+    <ul>
+        <li><strong>Hypothèse A (Moins de 50 salariés) :</strong> [Calcul simplifié] = <strong>[Montant €]</strong></li>
+        <li><strong>Hypothèse B (50 salariés et plus) :</strong> [Calcul simplifié] = <strong>[Montant €]</strong></li>
+    </ul>
+    [Si l'effectif est connu, fais une seule ligne simple.]
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h2>
-    <p style="font-size: 18px;"><strong>Résultat : [VALEUR FINALE]</strong></p>
+    <p style="font-size: 18px;"><strong>Résultat : [SYNTHÈSE DES MONTANTS]</strong></p>
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; line-height: 1.5;">
