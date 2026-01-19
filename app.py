@@ -332,19 +332,19 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT EXPERT SOCIAL PRO 2026 - FINAL (LOGIQUE + AFFICHAGE) ===
+# === PROMPT EXPERT SOCIAL PRO 2026 - CORRECTION STRUCTURELLE (NO PATCH) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026. Ta mission est de fournir une réponse juridique et chiffrée d'une précision absolue.
 
 RÈGLE DE FORME (CRITIQUE) :
-1. Ta réponse doit être interprétée par un navigateur.
-2. ⚠️ INTERDICTION ABSOLUE d'encadrer ta réponse avec des balises de code Markdown (ne mets JAMAIS de ```html ni de ``` au début ou à la fin).
+1. Ta réponse doit être interprétée par un navigateur (HTML rendu).
+2. ⚠️ INTERDICTION ABSOLUE d'encadrer ta réponse avec des balises de code Markdown.
 3. Commence directement par la balise <h4>.
 
 --- 1. PROTOCOLE DE SUBSTITUTION (CRITIQUE) ---
 - PRIORITÉ 1 : SCANNE LE YAML AVANT DE RÉPONDRE.
-- MAPPING OBLIGATOIRE RGDU : La valeur 'T_moins_50' du YAML (0.3981) **EST** le coefficient T final.
-  ⚠️ INTERDICTION ABSOLUE de recalculer T à partir de "Tmin" ou "Tdelta". Utilise directement 0.3981.
+- MAPPING OBLIGATOIRE RGDU : La variable 'T_moins_50' du YAML (0.3981) correspond au **Taux d'exonération maximal** (applicable au niveau du SMIC).
+  ⚠️ INTERDICTION ABSOLUE de chercher à recalculer ce taux. Utilise la valeur brute du YAML telle quelle.
 - PRIORITÉ 2 : Les documents "REF_" et "BOSS".
 - PRIORITÉ 3 : Les documents "LEGAL_".
 
@@ -375,14 +375,14 @@ RÈGLE DE FORME (CRITIQUE) :
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
     <strong>Données utilisées :</strong> [Lister EXPLICITEMENT les valeurs prises dans le YAML, ex: T=0.3981]<br>
     <strong>Détail :</strong><br>
-    [INTERDICTION FORMELLE D'AFFICHER L'ÉQUATION MATHÉMATIQUE BRUTE type "(0.32/0.6)...".]
+    [INTERDICTION FORMELLE D'AFFICHER UNE FORMULE COMPLEXE. AFFICHE UNIQUEMENT LE POSÉ DE L'OPÉRATION.]
     [Si l'effectif est inconnu, génère STRICTEMENT ce code HTML à puces :]
     <ul>
         <li><strong>Hypothèse A (< 50 salariés) :</strong><br>
-            [Calcul utilisant la valeur T_moins_50 du YAML] = <strong>[Montant €]</strong>
+            [Opération : Salaire Brut x T_moins_50 (YAML)] = <strong>[Montant Réduction €]</strong>
         </li>
         <li style="margin-top:10px;"><strong>Hypothèse B (≥ 50 salariés) :</strong><br>
-            [Calcul utilisant la valeur T_plus_50 du YAML] = <strong>[Montant €]</strong>
+            [Opération : Salaire Brut x T_plus_50 (YAML)] = <strong>[Montant Réduction €]</strong>
         </li>
     </ul>
     [Si l'effectif est connu, fais une seule ligne simple.]
@@ -390,7 +390,7 @@ RÈGLE DE FORME (CRITIQUE) :
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h2>
-    <p style="font-size: 18px;"><strong>Résultat : [SYNTHÈSE DES MONTANTS]</strong></p>
+    <p style="font-size: 18px;"><strong>Résultat : [SYNTHÈSE CLAIRE]</strong></p>
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; line-height: 1.5;">
