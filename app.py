@@ -12,7 +12,7 @@ from email.utils import parsedate_to_datetime
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
-
+from services.stripe_service import verify_active_subscription  
 # --- IMPORTS UI ---
 from ui.styles import apply_pro_design, render_top_columns, render_subscription_cards
 from rules.engine import SocialRuleEngine
@@ -21,8 +21,8 @@ from langchain_pinecone import PineconeVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# ✅ Stripe checkout
-from services.stripe_service import create_checkout_session
+# ✅ Stripe checkout + Verification
+from services.stripe_service import create_checkout_session, verify_active_subscription
 
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
@@ -283,6 +283,42 @@ def check_password():
     return False
 
 if not check_password(): st.stop()
+
+# ============================================================
+# 🔴 SÉCURITÉ STRIPE : VÉRIFICATION D'ABONNEMENT
+# ============================================================
+user_email = st.session_state.get("user_email")
+ADMIN_EMAILS = ["ton.email@admin.com"] # AJOUTE TON EMAIL ICI
+
+# On ne vérifie que si c'est un email classique (pas un code admin/promo)
+if user_email and user_email not in ["ADMINISTRATEUR", "Utilisateur Promo"]:
+    # Passe-droit pour ton email perso
+    if user_email in ADMIN_EMAILS:
+        is_subscribed = True
+    else:
+        with st.spinner("Vérification de votre abonnement..."):
+            is_subscribed = verify_active_subscription(user_email)
+
+    if not is_subscribed:
+        st.error("⛔ Accès refusé : Aucun abonnement actif trouvé.")
+        st.markdown("""
+        <div style="background-color: #ffebee; padding: 20px; border-radius: 10px; border-left: 5px solid #f44336;">
+            <h4>Votre abonnement est inactif ou expiré.</h4>
+            <p>Pour accéder à l'Expert Social 2026, vous devez disposer d'un abonnement valide.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            # On propose l'abonnement mensuel par défaut
+            checkout_url = create_checkout_session("Mensuel", user_email)
+            if checkout_url:
+                st.link_button("S'abonner (Mensuel)", checkout_url, type="primary")
+        
+        st.stop()
+# ============================================================
+# FIN SÉCURITÉ STRIPE
+# ============================================================
 
 # --- 3. CHARGEMENT MOTEUR & IA ---
 @st.cache_resource

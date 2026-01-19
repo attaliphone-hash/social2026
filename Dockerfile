@@ -1,34 +1,32 @@
-# 1. Image de base légère
+# Dockerfile - Version Nettoyée & Optimisée
+
+# Utilisation d'une image Python légère et récente
 FROM python:3.10-slim
 
-# 2. Dossier de travail
+# Configuration des variables d'environnement pour Python
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Répertoire de travail
 WORKDIR /app
 
-# 3. Installation des dépendances système (indispensable pour curl)
+# Installation des dépendances système nécessaires (si besoin pour certaines libs)
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 4. Préparation du dossier pour la base de données
-RUN mkdir -p /app/chroma_db
-
-# 5. Téléchargement du Golden Index (VOTRE TRÉSOR)
-RUN curl -L -o /app/chroma_db/chroma.sqlite3 "https://storage.googleapis.com/social2026-data/chroma.sqlite3"
-
-# 6. Copie des requirements
+# Copie des fichiers de dépendances
 COPY requirements.txt .
 
-# 7. Installation des bibliothèques Python
+# Installation des dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- C'EST ICI QUE C'ETAIT BLOQUANT ---
-# 8. Copie de TOUT le code (app.py ET les images .png)
+# Copie du reste du code de l'application
 COPY . .
-# --------------------------------------
 
-# 9. Exposition du port Streamlit
+# Exposition du port standard Cloud Run
 EXPOSE 8080
 
-# 10. Lancement de l'application
+# Commande de démarrage avec healthcheck natif de Streamlit
 CMD ["streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]
