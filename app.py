@@ -533,7 +533,7 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pou
         cleaned_q = clean_query_for_engine(q)
         facts = engine.format_certified_facts(engine.match_rules(cleaned_q))
         ctx, srcs = build_context(q)
- full_resp = ""
+        full_resp = ""
         for chunk in get_gemini_response_stream(q, ctx, srcs, facts, user_text):
             full_resp += chunk
             # Affichage progressif avec le curseur
@@ -545,6 +545,6 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pou
         
         # Affichage final propre (sans le curseur)
         ph.markdown(f'<div class="ai-response">{full_resp}</div>', unsafe_allow_html=True)
-    
-    # ON GARDE CETTE LIGNE MAIS ELLE ENREGISTRE MAINTENANT LE HTML PROPRE
-    st.session_state.messages.append({"role": "assistant", "content": full_resp})
+        
+        # Enregistrement dans l'historique (parfaitement aligné avec full_resp)
+        st.session_state.messages.append({"role": "assistant", "content": full_resp})
