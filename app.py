@@ -351,18 +351,33 @@ def clean_query_for_engine(q):
     return " ".join(cleaned)
 
 def build_context(query):
-    raw_docs = vectorstore.similarity_search(query, k=25)
+    # On augmente à k=30 pour scanner plus de documents (ton nouveau cerveau est grand !)
+    raw_docs = vectorstore.similarity_search(query, k=30)
     context_text, sources_seen = "", []
+    
     for d in raw_docs:
+        # On utilise la nouvelle métadonnée 'category' injectée par nos scripts
+        category = d.metadata.get('category', 'AUTRE')
         raw_src = d.metadata.get('source', 'Inconnu')
-        clean_name = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '').replace('.csv', '')
-        if "REF" in clean_name: pretty_src = "Barème Officiel"
-        elif "LEGAL" in clean_name: pretty_src = "Code du Travail"
-        elif "BOSS" in clean_name: pretty_src = "BOSS"
-        else: pretty_src = clean_name
-        sources_seen.append(pretty_src)
+        
+        # Traduction propre pour l'utilisateur final
+        if category == "REF":
+            pretty_src = "Barèmes & Chiffres 2026"
+        elif category == "DOC":
+            pretty_src = "BOSS / Jurisprudence"
+        elif category == "CODES":
+            pretty_src = "Code du Travail / Sécu"
+        else:
+            # Sécurité : si la catégorie est absente, on nettoie le nom du fichier
+            pretty_src = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '')
+
+        # On évite les doublons dans la liste des sources du footer
+        if pretty_src not in sources_seen:
+            sources_seen.append(pretty_src)
+            
         context_text += f"[DOCUMENT : {pretty_src}]\n{d.page_content}\n\n"
-    return context_text, list(set(sources_seen))
+    
+    return context_text, sources_seen
 
 def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
@@ -518,10 +533,18 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pou
         cleaned_q = clean_query_for_engine(q)
         facts = engine.format_certified_facts(engine.match_rules(cleaned_q))
         ctx, srcs = build_context(q)
-        full_resp = ""
+      full_resp = ""
         for chunk in get_gemini_response_stream(q, ctx, srcs, facts, user_text):
             full_resp += chunk
-            ph.markdown(full_resp + "▌", unsafe_allow_html=True)
-        if uploaded_file: full_resp += f"\n* 📄 Doc: {uploaded_file.name}"
-        ph.markdown(full_resp + "<br><br>", unsafe_allow_html=True)
+            # Affichage progressif avec le curseur
+            ph.markdown(f'<div class="ai-response">{full_resp}▌</div>', unsafe_allow_html=True)
+        
+        # Ajout du document analysé si nécessaire
+        if uploaded_file: 
+            full_resp += f'<br><p style="font-size:12px; color:gray;">📄 Document analysé : {uploaded_file.name}</p>'
+        
+        # Affichage final propre (sans le curseur)
+        ph.markdown(f'<div class="ai-response">{full_resp}</div>', unsafe_allow_html=True)
+    
+    # ON GARDE CETTE LIGNE MAIS ELLE ENREGISTRE MAINTENANT LE HTML PROPRE
     st.session_state.messages.append({"role": "assistant", "content": full_resp})
