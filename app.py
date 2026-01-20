@@ -533,7 +533,7 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pou
         cleaned_q = clean_query_for_engine(q)
         facts = engine.format_certified_facts(engine.match_rules(cleaned_q))
         ctx, srcs = build_context(q)
-      full_resp = ""
+ full_resp = ""
         for chunk in get_gemini_response_stream(q, ctx, srcs, facts, user_text):
             full_resp += chunk
             # Affichage progressif avec le curseur
