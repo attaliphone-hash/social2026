@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py (BASE BACKUP + UNIQUEMENT VEILLE MODIFIÉE)
+# FICHIER : app.py (VERSION PROPRE + PADDING BAS DE PAGE)
 # ============================================================
 import streamlit as st
 import os
@@ -47,7 +47,7 @@ def manage_subscription_link(email):
             customer_id = customers.data[0].id
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                return_url="https://socialexpertfrance.fr" 
+                return_url="[https://socialexpertfrance.fr](https://socialexpertfrance.fr)" 
             )
             return session.url
     except Exception as e:
@@ -72,9 +72,9 @@ def get_headers():
 
 # --- SOURCE 1 : BOSS ---
 def get_boss_status_html():
-    target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
+    target_url = "[https://boss.gouv.fr/portail/accueil/actualites.html](https://boss.gouv.fr/portail/accueil/actualites.html)"
     try:
-        url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
+        url = "[https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss](https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss)"
         response = requests.get(url, headers=get_headers(), timeout=6)
         
         if response.status_code == 200:
@@ -98,7 +98,7 @@ def get_boss_status_html():
 
 # --- SOURCE 2 : SERVICE-PUBLIC (FIX SCRAPING HTML) ---
 def get_service_public_status():
-    target_url = "https://entreprendre.service-public.gouv.fr/actualites"
+    target_url = "[https://entreprendre.service-public.gouv.fr/actualites](https://entreprendre.service-public.gouv.fr/actualites)"
     try:
         response = requests.get(target_url, headers=get_headers(), timeout=8)
         if response.status_code == 200:
@@ -134,9 +134,9 @@ def get_service_public_status():
 
 # --- SOURCE 3 : NET-ENTREPRISES ---
 def get_net_entreprises_status():
-    target_url = "https://www.net-entreprises.fr/actualites/"
+    target_url = "[https://www.net-entreprises.fr/actualites/](https://www.net-entreprises.fr/actualites/)"
     try:
-        url = "https://www.net-entreprises.fr/feed/"
+        url = "[https://www.net-entreprises.fr/feed/](https://www.net-entreprises.fr/feed/)"
         response = requests.get(url, headers=get_headers(), timeout=6)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -384,6 +384,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
 # === PROMPT EXPERT SOCIAL PRO 2026 - FINAL RENDER (0€ + HTML PROPRE) ===
+# NOTE : Padding bottom ajouté pour l'esthétique
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -443,7 +444,7 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
     <p style="font-size: 14px; margin-top: 5px; color: #444;">[Phrase d'explication (ex: "Le coût est nul grâce à l'exonération...")]</p>
 </div>
 
-<div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; font-size: 11px; color: #666; line-height: 1.5;">
+<div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
     <strong>Sources utilisées :</strong> {sources_list}<br>
     <em>Données chiffrées issues de la mise à jour : {date_maj}.</em><br>
     <span style="font-style: italic; color: #626267;">Attention : Cette réponse est basée sur le droit commun. Une convention collective (CCN) peut être plus favorable. Vérifiez toujours votre CCN.</span>
@@ -534,17 +535,23 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pou
         facts = engine.format_certified_facts(engine.match_rules(cleaned_q))
         ctx, srcs = build_context(q)
         full_resp = ""
+        
+        # Boucle de génération avec nettoyage en temps réel
         for chunk in get_gemini_response_stream(q, ctx, srcs, facts, user_text):
             full_resp += chunk
-            # Affichage progressif avec le curseur
-            ph.markdown(f'<div class="ai-response">{full_resp}▌</div>', unsafe_allow_html=True)
+            # 🧹 NETTOYAGE : On supprime les balises Markdown qui cassent l'affichage
+            clean_resp = full_resp.replace("```html", "").replace("```", "").strip()
+            ph.markdown(f'<div class="ai-response">{clean_resp}▌</div>', unsafe_allow_html=True)
+        
+        # Nettoyage final pour l'enregistrement
+        clean_resp = full_resp.replace("```html", "").replace("```", "").strip()
         
         # Ajout du document analysé si nécessaire
         if uploaded_file: 
-            full_resp += f'<br><p style="font-size:12px; color:gray;">📄 Document analysé : {uploaded_file.name}</p>'
+            clean_resp += f'<br><p style="font-size:12px; color:gray;">📄 Document analysé : {uploaded_file.name}</p>'
         
         # Affichage final propre (sans le curseur)
-        ph.markdown(f'<div class="ai-response">{full_resp}</div>', unsafe_allow_html=True)
+        ph.markdown(f'<div class="ai-response">{clean_resp}</div>', unsafe_allow_html=True)
         
-        # Enregistrement dans l'historique (parfaitement aligné avec full_resp)
-        st.session_state.messages.append({"role": "assistant", "content": full_resp})
+        # Enregistrement dans l'historique de la version PROPRE
+        st.session_state.messages.append({"role": "assistant", "content": clean_resp})
