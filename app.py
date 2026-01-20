@@ -280,11 +280,27 @@ def check_password():
     with t2:
         code = st.text_input("Code", type="password")
         if st.button("Valider", use_container_width=True):
+            # 1. Code Administrateur (Lecture dans ENV)
             if code == os.getenv("ADMIN_PASSWORD"):
-                st.session_state.authenticated = True; st.session_state.user_email = "ADMINISTRATEUR"; st.rerun()
+                st.session_state.authenticated = True
+                st.session_state.user_email = "ADMINISTRATEUR"
+                st.rerun()
+            
+            # 2. Code Utilisateur Promo Standard (Lecture dans ENV)
             elif code == os.getenv("APP_PASSWORD"):
-                st.session_state.authenticated = True; st.session_state.user_email = "Utilisateur Promo"; st.rerun()
-            else: st.error("Code faux")
+                st.session_state.authenticated = True
+                st.session_state.user_email = "Utilisateur Promo"
+                st.rerun()
+            
+            # 3. Code Spécial ANDRH (Lecture dans ENV - Méthode Parfaite)
+            # Si le code saisi correspond à ce que tu as mis dans CODE_PROMO_ANDRH
+            elif code == os.getenv("CODE_PROMO_ANDRH"):
+                st.session_state.authenticated = True
+                st.session_state.user_email = "Membre ANDRH (Invité)"
+                st.rerun()
+                
+            else: 
+                st.error("Code faux")
     return False
 
 if not check_password(): st.stop()
