@@ -311,8 +311,9 @@ if not check_password(): st.stop()
 user_email = st.session_state.get("user_email")
 ADMIN_EMAILS = ["ton.email@admin.com"] # AJOUTE TON EMAIL ICI
 
-# On ne vérifie que si c'est un email classique (pas un code admin/promo)
-if user_email and user_email not in ["ADMINISTRATEUR", "Utilisateur Promo"]:
+# On ne vérifie que si c'est un email classique (pas un code admin/promo/invité)
+# ✅ CORRECTION : Ajout de "Membre ANDRH (Invité)" pour contourner Stripe
+if user_email and user_email not in ["ADMINISTRATEUR", "Utilisateur Promo", "Membre ANDRH (Invité)"]:
     # Passe-droit pour ton email perso
     if user_email in ADMIN_EMAILS:
         is_subscribed = True
