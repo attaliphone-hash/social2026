@@ -537,22 +537,30 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pou
         ctx, srcs = build_context(q)
         full_resp = ""
         
-        # Boucle de génération avec nettoyage en temps réel
+        # Fonction locale pour nettoyer le texte (Code blocks + Indentation parasite)
+        def clean_text_for_display(text):
+            # 1. On vire les balises de code Markdown
+            text = text.replace("```html", "").replace("```", "")
+            # 2. CRITIQUE : On supprime l'indentation (espaces) au début de chaque ligne
+            # Cela empêche Streamlit de transformer le HTML indenté en bloc de code gris
+            lines = [line.lstrip() for line in text.splitlines()]
+            return "\n".join(lines)
+
+        # Boucle de génération
         for chunk in get_gemini_response_stream(q, ctx, srcs, facts, user_text):
             full_resp += chunk
-            # 🧹 NETTOYAGE : On supprime les balises Markdown qui cassent l'affichage
-            clean_resp = full_resp.replace("```html", "").replace("```", "").strip()
+            clean_resp = clean_text_for_display(full_resp)
             ph.markdown(f'<div class="ai-response">{clean_resp}▌</div>', unsafe_allow_html=True)
         
-        # Nettoyage final pour l'enregistrement
-        clean_resp = full_resp.replace("```html", "").replace("```", "").strip()
+        # Nettoyage final
+        final_clean_resp = clean_text_for_display(full_resp)
         
         # Ajout du document analysé si nécessaire
         if uploaded_file: 
-            clean_resp += f'<br><p style="font-size:12px; color:gray;">📄 Document analysé : {uploaded_file.name}</p>'
+            final_clean_resp += f'<br><p style="font-size:12px; color:gray;">📄 Document analysé : {uploaded_file.name}</p>'
         
-        # Affichage final propre (sans le curseur)
-        ph.markdown(f'<div class="ai-response">{clean_resp}</div>', unsafe_allow_html=True)
+        # Affichage final propre
+        ph.markdown(f'<div class="ai-response">{final_clean_resp}</div>', unsafe_allow_html=True)
         
-        # Enregistrement dans l'historique de la version PROPRE
-        st.session_state.messages.append({"role": "assistant", "content": clean_resp})
+        # Enregistrement dans l'historique
+        st.session_state.messages.append({"role": "assistant", "content": final_clean_resp})
