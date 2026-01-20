@@ -420,11 +420,12 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
 - MAPPING SMIC/FILLON : Utilise 'T_moins_50' (0.3981) ou 'T_plus_50' (0.4021) uniquement pour la Réduction Générale.
 
 - RÈGLE "COÛT ZÉRO" (SMIC) :
-  Si on demande le coût ou les charges pour un SMIC :
-  1. Calcule l'exonération (ex: ~725€).
-  2. Considère que : [Charges Dues] = [Exonération Calculée].
-  3. Applique la formule : [Charges Dues] - [Exonération] = 0 €.
-  4. Affiche "0,00 €" en résultat final.
+  Si on demande le coût ou les charges pour un salaire égal au SMIC :
+  1. Règle Juridique : Au niveau du SMIC, la Réduction Générale est maximale et égale au paramètre T.
+  2. Calcul du Coefficient : Utilise STRICTEMENT Coefficient = T (soit T_moins_50 ou T_plus_50). Ne fais JAMAIS le calcul (1.6 * ...).
+  3. Montant Exonération = Salaire Brut x T.
+  4. Considère que [Charges Dues] = [Montant Exonération].
+  5. Affiche "0,00 €" en résultat final (car Charges - Exonération = 0).
   
   ⚠️ GESTION DES SOURCES (CRITIQUE) :
   CITE TOUJOURS L'ARTICLE PRÉCIS (ex: Code du travail - Art. L1234-9, ou BOSS - Fiche Frais Pro).
