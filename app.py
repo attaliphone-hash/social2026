@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py (VERSION PROPRE + PADDING BAS DE PAGE)
+# FICHIER : app.py (CORRECTIF : VEILLE + TITRES + ARTICLES)
 # ============================================================
 import streamlit as st
 import os
@@ -47,7 +47,7 @@ def manage_subscription_link(email):
             customer_id = customers.data[0].id
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                return_url="[https://socialexpertfrance.fr](https://socialexpertfrance.fr)" 
+                return_url="https://socialexpertfrance.fr" 
             )
             return session.url
     except Exception as e:
@@ -55,7 +55,7 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# DEBUT : NOUVEAU MODULE VEILLE (3 SOURCES + FIX SCRAPING)
+# DEBUT : NOUVEAU MODULE VEILLE (CORRECTIF TIMEOUT & HEADERS)
 # ==============================================================================
 
 # Dictionnaire pour traduire les dates "16 janvier 2026"
@@ -66,16 +66,18 @@ FRENCH_MONTHS = {
 
 def get_headers():
     return {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7"
     }
 
 # --- SOURCE 1 : BOSS ---
 def get_boss_status_html():
-    target_url = "[https://boss.gouv.fr/portail/accueil/actualites.html](https://boss.gouv.fr/portail/accueil/actualites.html)"
+    target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
     try:
-        url = "[https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss](https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss)"
-        response = requests.get(url, headers=get_headers(), timeout=6)
+        url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
+        # Timeout augmenté à 12s pour éviter les erreurs sur Cloud Run
+        response = requests.get(url, headers=get_headers(), timeout=12)
         
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
@@ -93,17 +95,18 @@ def get_boss_status_html():
                         return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU BOSS ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
                     else:
                         return f"<div style='background-color:#d4edda; color:#155724; padding:10px; border-radius:6px; border:1px solid #c3e6cb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
-    except: pass
+    except Exception as e:
+        print(f"Erreur BOSS: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- SOURCE 2 : SERVICE-PUBLIC (FIX SCRAPING HTML) ---
+# --- SOURCE 2 : SERVICE-PUBLIC ---
 def get_service_public_status():
-    target_url = "[https://entreprendre.service-public.gouv.fr/actualites](https://entreprendre.service-public.gouv.fr/actualites)"
+    target_url = "https://entreprendre.service-public.gouv.fr/actualites"
     try:
-        response = requests.get(target_url, headers=get_headers(), timeout=8)
+        # Timeout augmenté
+        response = requests.get(target_url, headers=get_headers(), timeout=15)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
-            # On cherche la première "carte" (fr-card)
             card = soup.find('div', class_='fr-card')
             if card:
                 title_tag = card.find(class_='fr-card__title')
@@ -129,15 +132,17 @@ def get_service_public_status():
                         return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU SERVICE-PUBLIC ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
                     else:
                         return f"<div style='background-color:#d1ecf1; color:#0c5460; padding:10px; border-radius:6px; border:1px solid #bee5eb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Service-Public (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
-    except: pass
+    except Exception as e:
+        print(f"Erreur SP: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- SOURCE 3 : NET-ENTREPRISES ---
 def get_net_entreprises_status():
-    target_url = "[https://www.net-entreprises.fr/actualites/](https://www.net-entreprises.fr/actualites/)"
+    target_url = "https://www.net-entreprises.fr/actualites/"
     try:
-        url = "[https://www.net-entreprises.fr/feed/](https://www.net-entreprises.fr/feed/)"
-        response = requests.get(url, headers=get_headers(), timeout=6)
+        url = "https://www.net-entreprises.fr/feed/"
+        # Timeout augmenté
+        response = requests.get(url, headers=get_headers(), timeout=12)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
             item = soup.find('item')
@@ -153,7 +158,8 @@ def get_net_entreprises_status():
                         return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU NET-ENTREPRISES ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
                     else:
                         return f"<div style='background-color:#fff3cd; color:#856404; padding:10px; border-radius:6px; border:1px solid #ffeeba; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Net-Entreprises (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
-    except: pass
+    except Exception as e:
+        print(f"Erreur NetEnt: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- FONCTION PRINCIPALE ---
@@ -178,7 +184,6 @@ def show_legal_watch_bar():
 # --- POPUPS ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
-    # On utilise st.html pour le contenu technique ou st.markdown avec des balises simples
     st.markdown(f"""
     <div style='font-size: 12px; color: #1e293b; font-family: sans-serif;'>
         <p>ÉDITEUR DU SITE<br>
@@ -384,15 +389,14 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
 # === PROMPT EXPERT SOCIAL PRO 2026 - FINAL RENDER (0€ + HTML PROPRE) ===
-# NOTE : Padding bottom ajouté pour l'esthétique
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
 RÈGLE DE FORME ABSOLUE (CRITIQUE) :
 1. Tu dois générer du **HTML BRUT** destiné à être injecté directement dans une page web.
 2. ⚠️ Ne mets JAMAIS de balises de code (pas de ```html, pas de ```).
-3. Ne laisse jamais apparaître les balises <ul>, <li> ou <br> sous forme de texte visible dans le rendu final. Elles doivent servir au formatage.
-4. Commence directement par la balise <h4>.
+3. INTERDICTION TOTALE du Markdown pour les titres (Pas de #, ##, ###, ####). Utilise uniquement <h4 style="...">.
+4. Ne laisse jamais apparaître les balises <ul>, <li> ou <br> sous forme de texte visible. Elles doivent servir au formatage invisible.
 
 --- 1. LOGIQUE MÉTIER & CALCUL ---
 - PRIORITÉ 1 : SCANNE LE YAML.
@@ -406,8 +410,9 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
   4. Affiche "0,00 €" en résultat final.
   
   ⚠️ GESTION DES SOURCES (CRITIQUE) :
-  Ne cite JAMAIS "Protocole", "Instruction" ou "Règle interne" comme source.
-  Pour justifier le coût nul au SMIC, la source officielle est : **"BOSS / Urssaf"** (Dispositif Zéro Charges).
+  CITE TOUJOURS L'ARTICLE PRÉCIS (ex: Code du travail - Art. L1234-9, ou BOSS - Fiche Frais Pro).
+  Ne dis JAMAIS juste "Code du Travail".
+  Interdiction d'afficher les noms de fichiers techniques (REF_, DOC_, PDF).
 
 --- 2. CONTEXTE RAG ---
 {certified_facts}
@@ -418,10 +423,8 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li>[Insérer ici les règles juridiques et sources]</li>
+    <li>[Insérer ici les règles juridiques avec Article Précis]</li>
 </ul>
-
-[CONSIGNE SOURCES] : Affiche "Code du travail", "BOSS", "Urssaf". Pas de noms de fichiers.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">
     [TITRE : "Calcul de l'Exonération" (si Fillon) OU "Calcul & Application" (si Autre)]
@@ -432,16 +435,14 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
     <strong>Détail :</strong><br>
     
     [INSTRUCTION DE RENDU DU CALCUL] :
-    - SI SMIC/FILLON : Génère une liste à puces HTML (<ul><li>) comparant les deux hypothèses (<50 et ≥50) avec les montants de réduction.
-    - SI AUTRE CAS : Génère le détail du calcul étape par étape.
-    
-    [ATTENTION : Génère directement le code HTML des puces ici. Ne l'affiche pas en texte.]
+    - Génère une liste à puces HTML (<ul><li>) sans indentation Markdown avant.
+    - Détaille le calcul étape par étape.
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 CONCLUSION</h2>
     <p style="font-size: 18px;"><strong>Résultat : [RÉSULTAT FINAL CALCULÉ]</strong></p>
-    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Phrase d'explication (ex: "Le coût est nul grâce à l'exonération...")]</p>
+    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Phrase d'explication]</p>
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
