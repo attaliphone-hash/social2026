@@ -542,13 +542,49 @@ if uploaded_file:
 
 if "messages" not in st.session_state: st.session_state.messages = []
 for m in st.session_state.messages:
-    with st.chat_message(m["role"], avatar=("avatar-logo.png" if m["role"]=="assistant" else None)): st.markdown(m["content"], unsafe_allow_html=True)
+    with st.chat_message(m["role"], avatar=("avatar-logo.png" if m["role"]=="assistant" else None)): 
+        st.markdown(m["content"], unsafe_allow_html=True)
 
+# ============================================================
+# 🛡️ LIMITEUR D'USAGE (QUOTA SÉCURITÉ)
+# ============================================================
+# 1. On définit les limites selon le profil
+user_role = st.session_state.get("user_email", "Inconnu")
+
+if user_role == "Membre ANDRH (Invité)":
+    QUOTA_LIMIT = 30  # Limite pour le test ANDRH
+elif user_role == "ADMINISTRATEUR":
+    QUOTA_LIMIT = 9999 # Illimité pour toi
+else:
+    QUOTA_LIMIT = 50   # Sécurité standard
+
+# 2. Initialisation du compteur
+if "query_count" not in st.session_state:
+    st.session_state.query_count = 0
+
+# 3. Vérification AVANT de laisser poser la question
+if st.session_state.query_count >= QUOTA_LIMIT:
+    st.warning(f"🛑 **Limite de session atteinte ({QUOTA_LIMIT} questions).**")
+    st.info("Cette version de démonstration est limitée. Veuillez rafraîchir la page (F5) pour démarrer une nouvelle session.")
+    st.stop() # Bloque l'affichage de la barre de saisie en dessous
+
+# ============================================================
+# 💬 BARRE DE SAISIE & TRAITEMENT
+# ============================================================
 if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pour les documents à analyser)"):
+    
+    # ✅ CORRECTIF IMPORTANT : On augmente le compteur quand une question est posée
+    st.session_state.query_count += 1
+    
+    # Gestion du message utilisateur
     st.session_state.messages.append({"role": "user", "content": q})
     with st.chat_message("user"): st.markdown(q)
+    
+    # Gestion de la réponse IA
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         ph = st.empty()
+        
+        # Préparation du contexte
         cleaned_q = clean_query_for_engine(q)
         facts = engine.format_certified_facts(engine.match_rules(cleaned_q))
         ctx, srcs = build_context(q)
@@ -558,25 +594,24 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pou
         def clean_text_for_display(text):
             # 1. On vire les balises de code Markdown
             text = text.replace("```html", "").replace("```", "")
-            # 2. CRITIQUE : On supprime l'indentation (espaces) au début de chaque ligne
-            # Cela empêche Streamlit de transformer le HTML indenté en bloc de code gris
+            # 2. On supprime l'indentation (espaces) au début de chaque ligne
             lines = [line.lstrip() for line in text.splitlines()]
             return "\n".join(lines)
 
-        # Boucle de génération
+        # Boucle de génération (Streaming)
         for chunk in get_gemini_response_stream(q, ctx, srcs, facts, user_text):
             full_resp += chunk
             clean_resp = clean_text_for_display(full_resp)
             ph.markdown(f'<div class="ai-response">{clean_resp}▌</div>', unsafe_allow_html=True)
         
-        # Nettoyage final
+        # Nettoyage final et affichage
         final_clean_resp = clean_text_for_display(full_resp)
         
         # Ajout du document analysé si nécessaire
         if uploaded_file: 
             final_clean_resp += f'<br><p style="font-size:12px; color:gray;">📄 Document analysé : {uploaded_file.name}</p>'
         
-        # Affichage final propre
+        # Rendu final sans curseur
         ph.markdown(f'<div class="ai-response">{final_clean_resp}</div>', unsafe_allow_html=True)
         
         # Enregistrement dans l'historique
