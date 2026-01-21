@@ -146,58 +146,109 @@ def apply_pro_design():
 def render_top_columns():
     import streamlit as st
     
-    # 1. CSS SPÉCIFIQUE AVEC DÉTECTION MOBILE
     st.markdown("""
     <style>
-    /* STYLE DES CARTES (DESKTOP & MOBILE) */
-    .info-card {
+    /* =========================================
+       1. LOGIQUE D'AFFICHAGE (MEDIA QUERIES)
+       ========================================= */
+    
+    /* Par défaut (Mobile), on cache le Desktop */
+    .desktop-container { display: none !important; }
+    .mobile-container { display: block !important; }
+
+    /* Sur PC (Largeur > 768px), on inverse : on montre Desktop, on cache Mobile */
+    @media (min-width: 768px) {
+        .desktop-container { display: flex !important; }
+        .mobile-container { display: none !important; }
+    }
+
+    /* =========================================
+       2. STYLE DESKTOP (TON ANCIENNE VERSION)
+       ========================================= */
+    .desktop-container {
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 25px;
+    }
+    .info-card-desktop {
         background-color: white;
-        padding: 10px;
+        padding: 12px;
         border-radius: 8px;
         border: 1px solid #e0e0e0;
         text-align: center;
-        height: 100%;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        flex: 1; /* Largeur égale pour tous */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        min-width: 0; /* Évite le débordement */
     }
-    .info-header {
-        font-weight: 700;
+    .card-title-desktop {
         color: #024c6f;
-        font-size: 13px; /* Taille ajustée */
-        margin-bottom: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
+        font-weight: 700;
+        font-size: 13px;
+        margin-bottom: 6px;
+        white-space: nowrap; /* Force le titre sur une ligne si possible */
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    .info-text {
-        font-size: 11px;
+    .card-desc-desktop {
         color: #666;
+        font-size: 11px;
         line-height: 1.3;
-        margin-top: 5px;
-        border-top: 1px solid #f0f0f0;
-        padding-top: 5px;
     }
 
-    /* 📱 RÈGLE MAGIQUE POUR MOBILE (Largeur < 768px) */
-    @media only screen and (max-width: 768px) {
-        /* On cache la description */
-        .mobile-hidden-text {
-            display: none !important;
-        }
-        /* On rend la carte ultra-compacte */
-        .info-card {
-            padding: 8px !important;
-            margin-bottom: 4px !important;
-            border: 1px solid #eee !important;
-            box-shadow: none !important;
-        }
-        /* On enlève la marge sous le titre */
-        .info-header {
-            margin-bottom: 0 !important;
-            font-size: 12px !important;
-        }
+    /* =========================================
+       3. STYLE MOBILE (TEXTE GRIS LIGNE SIMPLE)
+       ========================================= */
+    .mobile-container {
+        text-align: center;
+        margin-bottom: 15px; /* Marge réduite pour remonter le login */
+        padding: 0 10px;
+    }
+    .mobile-text {
+        font-family: 'Source Sans Pro', sans-serif;
+        font-size: 11px; /* Petit et discret */
+        color: #444;     /* Gris foncé demandé */
+        line-height: 1.4;
+    }
+    .mobile-separator {
+        color: #999;
+        margin: 0 4px;
     }
     </style>
+
+    <div class="desktop-container">
+        <div class="info-card-desktop">
+            <div class="card-title-desktop">✅ Données Certifiées 2026</div>
+            <div class="card-desc-desktop">SMIC, Plafonds SS, Taux à jour.</div>
+        </div>
+        <div class="info-card-desktop">
+            <div class="card-title-desktop">⚖️ Sources officielles</div>
+            <div class="card-desc-desktop">Code du travail, BOSS, CCN.</div>
+        </div>
+        <div class="info-card-desktop">
+            <div class="card-title-desktop">⚡ Mise à Jour Agile</div>
+            <div class="card-desc-desktop">Intégration des nouveaux décrets.</div>
+        </div>
+        <div class="info-card-desktop">
+            <div class="card-title-desktop">🔍 Traçabilité Totale</div>
+            <div class="card-desc-desktop">Réponses sourcées juridiquement.</div>
+        </div>
+        <div class="info-card-desktop">
+            <div class="card-title-desktop">🔒 Confidentialité</div>
+            <div class="card-desc-desktop">Aucun stockage. RGPD Compliant.</div>
+        </div>
+    </div>
+
+    <div class="mobile-container">
+        <div class="mobile-text">
+            <strong>Données Certifiées 2026</strong>
+            <span class="mobile-separator">-</span>
+            Sources Officielles
+            <span class="mobile-separator">-</span>
+            Mise à jour Agile
+            <span class="mobile-separator">-</span>
+            Confidentialité
+        </div>
+    </div>
     """, unsafe_allow_html=True)
 
     # 2. LES DONNÉES (On les définit ici pour être sûr du texte)
