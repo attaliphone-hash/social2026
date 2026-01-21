@@ -271,7 +271,7 @@ def check_password():
         st.markdown("---")
         
         # --- SECTION ABONNEMENT (AVEC LES CARTES UI) ---
-        st.subheader("💎 Passer à la version PRO")
+        st.subheader("PAS ENCORE ABONNÉ ?")
         st.write("Débloquez l'accès illimité et le mode Expert Social 2026.")
 
         # Appel de la fonction graphique (définie dans ui/styles.py)

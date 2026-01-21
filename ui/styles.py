@@ -162,7 +162,7 @@ def render_subscription_cards():
             <h3 style="color: #1565c0; margin-top:0;">Mensuel</h3>
             <h2 style="color: #0d47a1; font-size: 28px;">35 € <span style="font-size:16px; color:#555;">HT / MOIS</span></h2>
             <p style="color: #333; font-size: 14px; margin-top: 10px;">Sans engagement</p>
-            <p style="color: #666; font-size: 13px;">✅ Accès complet Expert 2026</p>
+            <p style="color: #666; font-size: 13px;">Accès complet Expert Pro 2026</p>
         </div>
         """, unsafe_allow_html=True)
         
