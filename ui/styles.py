@@ -3,7 +3,7 @@ import os
 import base64
 
 # ==============================================================================
-# 1. UTILITAIRES & CONFIGURATION
+# 1. DESIGN GLOBAL
 # ==============================================================================
 def get_base64(bin_file):
     if os.path.exists(bin_file):
@@ -11,9 +11,6 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    """
-    Applique le CSS global (Titres, Boutons, Fond).
-    """
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
@@ -45,7 +42,7 @@ def apply_pro_design():
             text-align: left !important;
         }
 
-        /* --- INTERFACE UPLOAD --- */
+        /* --- BOUTONS & UPLOAD --- */
         .fake-upload-btn {
             font-family: 'Open Sans', sans-serif;
             font-size: 12px;
@@ -74,7 +71,6 @@ def apply_pro_design():
             padding: 0 !important;
         }
 
-        /* --- BOUTONS --- */
         button[data-testid="stBaseButton-secondary"] {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 12px !important;
@@ -86,7 +82,6 @@ def apply_pro_design():
             width: 100% !important;
         }
 
-        /* --- CHAT & FOOTER --- */
         .footer-text {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 11px !important; 
@@ -105,9 +100,8 @@ def apply_pro_design():
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
         
         </style>
-    """, unsafe_allow_html=True) # <-- C'est ici que j'avais oublié les guillemets. C'est réparé.
+    """, unsafe_allow_html=True)
 
-    # Gestion du Background
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
@@ -116,20 +110,19 @@ def apply_pro_design():
 
 
 # ==============================================================================
-# 2. ARGUMENTS (MOBILE COMPACT / DESKTOP CLASSIQUE)
+# 2. ARGUMENTS DE RÉASSURANCE (TEXTE EXACT DE L'IMAGE)
 # ==============================================================================
 def render_top_columns():
     """
-    Affiche les arguments.
-    - MOBILE : Ligne de texte compacte.
-    - DESKTOP : 5 Colonnes natives avec texte simple (SANS BLOCS BLANCS).
+    - DESKTOP : 5 colonnes, texte exact de l'image, pas de fond blanc, pas d'icônes.
+    - MOBILE : Ligne compacte.
     """
     import streamlit as st
     
-    # 1. CSS POUR GÉRER L'AFFICHAGE (Mobile vs Desktop)
+    # CSS RESPONSIVE
     st.markdown("""
     <style>
-    /* PAR DÉFAUT (MOBILE) : On affiche le texte compact, on cache le wrapper Desktop */
+    /* MOBILE : On affiche la ligne compacte */
     .mobile-header-text { 
         display: block !important; 
         text-align: center;
@@ -139,60 +132,73 @@ def render_top_columns():
         margin-bottom: 15px;
         line-height: 1.4;
     }
+    /* MOBILE : On cache le desktop */
     .desktop-wrapper { display: none !important; }
 
-    /* SUR DESKTOP (Écran > 768px) */
+    /* DESKTOP (> 768px) */
     @media (min-width: 768px) {
         .mobile-header-text { display: none !important; }
         .desktop-wrapper { display: block !important; }
     }
 
-    /* STYLE DES TEXTES DESKTOP (Simple, pas de cartes) */
+    /* STYLE TEXTE DESKTOP (Brut, sans boîte) */
     .arg-title {
-        color: #024c6f;
+        color: #024c6f; /* Bleu foncé */
         font-weight: 700;
-        font-size: 14px;
+        font-size: 13px;
         margin-bottom: 4px;
-        text-align: center;
+        line-height: 1.2;
     }
     .arg-desc {
-        color: #666;
-        font-size: 12px;
+        color: #555; /* Gris */
+        font-size: 11px;
         line-height: 1.3;
-        text-align: center;
     }
     .sep { color: #aaa; margin: 0 4px; }
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. HTML MOBILE (Visible seulement sur mobile)
+    # 1. MOBILE (Ligne compacte)
     st.markdown("""
     <div class="mobile-header-text">
         <strong>Données Certifiées 2026</strong> <span class="sep">-</span>
         Sources Officielles <span class="sep">-</span>
         Mise à jour Agile <span class="sep">-</span>
-        Traçabilité <span class="sep">-</span>
-        Confidentialité
+        Traçabilité Totale <span class="sep">-</span>
+        Confidentialité Garantie
     </div>
     """, unsafe_allow_html=True)
 
-    # 3. STRUCTURE DESKTOP (St.columns natif)
-    # On enveloppe tout ça dans une div 'desktop-wrapper' pour pouvoir le cacher sur mobile
+    # 2. DESKTOP (Texte complet de l'image IMG_7373)
     st.markdown('<div class="desktop-wrapper">', unsafe_allow_html=True)
     
-    # C'EST ICI QU'ON RETROUVE L'AFFICHAGE SIMPLE D'HIER (5 COLONNES)
     c1, c2, c3, c4, c5 = st.columns(5)
 
     with c1:
-        st.markdown('<div class="arg-title">✅ Données 2026</div><div class="arg-desc">SMIC, Plafonds SS, Taux à jour.</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="arg-title">Données Certifiées 2026 :</div>
+        <div class="arg-desc">Intégration prioritaire des nouveaux textes pour une précision chirurgicale.</div>
+        """, unsafe_allow_html=True)
     with c2:
-        st.markdown('<div class="arg-title">⚖️ Sources</div><div class="arg-desc">Code du travail, BOSS, CCN.</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="arg-title">Sources officielles :</div>
+        <div class="arg-desc">Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux.</div>
+        """, unsafe_allow_html=True)
     with c3:
-        st.markdown('<div class="arg-title">⚡ Mise à Jour</div><div class="arg-desc">Intégration des nouveaux décrets.</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="arg-title">Mise à Jour Agile :</div>
+        <div class="arg-desc">Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente.</div>
+        """, unsafe_allow_html=True)
     with c4:
-        st.markdown('<div class="arg-title">🔍 Traçabilité</div><div class="arg-desc">Réponses sourcées juridiquement.</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="arg-title">Traçabilité Totale :</div>
+        <div class="arg-desc">Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique.</div>
+        """, unsafe_allow_html=True)
     with c5:
-        st.markdown('<div class="arg-title">🔒 Confidentialité</div><div class="arg-desc">Aucun stockage. RGPD Compliant.</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <div class="arg-title">Confidentialité Garantie :</div>
+        <div class="arg-desc">Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.</div>
+        """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -201,12 +207,10 @@ def render_top_columns():
 # 3. ABONNEMENTS
 # ==============================================================================
 def render_subscription_cards():
-    """Affiche les cartes d'abonnement Mensuel (Bleu) et Annuel (Vert)"""
     import streamlit as st
     
     col1, col2 = st.columns(2, gap="medium")
     
-    # --- CARTE MENSUELLE (BLEU) ---
     with col1:
         st.markdown("""
         <div style="background-color: #e3f2fd; padding: 20px; border-radius: 10px; border: 1px solid #90caf9; height: 100%;">
@@ -216,11 +220,8 @@ def render_subscription_cards():
             <p style="color: #666; font-size: 13px;">Accès complet Expert Pro 2026</p>
         </div>
         """, unsafe_allow_html=True)
-        
-        # LIEN STRIPE MENSUEL (35€)
         st.link_button("S'abonner (Mensuel)", "https://buy.stripe.com/6oUeVf4U0enk1g07Q77AI01", use_container_width=True)
 
-    # --- CARTE ANNUELLE (VERT) ---
     with col2:
         st.markdown("""
         <div style="background-color: #e8f5e9; padding: 20px; border-radius: 10px; border: 1px solid #a5d6a7; height: 100%;">
@@ -230,6 +231,4 @@ def render_subscription_cards():
             <p style="color: #666; font-size: 13px;">✅ Rentabilité immédiate</p>
         </div>
         """, unsafe_allow_html=True)
-        
-        # LIEN STRIPE ANNUEL (350€)
         st.link_button("S'abonner (Annuel)", "https://buy.stripe.com/8x25kFgCIgvscYI2vN7AI00", use_container_width=True)
