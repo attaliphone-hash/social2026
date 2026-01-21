@@ -416,7 +416,11 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
 4. Ne laisse jamais apparaître les balises <ul>, <li> ou <br> sous forme de texte visible. Elles doivent servir au formatage invisible.
 
 --- 1. LOGIQUE MÉTIER & CALCUL ---
-- PRIORITÉ 1 : SCANNE LE YAML.
+- RÈGLE ABSOLUE (DATA-DRIVEN) :
+  Avant de lancer un calcul, SCANNE LE CONTEXTE (YAML/RAG).
+  SI UNE VALEUR EST DÉJÀ PRÉSENTE (ex: "plafond_journalier", "montant_forfaitaire", "seuil"), UTILISE-LA TEL QUEL.
+  ⛔ INTERDICTION DE RECALCULER une donnée si elle est fournie. Fais confiance au YAML (c'est la source de vérité 2026).
+
 - MAPPING SMIC/FILLON : Utilise 'T_moins_50' (0.3981) ou 'T_plus_50' (0.4021) uniquement pour la Réduction Générale.
 
 - RÈGLE "COÛT ZÉRO" (SMIC) :
