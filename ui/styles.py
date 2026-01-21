@@ -110,20 +110,17 @@ def apply_pro_design():
 
 
 # ==============================================================================
-# 2. ARGUMENTS DE RÉASSURANCE (100% HTML/CSS pour éviter les bugs Streamlit)
+# 2. ARGUMENTS DE RÉASSURANCE (CORRIGÉ)
 # ==============================================================================
 def render_top_columns():
-    """
-    Affiche les arguments.
-    Technique : Tout est dans un seul bloc HTML. Le CSS gère l'affichage.
-    """
     import streamlit as st
     
-    st.markdown("""
+    # ON DÉFINIT LE HTML DANS UNE VARIABLE SANS INDENTATION PARASITE
+    html_content = """
     <style>
-    /* --- CONFIGURATION MOBILE --- */
+    /* --- MOBILE --- */
     .mobile-header-text { 
-        display: block !important; /* Visible sur mobile */
+        display: block !important; 
         text-align: center;
         font-family: 'Source Sans Pro', sans-serif;
         font-size: 11px;
@@ -131,45 +128,38 @@ def render_top_columns():
         margin-bottom: 15px;
         line-height: 1.4;
     }
-    
-    .desktop-container { 
-        display: none !important; /* Caché sur mobile */
-    }
+    .desktop-container { display: none !important; }
 
-    /* --- CONFIGURATION DESKTOP (Écran > 768px) --- */
+    /* --- DESKTOP (> 768px) --- */
     @media (min-width: 768px) {
-        .mobile-header-text { display: none !important; } /* Caché sur PC */
+        .mobile-header-text { display: none !important; }
         
         .desktop-container { 
-            display: flex !important; /* Visible sur PC (Flexbox = Colonnes) */
+            display: flex !important;
             flex-direction: row;
             justify-content: space-between;
-            gap: 15px;
+            gap: 20px;
             width: 100%;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
     }
 
-    /* --- STYLE DU TEXTE DESKTOP --- */
+    /* --- STYLE DESKTOP --- */
     .desktop-col {
-        flex: 1; /* Largeur égale pour les 5 colonnes */
-        text-align: center;
+        flex: 1;
+        text-align: left; /* Alignement gauche comme sur l'image */
     }
-    
     .arg-title {
-        color: #024c6f; /* Bleu foncé */
+        color: #024c6f;
         font-weight: 700;
         font-size: 13px;
         margin-bottom: 5px;
-        line-height: 1.2;
     }
-    
     .arg-desc {
-        color: #555; /* Gris */
+        color: #555;
         font-size: 11px;
         line-height: 1.4;
     }
-    
     .sep { color: #aaa; margin: 0 4px; }
     </style>
 
@@ -209,7 +199,10 @@ def render_top_columns():
         </div>
 
     </div>
-    """, unsafe_allow_html=True)
+    """
+    
+    # ON INJECTE LE HTML AVEC L'OPTION OBLIGATOIRE
+    st.markdown(html_content, unsafe_allow_html=True)
 
 
 # ==============================================================================
