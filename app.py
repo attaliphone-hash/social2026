@@ -269,14 +269,16 @@ def check_password():
                 st.rerun()
             except: st.error("Erreur d'identification.")
         st.markdown("---")
-        render_subscription_cards()
-        if st.session_state.get("btn_sub_month"):
-            u = create_checkout_session("Mensuel")
-            if u: st.markdown(f'<meta http-equiv="refresh" content="0;URL={u}">', unsafe_allow_html=True)
-        if st.session_state.get("btn_sub_year"):
-            u = create_checkout_session("Annuel")
-            if u: st.markdown(f'<meta http-equiv="refresh" content="0;URL={u}">', unsafe_allow_html=True)
+        
+        # --- SECTION ABONNEMENT (AVEC LES CARTES UI) ---
+        st.subheader("💎 Passer à la version PRO")
+        st.write("Débloquez l'accès illimité et le mode Expert Social 2026.")
 
+        # Appel de la fonction graphique (définie dans ui/styles.py)
+        # Assure-toi d'avoir mis à jour styles.py avec les prix 35/350 avant !
+        render_subscription_cards()
+
+    # --- ONGLET 2 : CODES D'ACCÈS (INCHANGÉ) ---
     with t2:
         code = st.text_input("Code", type="password")
         if st.button("Valider", use_container_width=True):
@@ -292,8 +294,7 @@ def check_password():
                 st.session_state.user_email = "Utilisateur Promo"
                 st.rerun()
             
-            # 3. Code Spécial ANDRH (Lecture dans ENV - Méthode Parfaite)
-            # Si le code saisi correspond à ce que tu as mis dans CODE_PROMO_ANDRH
+            # 3. Code Spécial ANDRH (Lecture dans ENV)
             elif code == os.getenv("CODE_PROMO_ANDRH"):
                 st.session_state.authenticated = True
                 st.session_state.user_email = "Membre ANDRH (Invité)"

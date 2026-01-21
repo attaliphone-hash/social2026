@@ -150,10 +150,35 @@ def render_top_columns():
         col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
 
 def render_subscription_cards():
-    col_m, col_a = st.columns(2)
-    with col_m:
-        st.markdown("""<div style="background-color: #e3f2fd; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #bbdefb;"><h3>Mensuel</h3><h2>50 € HT <small>/ mois</small></h2><p>Sans engagement</p></div><br>""", unsafe_allow_html=True)
-        st.button("S'abonner (Mensuel)", key="btn_sub_month", use_container_width=True)
-    with col_a:
-        st.markdown("""<div style="background-color: #e8f5e9; border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #c8e6c9;"><h3>Annuel</h3><h2>500 € HT <small>/ an</small></h2><p>2 mois offerts</p></div><br>""", unsafe_allow_html=True)
-        st.button("S'abonner (Annuel)", key="btn_sub_year", use_container_width=True)
+    """Affiche les cartes d'abonnement Mensuel (Bleu) et Annuel (Vert)"""
+    import streamlit as st
+    
+    col1, col2 = st.columns(2, gap="medium")
+    
+    # --- CARTE MENSUELLE (BLEU) ---
+    with col1:
+        st.markdown("""
+        <div style="background-color: #e3f2fd; padding: 20px; border-radius: 10px; border: 1px solid #90caf9; height: 100%;">
+            <h3 style="color: #1565c0; margin-top:0;">Mensuel</h3>
+            <h2 style="color: #0d47a1; font-size: 28px;">35 € <span style="font-size:16px; color:#555;">HT / MOIS</span></h2>
+            <p style="color: #333; font-size: 14px; margin-top: 10px;">Sans engagement</p>
+            <p style="color: #666; font-size: 13px;">✅ Accès complet Expert 2026</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # LIEN STRIPE MENSUEL (35€)
+        st.link_button("S'abonner (Mensuel)", "https://buy.stripe.com/6oUeVf4U0enk1g07Q77AI01", use_container_width=True)
+
+    # --- CARTE ANNUELLE (VERT) ---
+    with col2:
+        st.markdown("""
+        <div style="background-color: #e8f5e9; padding: 20px; border-radius: 10px; border: 1px solid #a5d6a7; height: 100%;">
+            <h3 style="color: #2e7d32; margin-top:0;">Annuel</h3>
+            <h2 style="color: #1b5e20; font-size: 28px;">350 € <span style="font-size:16px; color:#555;">HT / AN</span></h2>
+            <p style="color: #333; font-size: 14px; margin-top: 10px;">2 mois offerts</p>
+            <p style="color: #666; font-size: 13px;">✅ Rentabilité immédiate</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # LIEN STRIPE ANNUEL (350€)
+        st.link_button("S'abonner (Annuel)", "https://buy.stripe.com/8x25kFgCIgvscYI2vN7AI00", use_container_width=True)
