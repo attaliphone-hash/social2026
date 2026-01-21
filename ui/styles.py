@@ -3,7 +3,7 @@ import os
 import base64
 
 # ==============================================================================
-# 1. DESIGN GLOBAL
+# 1. DESIGN GLOBAL & CONFIGURATION
 # ==============================================================================
 def get_base64(bin_file):
     if os.path.exists(bin_file):
@@ -110,21 +110,20 @@ def apply_pro_design():
 
 
 # ==============================================================================
-# 2. ARGUMENTS DE RÉASSURANCE (TEXTE EXACT DE L'IMAGE)
+# 2. ARGUMENTS DE RÉASSURANCE (100% HTML/CSS pour éviter les bugs Streamlit)
 # ==============================================================================
 def render_top_columns():
     """
-    - DESKTOP : 5 colonnes, texte exact de l'image, pas de fond blanc, pas d'icônes.
-    - MOBILE : Ligne compacte.
+    Affiche les arguments.
+    Technique : Tout est dans un seul bloc HTML. Le CSS gère l'affichage.
     """
     import streamlit as st
     
-    # CSS RESPONSIVE
     st.markdown("""
     <style>
-    /* MOBILE : On affiche la ligne compacte */
+    /* --- CONFIGURATION MOBILE --- */
     .mobile-header-text { 
-        display: block !important; 
+        display: block !important; /* Visible sur mobile */
         text-align: center;
         font-family: 'Source Sans Pro', sans-serif;
         font-size: 11px;
@@ -132,34 +131,48 @@ def render_top_columns():
         margin-bottom: 15px;
         line-height: 1.4;
     }
-    /* MOBILE : On cache le desktop */
-    .desktop-wrapper { display: none !important; }
-
-    /* DESKTOP (> 768px) */
-    @media (min-width: 768px) {
-        .mobile-header-text { display: none !important; }
-        .desktop-wrapper { display: block !important; }
+    
+    .desktop-container { 
+        display: none !important; /* Caché sur mobile */
     }
 
-    /* STYLE TEXTE DESKTOP (Brut, sans boîte) */
+    /* --- CONFIGURATION DESKTOP (Écran > 768px) --- */
+    @media (min-width: 768px) {
+        .mobile-header-text { display: none !important; } /* Caché sur PC */
+        
+        .desktop-container { 
+            display: flex !important; /* Visible sur PC (Flexbox = Colonnes) */
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 15px;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+    }
+
+    /* --- STYLE DU TEXTE DESKTOP --- */
+    .desktop-col {
+        flex: 1; /* Largeur égale pour les 5 colonnes */
+        text-align: center;
+    }
+    
     .arg-title {
         color: #024c6f; /* Bleu foncé */
         font-weight: 700;
         font-size: 13px;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
         line-height: 1.2;
     }
+    
     .arg-desc {
         color: #555; /* Gris */
         font-size: 11px;
-        line-height: 1.3;
+        line-height: 1.4;
     }
+    
     .sep { color: #aaa; margin: 0 4px; }
     </style>
-    """, unsafe_allow_html=True)
 
-    # 1. MOBILE (Ligne compacte)
-    st.markdown("""
     <div class="mobile-header-text">
         <strong>Données Certifiées 2026</strong> <span class="sep">-</span>
         Sources Officielles <span class="sep">-</span>
@@ -167,40 +180,36 @@ def render_top_columns():
         Traçabilité Totale <span class="sep">-</span>
         Confidentialité Garantie
     </div>
+
+    <div class="desktop-container">
+        
+        <div class="desktop-col">
+            <div class="arg-title">Données Certifiées 2026 :</div>
+            <div class="arg-desc">Intégration prioritaire des nouveaux textes pour une précision chirurgicale.</div>
+        </div>
+
+        <div class="desktop-col">
+            <div class="arg-title">Sources officielles :</div>
+            <div class="arg-desc">Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux.</div>
+        </div>
+
+        <div class="desktop-col">
+            <div class="arg-title">Mise à Jour Agile :</div>
+            <div class="arg-desc">Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente.</div>
+        </div>
+
+        <div class="desktop-col">
+            <div class="arg-title">Traçabilité Totale :</div>
+            <div class="arg-desc">Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique.</div>
+        </div>
+
+        <div class="desktop-col">
+            <div class="arg-title">Confidentialité Garantie :</div>
+            <div class="arg-desc">Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.</div>
+        </div>
+
+    </div>
     """, unsafe_allow_html=True)
-
-    # 2. DESKTOP (Texte complet de l'image IMG_7373)
-    st.markdown('<div class="desktop-wrapper">', unsafe_allow_html=True)
-    
-    c1, c2, c3, c4, c5 = st.columns(5)
-
-    with c1:
-        st.markdown("""
-        <div class="arg-title">Données Certifiées 2026 :</div>
-        <div class="arg-desc">Intégration prioritaire des nouveaux textes pour une précision chirurgicale.</div>
-        """, unsafe_allow_html=True)
-    with c2:
-        st.markdown("""
-        <div class="arg-title">Sources officielles :</div>
-        <div class="arg-desc">Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux.</div>
-        """, unsafe_allow_html=True)
-    with c3:
-        st.markdown("""
-        <div class="arg-title">Mise à Jour Agile :</div>
-        <div class="arg-desc">Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente.</div>
-        """, unsafe_allow_html=True)
-    with c4:
-        st.markdown("""
-        <div class="arg-title">Traçabilité Totale :</div>
-        <div class="arg-desc">Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique.</div>
-        """, unsafe_allow_html=True)
-    with c5:
-        st.markdown("""
-        <div class="arg-title">Confidentialité Garantie :</div>
-        <div class="arg-desc">Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.</div>
-        """, unsafe_allow_html=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # ==============================================================================
@@ -220,7 +229,7 @@ def render_subscription_cards():
             <p style="color: #666; font-size: 13px;">Accès complet Expert Pro 2026</p>
         </div>
         """, unsafe_allow_html=True)
-        st.link_button("S'abonner (Mensuel)", "https://buy.stripe.com/6oUeVf4U0enk1g07Q77AI01", use_container_width=True)
+        st.link_button("Je m'abonne (35€)", "https://buy.stripe.com/6oUeVf4U0enk1g07Q77AI01", use_container_width=True)
 
     with col2:
         st.markdown("""
@@ -231,4 +240,4 @@ def render_subscription_cards():
             <p style="color: #666; font-size: 13px;">✅ Rentabilité immédiate</p>
         </div>
         """, unsafe_allow_html=True)
-        st.link_button("S'abonner (Annuel)", "https://buy.stripe.com/8x25kFgCIgvscYI2vN7AI00", use_container_width=True)
+        st.link_button("Je m'abonne (350€)", "https://buy.stripe.com/8x25kFgCIgvscYI2vN7AI00", use_container_width=True)
