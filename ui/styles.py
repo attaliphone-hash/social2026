@@ -146,85 +146,84 @@ def apply_pro_design():
 def render_top_columns():
     import streamlit as st
     
-    # 1. CSS INTELLIGENT (Gestion de l'affichage)
     st.markdown("""
     <style>
-    /* ============================================================
-       VERSION MOBILE : TEXTE SIMPLE (Gris foncé, Compact)
-       Par défaut, on le cache. On l'affiche uniquement si écran < 768px
-       ============================================================ */
-    .mobile-text-container {
-        display: none;
-    }
+    /* 1. GESTION AFFICHAGE (Desktop vs Mobile) */
+    .desktop-simple-cols { display: flex !important; }
+    .mobile-compact-line { display: none !important; }
 
     @media (max-width: 768px) {
-        /* 1. On AFFICHE le texte mobile */
-        .mobile-text-container {
-            display: block !important;
-            text-align: center;
-            font-family: 'Source Sans Pro', sans-serif;
-            font-size: 11px;
-            color: #444; /* Gris foncé demandé */
-            line-height: 1.4;
-            margin-bottom: 5px; /* Très peu de marge pour remonter le login */
-            padding: 0 10px;
-        }
-        
-        /* 2. On CACHE violemment la version Desktop */
-        .desktop-wrapper {
-            display: none !important;
-        }
-        
-        /* 3. Ajustement global pour remonter tout le contenu sur mobile */
-        .block-container {
-            padding-top: 2rem !important; 
-        }
+        .desktop-simple-cols { display: none !important; }
+        .mobile-compact-line { display: block !important; }
     }
 
-    .mobile-separator {
-        color: #999;
-        margin: 0 4px;
-    }
-
-    /* ============================================================
-       VERSION DESKTOP : STYLE DES CARTES (Ton Design Original)
-       ============================================================ */
-    .info-card-desktop {
-        background-color: white;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
+    /* 2. STYLE DESKTOP : 5 COLONNES TEXTE PUR (SANS BLOC BLANC) */
+    .desktop-simple-cols {
+        justify-content: space-between;
         text-align: center;
-        height: 100%;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+        gap: 10px;
     }
-    .card-title-desktop {
+    .col-item {
+        flex: 1;
+        /* AUCUN background, AUCUNE bordure */
+    }
+    .col-titre {
         color: #024c6f;
         font-weight: 700;
-        font-size: 13px;
-        margin-bottom: 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 14px;
+        margin-bottom: 4px;
     }
-    .card-desc-desktop {
+    .col-desc {
         color: #666;
-        font-size: 11px;
+        font-size: 12px;
         line-height: 1.3;
     }
-    </style>
-    """, unsafe_allow_html=True)
 
-    # 2. RENDU HTML POUR LE MOBILE (La ligne simple)
-    st.markdown("""
-    <div class="mobile-text-container">
-        <strong>Données Certifiées 2026</strong>
-        <span class="mobile-separator">-</span>
-        Sources Officielles
-        <span class="mobile-separator">-</span>
-        Mise à jour Agile
-        <span class="mobile-separator">-</span>
-        Confidentialité
+    /* 3. STYLE MOBILE : LIGNE UNIQUE */
+    .mobile-compact-line {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .mob-text {
+        font-size: 11px;
+        color: #444; /* Gris foncé */
+        font-family: sans-serif;
+        font-weight: 600;
+    }
+    .sep { color: #aaa; margin: 0 3px; }
+    </style>
+
+    <div class="mobile-compact-line">
+        <div class="mob-text">
+            Données 2026 <span class="sep">-</span>
+            Sources Officielles <span class="sep">-</span>
+            Mise à jour <span class="sep">-</span>
+            Confidentialité
+        </div>
+    </div>
+
+    <div class="desktop-simple-cols">
+        <div class="col-item">
+            <div class="col-titre">✅ Données 2026</div>
+            <div class="col-desc">SMIC, Plafonds SS, Taux à jour.</div>
+        </div>
+        <div class="col-item">
+            <div class="col-titre">⚖️ Sources</div>
+            <div class="col-desc">Code du travail, BOSS, CCN.</div>
+        </div>
+        <div class="col-item">
+            <div class="col-titre">⚡ Mise à Jour</div>
+            <div class="col-desc">Intégration des nouveaux décrets.</div>
+        </div>
+        <div class="col-item">
+            <div class="col-titre">🔍 Traçabilité</div>
+            <div class="col-desc">Réponses sourcées juridiquement.</div>
+        </div>
+        <div class="col-item">
+            <div class="col-titre">🔒 Confidentialité</div>
+            <div class="col-desc">Aucun stockage. RGPD Compliant.</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
