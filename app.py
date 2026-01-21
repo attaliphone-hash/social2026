@@ -257,7 +257,7 @@ def check_password():
     st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
     st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
     
-    t1, t2 = st.tabs(["🔐 Abonnés", "Découverte"])
+    t1, t2 = st.tabs(["🔐 Je suis abonné", "J'ai un code découverte"])
     with t1:
         email = st.text_input("Email", key="e")
         pwd = st.text_input("Mot de passe", type="password", key="p")
@@ -572,7 +572,7 @@ if st.session_state.query_count >= QUOTA_LIMIT:
 # ============================================================
 # 💬 BARRE DE SAISIE & TRAITEMENT
 # ============================================================
-if q := st.chat_input("Posez votre question (ou utilisez le bouton ci-dessus pour les documents à analyser)"):
+if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pour verser le document à analyser)"):
     
     # ✅ CORRECTIF IMPORTANT : On augmente le compteur quand une question est posée
     st.session_state.query_count += 1
