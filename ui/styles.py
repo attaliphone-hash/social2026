@@ -253,32 +253,6 @@ def render_top_columns():
             """, unsafe_allow_html=True)
             
     st.markdown('</div>', unsafe_allow_html=True)
-    # 2. LES DONNÉES (On les définit ici pour être sûr du texte)
-    features = [
-        ("✅", "Données Certifiées 2026", "SMIC, Plafonds SS, Taux, Barèmes fiscaux à jour."),
-        ("⚖️", "Sources officielles", "Code du travail, BOSS, Jurisprudence, CCN."),
-        ("⚡", "Mise à Jour Agile", "Intégration immédiate des nouveaux décrets."),
-        ("🔍", "Traçabilité Totale", "Chaque réponse cite ses sources juridiques."),
-        ("🔒", "Confidentialité", "Aucune donnée stockée. RGPD Compliant.")
-    ]
-
-    # 3. AFFICHAGE
-    cols = st.columns(5, gap="small")
-    
-    for i, col in enumerate(cols):
-        icon, title, desc = features[i]
-        with col:
-            st.markdown(f"""
-            <div class="info-card">
-                <div class="info-header">
-                    <span>{icon}</span> <span>{title}</span>
-                </div>
-                <div class="info-text mobile-hidden-text">
-                    {desc}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
 def render_subscription_cards():
     """Affiche les cartes d'abonnement Mensuel (Bleu) et Annuel (Vert)"""
     import streamlit as st
