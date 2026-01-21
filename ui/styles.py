@@ -3,14 +3,14 @@ import os
 import base64
 
 # ==============================================================================
-# 1. ARGUMENTS (UTILE POUR LE RAG MAIS PAS POUR L'AFFICHAGE ACTUEL)
+# 1. ARGUMENTS (TEXTES)
 # ==============================================================================
 ARGUMENTS_UNIFIES = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes pour une précision chirurgicale."),
-    ("Sources officielles :", " Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux."),
-    ("Mise à Jour Agile :", " Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente."),
-    ("Traçabilité Totale :", " Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique."),
-    ("Confidentialité Garantie :", " Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.")
+    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes."),
+    ("Sources officielles :", " Analyse croisée BOSS, Code du Travail, Sécu."),
+    ("Mise à Jour Agile :", " Base actualisée en temps réel."),
+    ("Traçabilité Totale :", " Chaque réponse est sourcée."),
+    ("Confidentialité :", " Aucun cookie, aucun stockage.")
 ]
 
 def get_base64(bin_file):
@@ -20,7 +20,7 @@ def get_base64(bin_file):
 
 def apply_pro_design():
     """
-    Applique le CSS global de l'application (Titres, Boutons, Background).
+    Applique le CSS global (Titres, Boutons, Fond).
     """
     st.markdown("""
         <style>
@@ -31,7 +31,7 @@ def apply_pro_design():
         [data-testid="stHeader"] {display: none;}
         .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
 
-        /* --- TITRE H1 --- */
+        /* --- TYPOGRAPHIE --- */
         h1 {
             font-family: 'Baskerville', 'Georgia', serif !important;
             color: #253E92 !important;
@@ -42,7 +42,6 @@ def apply_pro_design():
             margin-bottom: 20px !important; 
             text-align: left !important;
         }
-        /* --- H2 --- */
         h2 {
             font-family: 'Open Sans', sans-serif!important;
             color: #253E92 !important;
@@ -54,7 +53,7 @@ def apply_pro_design():
             text-align: left !important;
         }
 
-        /* --- LE FAUX BOUTON UPLOAD (Visuel uniquement) --- */
+        /* --- INTERFACE UPLOAD --- */
         .fake-upload-btn {
             font-family: 'Open Sans', sans-serif;
             font-size: 12px;
@@ -67,11 +66,9 @@ def apply_pro_design():
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             pointer-events: none;
         }
 
-        /* --- LE VRAI UPLOADER (Invisible & Superposé) --- */
         [data-testid="stFileUploader"] {
             margin-top: -42px !important;
             opacity: 0 !important;
@@ -84,37 +81,26 @@ def apply_pro_design():
             min-height: 40px !important;
             padding: 0 !important;
         }
-        
-        [data-testid="stFileUploader"] button {
-            width: 100% !important;
-            height: 40px !important;
-        }
 
-        /* --- BOUTON NOUVELLE SESSION --- */
+        /* --- BOUTONS --- */
         button[data-testid="stBaseButton-secondary"] {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 12px !important;
             height: 40px !important;
-            min-height: 40px !important;
             background-color: white !important;
             border: 1px solid #ccc !important;
             color: #333 !important;
             border-radius: 4px !important;
             width: 100% !important;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        button[data-testid="stBaseButton-secondary"]:hover {
-            border-color: #253E92 !important;
-            color: #253E92 !important;
         }
 
-        /* --- FOOTER & TEXTES --- */
+        /* --- CHAT & FOOTER --- */
         .footer-text {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 11px !important; 
             color: #7A7A7A !important;
         }
-
+        
         button[data-testid="stBaseButton-tertiary"] {
             font-family: 'Open Sans', sans-serif !important;
             font-size: 11px !important; 
@@ -122,115 +108,99 @@ def apply_pro_design():
             background: transparent !important;
             border: none !important;
             padding: 0 !important;
-            text-decoration: none !important; 
-        }
-        button[data-testid="stBaseButton-tertiary"]:hover {
-            color: #253E92 !important;
-            text-decoration: underline !important;
         }
 
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
-        .boss-alert-box { padding: 12px !important; border-radius: 8px !important; font-size: 14px !important; }
-
+        
+        /* C'est ici que ça plantait : il manquait la fermeture ci-dessous */
         </style>
-    """, unsafe_allow_html=True) # <--- C'EST ICI QUE TU AVAIS L'ERREUR (Il manquait cette fermeture)
+    """, unsafe_allow_html=True)
 
-    # Gestion de l'image de fond
+    # Gestion du Background
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
     else:
         st.markdown("""<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""", unsafe_allow_html=True)
 
+
 def render_top_columns():
     """
-    Gestion des Arguments de Réassurance :
-    - DESKTOP : 5 colonnes de texte simple (SANS cadre blanc, SANS bordure).
-    - MOBILE : Une ligne de texte compacte (pour remonter le login).
+    Affiche les arguments.
+    - MOBILE : Ligne de texte compacte.
+    - DESKTOP : 5 Colonnes natives (st.columns) avec texte simple (SANS cadre blanc).
     """
     import streamlit as st
     
+    # 1. CSS POUR GÉRER L'AFFICHAGE RESPONSIVE
     st.markdown("""
     <style>
-    /* 1. GESTION AFFICHAGE (Desktop vs Mobile) */
-    .desktop-simple-cols { display: flex !important; }
-    .mobile-compact-line { display: none !important; }
-
-    @media (max-width: 768px) {
-        .desktop-simple-cols { display: none !important; }
-        .mobile-compact-line { display: block !important; }
-    }
-
-    /* 2. STYLE DESKTOP : 5 COLONNES TEXTE PUR (SANS BLOC BLANC) */
-    .desktop-simple-cols {
-        justify-content: space-between;
+    /* PAR DÉFAUT (MOBILE) : On affiche le texte compact, on cache le wrapper Desktop */
+    .mobile-header-text { 
+        display: block !important; 
         text-align: center;
-        margin-bottom: 20px;
-        gap: 10px;
-        width: 100%;
+        font-family: 'Source Sans Pro', sans-serif;
+        font-size: 11px;
+        color: #444; 
+        margin-bottom: 15px;
+        line-height: 1.4;
     }
-    .col-item {
-        flex: 1;
-        /* AUCUN background, AUCUNE bordure, juste du texte */
+    .desktop-wrapper { display: none !important; }
+
+    /* SUR DESKTOP (Écran > 768px) */
+    @media (min-width: 768px) {
+        .mobile-header-text { display: none !important; }
+        .desktop-wrapper { display: block !important; }
     }
-    .col-titre {
+
+    /* STYLE DES TEXTES DESKTOP (Simple, pas de cartes) */
+    .arg-title {
         color: #024c6f;
         font-weight: 700;
         font-size: 14px;
         margin-bottom: 4px;
+        text-align: center;
     }
-    .col-desc {
+    .arg-desc {
         color: #666;
         font-size: 12px;
         line-height: 1.3;
-    }
-
-    /* 3. STYLE MOBILE : LIGNE UNIQUE */
-    .mobile-compact-line {
         text-align: center;
-        margin-bottom: 15px;
     }
-    .mob-text {
-        font-size: 11px;
-        color: #444; /* Gris foncé */
-        font-family: sans-serif;
-        font-weight: 600;
-    }
-    .sep { color: #aaa; margin: 0 3px; }
+    .sep { color: #aaa; margin: 0 4px; }
     </style>
+    """, unsafe_allow_html=True)
 
-    <div class="mobile-compact-line">
-        <div class="mob-text">
-            Données 2026 <span class="sep">-</span>
-            Sources Officielles <span class="sep">-</span>
-            Mise à jour <span class="sep">-</span>
-            Confidentialité
-        </div>
-    </div>
-
-    <div class="desktop-simple-cols">
-        <div class="col-item">
-            <div class="col-titre">✅ Données 2026</div>
-            <div class="col-desc">SMIC, Plafonds SS, Taux à jour.</div>
-        </div>
-        <div class="col-item">
-            <div class="col-titre">⚖️ Sources</div>
-            <div class="col-desc">Code du travail, BOSS, CCN.</div>
-        </div>
-        <div class="col-item">
-            <div class="col-titre">⚡ Mise à Jour</div>
-            <div class="col-desc">Intégration des nouveaux décrets.</div>
-        </div>
-        <div class="col-item">
-            <div class="col-titre">🔍 Traçabilité</div>
-            <div class="col-desc">Réponses sourcées juridiquement.</div>
-        </div>
-        <div class="col-item">
-            <div class="col-titre">🔒 Confidentialité</div>
-            <div class="col-desc">Aucun stockage. RGPD Compliant.</div>
-        </div>
+    # 2. HTML MOBILE (Visible seulement sur mobile)
+    st.markdown("""
+    <div class="mobile-header-text">
+        <strong>Données Certifiées 2026</strong> <span class="sep">-</span>
+        Sources Officielles <span class="sep">-</span>
+        Mise à jour Agile <span class="sep">-</span>
+        Traçabilité <span class="sep">-</span>
+        Confidentialité
     </div>
     """, unsafe_allow_html=True)
+
+    # 3. STRUCTURE DESKTOP (St.columns natif)
+    # On enveloppe tout ça dans une div 'desktop-wrapper' pour pouvoir le cacher sur mobile
+    st.markdown('<div class="desktop-wrapper">', unsafe_allow_html=True)
+    
+    c1, c2, c3, c4, c5 = st.columns(5)
+
+    with c1:
+        st.markdown('<div class="arg-title">✅ Données 2026</div><div class="arg-desc">SMIC, Plafonds SS, Taux à jour.</div>', unsafe_allow_html=True)
+    with c2:
+        st.markdown('<div class="arg-title">⚖️ Sources</div><div class="arg-desc">Code du travail, BOSS, CCN.</div>', unsafe_allow_html=True)
+    with c3:
+        st.markdown('<div class="arg-title">⚡ Mise à Jour</div><div class="arg-desc">Intégration des nouveaux décrets.</div>', unsafe_allow_html=True)
+    with c4:
+        st.markdown('<div class="arg-title">🔍 Traçabilité</div><div class="arg-desc">Réponses sourcées juridiquement.</div>', unsafe_allow_html=True)
+    with c5:
+        st.markdown('<div class="arg-title">🔒 Confidentialité</div><div class="arg-desc">Aucun stockage. RGPD Compliant.</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
 
 def render_subscription_cards():
     """Affiche les cartes d'abonnement Mensuel (Bleu) et Annuel (Vert)"""
