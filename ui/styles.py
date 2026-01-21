@@ -3,7 +3,7 @@ import os
 import base64
 
 # ==============================================================================
-# 1. CONFIGURATION ET DESIGN GLOBAL
+# 1. DESIGN GLOBAL & CONFIGURATION
 # ==============================================================================
 def get_base64(bin_file):
     if os.path.exists(bin_file):
@@ -19,6 +19,7 @@ def apply_pro_design():
 [data-testid="stHeader"] {display: none;}
 .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
 
+/* --- TYPOGRAPHIE --- */
 h1 {
     font-family: 'Baskerville', 'Georgia', serif !important;
     color: #253E92 !important;
@@ -40,6 +41,7 @@ h2 {
     text-align: left !important;
 }
 
+/* --- BOUTONS & UPLOAD --- */
 .fake-upload-btn {
     font-family: 'Open Sans', sans-serif;
     font-size: 12px;
@@ -79,6 +81,7 @@ button[data-testid="stBaseButton-secondary"] {
     width: 100% !important;
 }
 
+/* --- FOOTER & LIENS (CORRECTIF ESPACEMENT MOBILE) --- */
 .footer-text {
     font-family: 'Open Sans', sans-serif !important;
     font-size: 11px !important; 
@@ -92,6 +95,18 @@ button[data-testid="stBaseButton-tertiary"] {
     background: transparent !important;
     border: none !important;
     padding: 0 !important;
+    height: auto !important;
+    min-height: 0px !important;
+}
+
+/* ⚠️ HACK MOBILE : Réduit drastiquement l'espace entre les colonnes empilées (Copyright/Mentions) */
+@media (max-width: 768px) {
+    [data-testid="column"] {
+        margin-bottom: -15px !important; /* Remonte les éléments */
+    }
+    div[data-testid="stVerticalBlock"] > div {
+        gap: 0.5rem !important; /* Réduit le gap général */
+    }
 }
 
 .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
@@ -106,25 +121,25 @@ button[data-testid="stBaseButton-tertiary"] {
 
 
 # ==============================================================================
-# 2. ARGUMENTS DE RÉASSURANCE (CORRIGÉ - SANS INDENTATION)
+# 2. ARGUMENTS DE RÉASSURANCE
 # ==============================================================================
 def render_top_columns():
     import streamlit as st
     
-    # NOTE: Le code HTML ci-dessous est collé à gauche pour éviter que Streamlit
-    # ne le considère comme un bloc de code (markdown code block).
+    # NOTE: J'ai retiré le gras et mis un style épuré pour le mobile.
     
     st.markdown("""
 <style>
 /* MOBILE */
 .mobile-header-text { 
     display: block !important; 
-    text-align: center;
+    text-align: left; /* Alignement gauche demandé */
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 11px;
-    color: #444; 
-    margin-bottom: 15px;
-    line-height: 1.4;
+    color: #555; /* Gris moyen doux */
+    margin-bottom: 20px;
+    line-height: 1.6; /* Meilleure lisibilité */
+    padding: 0 5px;
 }
 .desktop-container { display: none !important; }
 
@@ -142,7 +157,7 @@ def render_top_columns():
     }
 }
 
-/* STYLE TEXTE */
+/* STYLE TEXTE DESKTOP */
 .desktop-col {
     flex: 1;
     text-align: left;
@@ -158,15 +173,15 @@ def render_top_columns():
     font-size: 11px;
     line-height: 1.4;
 }
-.sep { color: #aaa; margin: 0 4px; }
+.sep { color: #ccc; margin: 0 5px; }
 </style>
 
 <div class="mobile-header-text">
-    <strong>Données Certifiées 2026</strong> <span class="sep">-</span>
+    Données Certifiées 2026 <span class="sep">-</span>
     Sources Officielles <span class="sep">-</span>
     Mise à jour Agile <span class="sep">-</span>
-    Traçabilité Totale <span class="sep">-</span>
-    Confidentialité Garantie
+    Traçabilité <span class="sep">-</span>
+    Confidentialité
 </div>
 
 <div class="desktop-container">
