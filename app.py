@@ -561,7 +561,7 @@ if user_role == "Membre ANDRH (Invité)":
 elif user_role == "ADMINISTRATEUR":
     QUOTA_LIMIT = 9999 # Illimité pour toi
 else:
-    QUOTA_LIMIT = 50   # Sécurité standard
+    QUOTA_LIMIT = 20   # Sécurité standard
 
 # 2. Initialisation du compteur
 if "query_count" not in st.session_state:
