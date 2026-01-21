@@ -3,16 +3,8 @@ import os
 import base64
 
 # ==============================================================================
-# 1. ARGUMENTS (TEXTES)
+# 1. UTILITAIRES & CONFIGURATION
 # ==============================================================================
-ARGUMENTS_UNIFIES = [
-    ("Données Certifiées 2026 :", " Intégration prioritaire des nouveaux textes."),
-    ("Sources officielles :", " Analyse croisée BOSS, Code du Travail, Sécu."),
-    ("Mise à Jour Agile :", " Base actualisée en temps réel."),
-    ("Traçabilité Totale :", " Chaque réponse est sourcée."),
-    ("Confidentialité :", " Aucun cookie, aucun stockage.")
-]
-
 def get_base64(bin_file):
     if os.path.exists(bin_file):
         return base64.b64encode(open(bin_file, "rb").read()).decode()
@@ -112,9 +104,8 @@ def apply_pro_design():
 
         .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
         
-        /* C'est ici que ça plantait : il manquait la fermeture ci-dessous */
         </style>
-    """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True) # <-- C'est ici que j'avais oublié les guillemets. C'est réparé.
 
     # Gestion du Background
     bg_data = get_base64('background.webp')
@@ -124,15 +115,18 @@ def apply_pro_design():
         st.markdown("""<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""", unsafe_allow_html=True)
 
 
+# ==============================================================================
+# 2. ARGUMENTS (MOBILE COMPACT / DESKTOP CLASSIQUE)
+# ==============================================================================
 def render_top_columns():
     """
     Affiche les arguments.
     - MOBILE : Ligne de texte compacte.
-    - DESKTOP : 5 Colonnes natives (st.columns) avec texte simple (SANS cadre blanc).
+    - DESKTOP : 5 Colonnes natives avec texte simple (SANS BLOCS BLANCS).
     """
     import streamlit as st
     
-    # 1. CSS POUR GÉRER L'AFFICHAGE RESPONSIVE
+    # 1. CSS POUR GÉRER L'AFFICHAGE (Mobile vs Desktop)
     st.markdown("""
     <style>
     /* PAR DÉFAUT (MOBILE) : On affiche le texte compact, on cache le wrapper Desktop */
@@ -186,6 +180,7 @@ def render_top_columns():
     # On enveloppe tout ça dans une div 'desktop-wrapper' pour pouvoir le cacher sur mobile
     st.markdown('<div class="desktop-wrapper">', unsafe_allow_html=True)
     
+    # C'EST ICI QU'ON RETROUVE L'AFFICHAGE SIMPLE D'HIER (5 COLONNES)
     c1, c2, c3, c4, c5 = st.columns(5)
 
     with c1:
@@ -202,6 +197,9 @@ def render_top_columns():
     st.markdown('</div>', unsafe_allow_html=True)
 
 
+# ==============================================================================
+# 3. ABONNEMENTS
+# ==============================================================================
 def render_subscription_cards():
     """Affiche les cartes d'abonnement Mensuel (Bleu) et Annuel (Vert)"""
     import streamlit as st
