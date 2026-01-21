@@ -144,10 +144,87 @@ def apply_pro_design():
         st.markdown("""<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""", unsafe_allow_html=True)
 
 def render_top_columns():
+    import streamlit as st
+    
+    # 1. CSS SPÉCIFIQUE AVEC DÉTECTION MOBILE
+    st.markdown("""
+    <style>
+    /* STYLE DES CARTES (DESKTOP & MOBILE) */
+    .info-card {
+        background-color: white;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        text-align: center;
+        height: 100%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .info-header {
+        font-weight: 700;
+        color: #024c6f;
+        font-size: 13px; /* Taille ajustée */
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .info-text {
+        font-size: 11px;
+        color: #666;
+        line-height: 1.3;
+        margin-top: 5px;
+        border-top: 1px solid #f0f0f0;
+        padding-top: 5px;
+    }
+
+    /* 📱 RÈGLE MAGIQUE POUR MOBILE (Largeur < 768px) */
+    @media only screen and (max-width: 768px) {
+        /* On cache la description */
+        .mobile-hidden-text {
+            display: none !important;
+        }
+        /* On rend la carte ultra-compacte */
+        .info-card {
+            padding: 8px !important;
+            margin-bottom: 4px !important;
+            border: 1px solid #eee !important;
+            box-shadow: none !important;
+        }
+        /* On enlève la marge sous le titre */
+        .info-header {
+            margin-bottom: 0 !important;
+            font-size: 12px !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # 2. LES DONNÉES (On les définit ici pour être sûr du texte)
+    features = [
+        ("✅", "Données Certifiées 2026", "SMIC, Plafonds SS, Taux, Barèmes fiscaux à jour."),
+        ("⚖️", "Sources officielles", "Code du travail, BOSS, Jurisprudence, CCN."),
+        ("⚡", "Mise à Jour Agile", "Intégration immédiate des nouveaux décrets."),
+        ("🔍", "Traçabilité Totale", "Chaque réponse cite ses sources juridiques."),
+        ("🔒", "Confidentialité", "Aucune donnée stockée. RGPD Compliant.")
+    ]
+
+    # 3. AFFICHAGE
     cols = st.columns(5, gap="small")
+    
     for i, col in enumerate(cols):
-        title, desc = ARGUMENTS_UNIFIES[i]
-        col.markdown(f'<p class="assurance-text"><span class="assurance-title">{title}</span><span class="assurance-desc">{desc}</span></p>', unsafe_allow_html=True)
+        icon, title, desc = features[i]
+        with col:
+            st.markdown(f"""
+            <div class="info-card">
+                <div class="info-header">
+                    <span>{icon}</span> <span>{title}</span>
+                </div>
+                <div class="info-text mobile-hidden-text">
+                    {desc}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
 def render_subscription_cards():
     """Affiche les cartes d'abonnement Mensuel (Bleu) et Annuel (Vert)"""
