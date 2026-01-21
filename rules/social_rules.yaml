@@ -63,12 +63,13 @@
   text: "L'indemnité forfaitaire de télétravail exonérée est de 2,80 € par jour."
 
 - id: AVN_VEHICULE_ELEC_2026
-  keywords: ["vehicule", "véhicule", "electrique", "électrique", "abattement"]
+  keywords: ["vehicule", "véhicule", "electrique", "électrique", "abattement", "taux", "avantage", "nature"]
   valeurs:
+    taux_forfaitaire_achat_moins_5ans: 0.09
     plafond_abattement: 2003.00
   derniere_maj: "Janvier 2026"
   source: "Arrêté 2026"
-  text: "L'abattement de 50% sur l'avantage en nature véhicule électrique est plafonné à 2 003 € par an."
+  text: "RÈGLE DE CALCUL : 1. Calculez d'abord l'avantage brut = 9% du prix d'achat TTC (si véhicule < 5 ans). 2. Appliquez ensuite l'abattement de 50% sur ce montant. 3. Ce montant d'abattement est plafonné à 2 003 € par an."
 
 # -------------------------------------------------------------------------
 # 3. STAGES & APPRENTISSAGE (RÈGLES STRICTES)
