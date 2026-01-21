@@ -146,46 +146,64 @@ def apply_pro_design():
 def render_top_columns():
     import streamlit as st
     
+    # 1. CSS INTELLIGENT (Gestion de l'affichage)
     st.markdown("""
     <style>
-    /* =========================================
-       1. LOGIQUE D'AFFICHAGE (MEDIA QUERIES)
-       ========================================= */
-    
-    /* Par défaut (Mobile), on cache le Desktop */
-    .desktop-container { display: none !important; }
-    .mobile-container { display: block !important; }
-
-    /* Sur PC (Largeur > 768px), on inverse : on montre Desktop, on cache Mobile */
-    @media (min-width: 768px) {
-        .desktop-container { display: flex !important; }
-        .mobile-container { display: none !important; }
+    /* ============================================================
+       VERSION MOBILE : TEXTE SIMPLE (Gris foncé, Compact)
+       Par défaut, on le cache. On l'affiche uniquement si écran < 768px
+       ============================================================ */
+    .mobile-text-container {
+        display: none;
     }
 
-    /* =========================================
-       2. STYLE DESKTOP (TON ANCIENNE VERSION)
-       ========================================= */
-    .desktop-container {
-        gap: 12px;
-        justify-content: center;
-        margin-bottom: 25px;
+    @media (max-width: 768px) {
+        /* 1. On AFFICHE le texte mobile */
+        .mobile-text-container {
+            display: block !important;
+            text-align: center;
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 11px;
+            color: #444; /* Gris foncé demandé */
+            line-height: 1.4;
+            margin-bottom: 5px; /* Très peu de marge pour remonter le login */
+            padding: 0 10px;
+        }
+        
+        /* 2. On CACHE violemment la version Desktop */
+        .desktop-wrapper {
+            display: none !important;
+        }
+        
+        /* 3. Ajustement global pour remonter tout le contenu sur mobile */
+        .block-container {
+            padding-top: 2rem !important; 
+        }
     }
+
+    .mobile-separator {
+        color: #999;
+        margin: 0 4px;
+    }
+
+    /* ============================================================
+       VERSION DESKTOP : STYLE DES CARTES (Ton Design Original)
+       ============================================================ */
     .info-card-desktop {
         background-color: white;
-        padding: 12px;
+        padding: 10px;
         border-radius: 8px;
         border: 1px solid #e0e0e0;
         text-align: center;
-        flex: 1; /* Largeur égale pour tous */
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        min-width: 0; /* Évite le débordement */
+        height: 100%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
     .card-title-desktop {
         color: #024c6f;
         font-weight: 700;
         font-size: 13px;
-        margin-bottom: 6px;
-        white-space: nowrap; /* Force le titre sur une ligne si possible */
+        margin-bottom: 5px;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
@@ -194,63 +212,47 @@ def render_top_columns():
         font-size: 11px;
         line-height: 1.3;
     }
-
-    /* =========================================
-       3. STYLE MOBILE (TEXTE GRIS LIGNE SIMPLE)
-       ========================================= */
-    .mobile-container {
-        text-align: center;
-        margin-bottom: 15px; /* Marge réduite pour remonter le login */
-        padding: 0 10px;
-    }
-    .mobile-text {
-        font-family: 'Source Sans Pro', sans-serif;
-        font-size: 11px; /* Petit et discret */
-        color: #444;     /* Gris foncé demandé */
-        line-height: 1.4;
-    }
-    .mobile-separator {
-        color: #999;
-        margin: 0 4px;
-    }
     </style>
+    """, unsafe_allow_html=True)
 
-    <div class="desktop-container">
-        <div class="info-card-desktop">
-            <div class="card-title-desktop">✅ Données Certifiées 2026</div>
-            <div class="card-desc-desktop">SMIC, Plafonds SS, Taux à jour.</div>
-        </div>
-        <div class="info-card-desktop">
-            <div class="card-title-desktop">⚖️ Sources officielles</div>
-            <div class="card-desc-desktop">Code du travail, BOSS, CCN.</div>
-        </div>
-        <div class="info-card-desktop">
-            <div class="card-title-desktop">⚡ Mise à Jour Agile</div>
-            <div class="card-desc-desktop">Intégration des nouveaux décrets.</div>
-        </div>
-        <div class="info-card-desktop">
-            <div class="card-title-desktop">🔍 Traçabilité Totale</div>
-            <div class="card-desc-desktop">Réponses sourcées juridiquement.</div>
-        </div>
-        <div class="info-card-desktop">
-            <div class="card-title-desktop">🔒 Confidentialité</div>
-            <div class="card-desc-desktop">Aucun stockage. RGPD Compliant.</div>
-        </div>
-    </div>
-
-    <div class="mobile-container">
-        <div class="mobile-text">
-            <strong>Données Certifiées 2026</strong>
-            <span class="mobile-separator">-</span>
-            Sources Officielles
-            <span class="mobile-separator">-</span>
-            Mise à jour Agile
-            <span class="mobile-separator">-</span>
-            Confidentialité
-        </div>
+    # 2. RENDU HTML POUR LE MOBILE (La ligne simple)
+    st.markdown("""
+    <div class="mobile-text-container">
+        <strong>Données Certifiées 2026</strong>
+        <span class="mobile-separator">-</span>
+        Sources Officielles
+        <span class="mobile-separator">-</span>
+        Mise à jour Agile
+        <span class="mobile-separator">-</span>
+        Confidentialité
     </div>
     """, unsafe_allow_html=True)
 
+    # 3. RENDU PYTHON POUR LE DESKTOP (Tes colonnes originales)
+    # On met tout ça dans une div "desktop-wrapper" pour pouvoir la cacher sur mobile
+    st.markdown('<div class="desktop-wrapper">', unsafe_allow_html=True)
+    
+    # C'est ici qu'on retrouve ton affichage original avec st.columns
+    cols = st.columns(5)
+    
+    data = [
+        ("✅ Données 2026", "SMIC, Plafonds SS, Taux à jour."),
+        ("⚖️ Sources", "Code du travail, BOSS, CCN."),
+        ("⚡ Mise à Jour", "Intégration des nouveaux décrets."),
+        ("🔍 Traçabilité", "Réponses sourcées juridiquement."),
+        ("🔒 Confidentialité", "Aucun stockage. RGPD Compliant.")
+    ]
+    
+    for i, (title, desc) in enumerate(data):
+        with cols[i]:
+            st.markdown(f"""
+            <div class="info-card-desktop">
+                <div class="card-title-desktop">{title}</div>
+                <div class="card-desc-desktop">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+    st.markdown('</div>', unsafe_allow_html=True)
     # 2. LES DONNÉES (On les définit ici pour être sûr du texte)
     features = [
         ("✅", "Données Certifiées 2026", "SMIC, Plafonds SS, Taux, Barèmes fiscaux à jour."),
