@@ -88,7 +88,7 @@ button[kind="primary"] {
     box-shadow: none !important;
     color: #d32f2f !important; /* Rouge vif */
     padding: 0px !important;
-    text-decoration: none !important;
+    text-decoration: underline !important;
     transition: all 0.2s ease;
 }
 button[kind="primary"] p {
