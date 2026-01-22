@@ -41,7 +41,7 @@ def clean_text(text):
     soup = BeautifulSoup(text, "html.parser")
     text_plain = soup.get_text(separator="\n")
     
-    # 4. Encodage final (si un emoji inconnu reste, il est supprimé proprement)
+    # 4. Encodage final
     return text_plain.encode('latin-1', 'ignore').decode('latin-1')
 
 def create_pdf_report(user_question, ai_response, sources_list):
@@ -81,4 +81,6 @@ def create_pdf_report(user_question, ai_response, sources_list):
     pdf.set_text_color(100)
     pdf.multi_cell(0, 4, "Document genere par IA a titre informatif.")
 
-    return pdf.output(dest='S')
+    # --- CORRECTION ICI ---
+    # On force la conversion en 'bytes' pur pour que Streamlit accepte
+    return bytes(pdf.output())
