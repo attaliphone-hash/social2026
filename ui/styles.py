@@ -237,13 +237,13 @@ def modal_manifesto():
         <p>Expert Social Pro est né d’un constat simple : <br>👉 <em>La majorité des IA répondent vite, mais ne calculent pas vraiment.</em></p>
         <div class="manifesto-title">🔹 Notre différence fondamentale</div>
         <p><span class="manifesto-strong">1. Le calcul avant la conclusion</span><br>Chaque réponse suit une logique stricte : identification des règles > application des barèmes 2026 > calcul détaillé > conclusion.<br>🚫 Aucune "devinette statistique".</p>
-        <p><span class="manifesto-strong">2. Des chiffres certifiés, pas supposés</span><br>Les montants clés (SMIC, PASS, MG) sont injectés systématiquement.<br>👉 Un chiffre officiel ne se discute pas, il s’applique.</p>
+        <p><span class="manifesto-strong">2. Des chiffres certifiés, pas supposés, voire imaginés</span><br>Les montants clés (SMIC, PASS, MG) sont injectés systématiquement.<br>👉 Un chiffre officiel ne se discute pas, il s’applique.</p>
         <p><span class="manifesto-strong">3. Une hiérarchie claire des sources</span></p>
         <ul class="manifesto-list"><li>🥇 Barèmes officiels et données URSSAF</li><li>🥈 Doctrine BOSS</li><li>🥉 Code du travail et textes légaux</li></ul>
         <div class="manifesto-title">👥 À qui s’adresse Expert Social Pro ?</div>
-        <ul class="manifesto-list"><li>✅ Cabinets comptables et sociaux</li><li>✅ Responsables paie / RH</li><li>✅ Juristes praticiens</li><li>❌ <em>Pas aux curieux. À ceux qui assument leurs réponses.</em></li></ul>
+        <ul class="manifesto-list"><li>✅ Cabinets de conseil.</li><li>✅ Responsables paie.</li><li>✅ Équipes RH</li><li>❌ <em>Pas aux curieux. À ceux qui assument leurs réponses.</em></li></ul>
         <div class="manifesto-title">🤝 Notre engagement</div>
-        <p>Nous ne promettons pas de "tout savoir" en 2 secondes.<br><span class="manifesto-check">Nous garantissons des calculs cohérents et une base défendable professionnellement.</span></p>
+        <p>Notre application est un copilote RH et Paie avant consultation.<br><span class="manifesto-check">Nous garantissons des calculs cohérents et une base défendable professionnellement.</span></p>
     </div>
     """, unsafe_allow_html=True)
 
