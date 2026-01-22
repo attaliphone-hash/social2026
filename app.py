@@ -11,6 +11,7 @@ from email.utils import parsedate_to_datetime
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from utils.pdf_gen import create_pdf_report
 
 # --- IMPORTS SERVICES ---
 from services.stripe_service import verify_active_subscription, create_checkout_session
@@ -519,3 +520,20 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pou
         
         # Enregistrement dans l'historique
         st.session_state.messages.append({"role": "assistant", "content": final_clean_resp})
+
+        # --- GÉNÉRATION ET TÉLÉCHARGEMENT PDF ---
+        try:
+            # On génère le fichier binaire PDF
+            pdf_bytes = create_pdf_report(q, full_resp, ", ".join(srcs))
+            
+            # On affiche le bouton
+            st.download_button(
+                label="📄 Télécharger le rapport (PDF)",
+                data=pdf_bytes,
+                file_name=f"ExpertSocialPro_Reponse_{datetime.now().strftime('%H%M%S')}.pdf",
+                mime="application/pdf",
+                key=f"pdf_btn_{st.session_state.query_count}"
+            )
+        except Exception as e:
+            # En cas d'erreur PDF, on ne plante pas l'appli, on log juste l'erreur
+            print(f"Erreur génération PDF : {e}")

@@ -13,3 +13,4 @@ langchain-pinecone==0.0.3
 pinecone-client==3.1.0
 pyyaml==6.0.1
 gunicorn==21.2.0
+fpdf2==2.7.1
