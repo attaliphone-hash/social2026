@@ -1,12 +1,11 @@
 # ============================================================
-# FICHIER : app.py V30
+# FICHIER : app.py V30 (NETTOYÉ)
 # ============================================================
 import streamlit as st
 import os
 import pypdf
 import stripe
 import requests
-import re
 from bs4 import BeautifulSoup
 from email.utils import parsedate_to_datetime
 from datetime import datetime, timezone
@@ -14,11 +13,9 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # --- IMPORTS SERVICES ---
-# (On garde tes imports tels quels)
 from services.stripe_service import verify_active_subscription, create_checkout_session
 
 # --- IMPORTS UI ---
-# MODIF : On ajoute render_footer pour afficher le bouton rouge et les mentions
 from ui.styles import apply_pro_design, render_top_columns, render_subscription_cards, render_footer
 
 # --- IMPORTS IA ---
@@ -59,7 +56,7 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# DEBUT : MODULE VEILLE (CODE STRICTEMENT D'ORIGINE)
+# MODULE VEILLE (BOSS / SERVICE-PUBLIC / NET-ENTREPRISES)
 # ==============================================================================
 FRENCH_MONTHS = {
     "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
@@ -182,7 +179,7 @@ def check_password():
     # 1. ARGUMENTS EN HAUT
     render_top_columns()
     
-    # 2. FOOTER (MODIF : REMPLACEMENT PAR LA NOUVELLE FONCTION)
+    # 2. FOOTER
     render_footer()
 
     st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
@@ -228,7 +225,7 @@ def check_password():
 if not check_password(): st.stop()
 
 # ============================================================
-# 🔴 SÉCURITÉ STRIPE : VÉRIFICATION D'ABONNEMENT
+# SÉCURITÉ STRIPE : VÉRIFICATION D'ABONNEMENT
 # ============================================================
 user_email = st.session_state.get("user_email")
 ADMIN_EMAILS = ["ton.email@admin.com"] 
@@ -316,7 +313,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT EXPERT SOCIAL PRO 2026 - FINAL RENDER ===
+# === PROMPT IA ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -410,15 +407,15 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
 # 1. ARGUMENTS
 render_top_columns()
 
-# 2. FOOTER (MODIF : REMPLACEMENT PAR LA NOUVELLE FONCTION)
+# 2. FOOTER
 render_footer()
 
-# ✅ BARRE VEILLE
+# VEILLE JURIDIQUE
 if st.session_state.user_email == "ADMINISTRATEUR": show_legal_watch_bar()
 
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
 
-# 3. ACTIONS (GAUCHE - METHODE FANTÔME)
+# 3. ACTIONS (UPLOAD & RESET)
 col_act1, col_act2, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
 
 with col_act1:
@@ -479,7 +476,7 @@ if st.session_state.query_count >= QUOTA_LIMIT:
 # ============================================================
 if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pour verser le document à analyser)"):
     
-    # ✅ CORRECTIF IMPORTANT : On augmente le compteur quand une question est posée
+    # On augmente le compteur quand une question est posée
     st.session_state.query_count += 1
     
     # Gestion du message utilisateur

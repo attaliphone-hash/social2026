@@ -3,23 +3,29 @@ import os
 import base64
 
 # ==============================================================================
-# 1. DESIGN GLOBAL & CONFIGURATION
+# 1. UTILITAIRES (Fonctions techniques)
 # ==============================================================================
 def get_base64(bin_file):
+    """Permet de charger une image en fond d'écran via CSS"""
     if os.path.exists(bin_file):
         return base64.b64encode(open(bin_file, "rb").read()).decode()
     return ""
 
+# ==============================================================================
+# 2. DESIGN CSS (C'est ici qu'on change les couleurs, polices, boutons)
+# ==============================================================================
 def apply_pro_design():
     st.markdown("""
 <style>
+/* --- IMPORT DES POLICES --- */
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
 
+/* --- NETTOYAGE INTERFACE STREAMLIT (Cacher menu, header, footer par défaut) --- */
 #MainMenu, header, footer {visibility: hidden;}
 [data-testid="stHeader"] {display: none;}
 .block-container { padding-top: 1rem !important; padding-bottom: 5rem !important;}
 
-/* --- TYPOGRAPHIE --- */
+/* --- TYPOGRAPHIE (H1 = Titre principal, H2 = Sous-titres) --- */
 h1 {
     font-family: 'Baskerville', 'Georgia', serif !important;
     color: #253E92 !important;
@@ -41,7 +47,7 @@ h2 {
     text-align: left !important;
 }
 
-/* --- BOUTONS & UPLOAD --- */
+/* --- BOUTONS STANDARD & ZONE UPLOAD --- */
 .fake-upload-btn {
     font-family: 'Open Sans', sans-serif;
     font-size: 12px;
@@ -81,14 +87,16 @@ button[data-testid="stBaseButton-secondary"] {
     width: 100% !important;
 }
 
-/* --- CSS SPÉCIFIQUE POUR LE FOOTER --- */
+/* --- BOUTONS DU FOOTER (ROUGE & GRIS) --- */
+
+/* Bouton "Pourquoi..." (Rouge) */
 button[kind="primary"] {
     background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
     color: #d32f2f !important; /* Rouge vif */
     padding: 0px !important;
-    text-decoration: underline !important;
+    text-decoration: underline !important; /* Souligné */
     transition: all 0.2s ease;
 }
 button[kind="primary"] p {
@@ -103,6 +111,7 @@ button[kind="primary"]:hover {
     background-color: transparent !important;
 }
 
+/* Boutons "Mentions" / "Confidentialité" (Gris) */
 button[kind="tertiary"] p {
     font-size: 11px !important;
     font-family: 'Open Sans', sans-serif !important;
@@ -115,6 +124,7 @@ button[kind="tertiary"] {
     border: none !important;
 }
 
+/* --- RESPONSIVE (MOBILE) & CHAT --- */
 @media (max-width: 768px) {
     [data-testid="column"] {
         margin-bottom: -15px !important;
@@ -128,6 +138,7 @@ button[kind="tertiary"] {
 </style>
 """, unsafe_allow_html=True)
 
+    # Gestion de l'image de fond
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
@@ -136,7 +147,7 @@ button[kind="tertiary"] {
 
 
 # ==============================================================================
-# 2. ARGUMENTS DE RÉASSURANCE
+# 3. ARGUMENTS DE RÉASSURANCE (Barre sous le titre)
 # ==============================================================================
 def render_top_columns():
     import streamlit as st
@@ -192,7 +203,7 @@ def render_top_columns():
 
 
 # ==============================================================================
-# 3. ABONNEMENTS
+# 4. ABONNEMENTS (Cartes de prix)
 # ==============================================================================
 def render_subscription_cards():
     import streamlit as st
@@ -206,9 +217,10 @@ def render_subscription_cards():
 
 
 # ==============================================================================
-# 4. MODALS & FOOTER (AVEC VOS TEXTES EXACTS)
+# 5. MODALS & FOOTER (Textes Légaux et Manifeste)
 # ==============================================================================
 
+# --- POPUP : MANIFESTE (Le "Pourquoi") ---
 @st.dialog("Pourquoi Expert Social Pro existe ?")
 def modal_manifesto():
     st.markdown("""
@@ -235,9 +247,9 @@ def modal_manifesto():
     </div>
     """, unsafe_allow_html=True)
 
+# --- POPUP : MENTIONS LÉGALES (Sylvain Attal) ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
-    # TEXTE EXACTEMENT RESTAURÉ DEPUIS VOTRE ANCIEN APP.PY
     st.markdown(f"""
     <div style='font-size: 12px; color: #1e293b; font-family: sans-serif;'>
         <p>ÉDITEUR DU SITE<br>
@@ -256,9 +268,9 @@ def modal_mentions():
     </div>
     """, unsafe_allow_html=True)
 
+# --- POPUP : RGPD & CONFIDENTIALITÉ ---
 @st.dialog("Politique de Confidentialité")
 def modal_rgpd():
-    # TEXTE EXACTEMENT RESTAURÉ DEPUIS VOTRE ANCIEN APP.PY
     st.markdown(f"""
     <div style='font-size: 13px; color: #1e293b; font-family: sans-serif;'>
         <p><strong>PROTECTION DES DONNÉES :</strong></p>
@@ -270,6 +282,7 @@ def modal_rgpd():
     </div>
     """, unsafe_allow_html=True)
 
+# --- FONCTION PRINCIPALE : AFFICHER LE FOOTER ---
 def render_footer():
     """Affiche le footer avec le bouton Manifeste (rouge) et les liens légaux"""
     import streamlit as st
@@ -280,7 +293,7 @@ def render_footer():
     c_line = st.columns([2.2, 0.8, 0.8, 2.2], vertical_alignment="center")
 
     with c_line[0]: 
-        # Type "primary" = ROUGE (grâce au CSS)
+        # Type "primary" = ROUGE (grâce au CSS plus haut)
         if st.button("Pourquoi Expert Social Pro existe", type="primary", key="btn_manif"):
             modal_manifesto()
 
