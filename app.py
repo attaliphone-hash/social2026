@@ -9,6 +9,8 @@ import requests
 from bs4 import BeautifulSoup
 from email.utils import parsedate_to_datetime
 from datetime import datetime, timezone
+import re
+import unicodedata
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from utils.pdf_gen import create_pdf_report
@@ -523,17 +525,50 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pou
 
         # --- GÉNÉRATION ET TÉLÉCHARGEMENT PDF ---
         try:
-            # On génère le fichier binaire PDF
+            # 1. CRÉATION DU NOM DE FICHIER "ANTI-BLABLA"
+            
+            # Liste des mots inutiles à supprimer du titre
+            stop_words = {
+                "bonjour", "bonsoir", "salut", "hey", "cher", "chere",
+                "je", "tu", "il", "nous", "vous", "ils",
+                "voudrais", "aimerais", "souhaite", "désire", "veux", "peux",
+                "savoir", "connaitre", "avoir", "demande", "question",
+                "est-ce", "que", "qu", "svp", "stp", "merci", "plait",
+                "est", "ce", "le", "la", "les", "un", "une", "des", "du", "de", "d"
+            }
+
+            # On normalise (enlève les accents)
+            nfkd_form = unicodedata.normalize('NFKD', q)
+            no_accent = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+            
+            # On ne garde que les lettres et chiffres
+            clean_str = re.sub(r'[^a-zA-Z0-9\s]', '', no_accent)
+            
+            # On découpe en mots
+            all_words = clean_str.split()
+            
+            # ON FILTRE : On ne garde que les mots utiles
+            useful_words = [w for w in all_words if w.lower() not in stop_words][:8]
+            
+            # Sécurité : Si le filtre a tout supprimé, on remet les premiers mots bruts
+            if not useful_words:
+                useful_words = all_words[:8]
+
+            short_title = "_".join(useful_words) 
+            
+            # Nom final
+            final_filename = f"Reponse_{short_title}.pdf"
+
+            # 2. GÉNÉRATION DU PDF
             pdf_bytes = create_pdf_report(q, full_resp, ", ".join(srcs))
             
-            # On affiche le bouton
+            # 3. AFFICHAGE DU BOUTON
             st.download_button(
                 label="📄 Télécharger le rapport (PDF)",
                 data=pdf_bytes,
-                file_name=f"ExpertSocialPro_Reponse_{datetime.now().strftime('%H%M%S')}.pdf",
+                file_name=final_filename,
                 mime="application/pdf",
                 key=f"pdf_btn_{st.session_state.query_count}"
             )
         except Exception as e:
-            # En cas d'erreur PDF, on ne plante pas l'appli, on log juste l'erreur
             print(f"Erreur génération PDF : {e}")
