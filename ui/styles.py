@@ -81,31 +81,46 @@ button[data-testid="stBaseButton-secondary"] {
     width: 100% !important;
 }
 
-/* --- FOOTER & LIENS (CORRECTIF ESPACEMENT MOBILE) --- */
-.footer-text {
-    font-family: 'Open Sans', sans-serif !important;
-    font-size: 11px !important; 
-    color: #7A7A7A !important;
+/* --- CSS SPÉCIFIQUE POUR LE FOOTER --- */
+button[kind="primary"] {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #d32f2f !important; /* Rouge vif */
+    padding: 0px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+}
+button[kind="primary"] p {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    padding-top: 3px !important;
+}
+button[kind="primary"]:hover {
+    color: #b71c1c !important;
+    text-decoration: underline !important;
+    background-color: transparent !important;
 }
 
-button[data-testid="stBaseButton-tertiary"] {
+button[kind="tertiary"] p {
+    font-size: 11px !important;
     font-family: 'Open Sans', sans-serif !important;
-    font-size: 11px !important; 
     color: #7A7A7A !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
+}
+button[kind="tertiary"] {
+    padding: 0px !important;
     height: auto !important;
     min-height: 0px !important;
+    border: none !important;
 }
 
-/* ⚠️ HACK MOBILE : Réduit drastiquement l'espace entre les colonnes empilées (Copyright/Mentions) */
 @media (max-width: 768px) {
     [data-testid="column"] {
-        margin-bottom: -15px !important; /* Remonte les éléments */
+        margin-bottom: -15px !important;
     }
     div[data-testid="stVerticalBlock"] > div {
-        gap: 0.5rem !important; /* Réduit le gap général */
+        gap: 0.5rem !important;
     }
 }
 
@@ -125,20 +140,17 @@ button[data-testid="stBaseButton-tertiary"] {
 # ==============================================================================
 def render_top_columns():
     import streamlit as st
-    
-    # NOTE: J'ai retiré le gras et mis un style épuré pour le mobile.
-    
     st.markdown("""
 <style>
 /* MOBILE */
 .mobile-header-text { 
     display: block !important; 
-    text-align: left; /* Alignement gauche demandé */
+    text-align: left;
     font-family: 'Source Sans Pro', sans-serif;
     font-size: 11px;
-    color: #555; /* Gris moyen doux */
+    color: #555;
     margin-bottom: 20px;
-    line-height: 1.6; /* Meilleure lisibilité */
+    line-height: 1.6;
     padding: 0 5px;
 }
 .desktop-container { display: none !important; }
@@ -146,7 +158,6 @@ def render_top_columns():
 /* DESKTOP */
 @media (min-width: 768px) {
     .mobile-header-text { display: none !important; }
-    
     .desktop-container { 
         display: flex !important;
         flex-direction: row;
@@ -156,23 +167,9 @@ def render_top_columns():
         margin-bottom: 30px;
     }
 }
-
-/* STYLE TEXTE DESKTOP */
-.desktop-col {
-    flex: 1;
-    text-align: left;
-}
-.arg-title {
-    color: #024c6f;
-    font-weight: 700;
-    font-size: 13px;
-    margin-bottom: 5px;
-}
-.arg-desc {
-    color: #555;
-    font-size: 11px;
-    line-height: 1.4;
-}
+.desktop-col { flex: 1; text-align: left; }
+.arg-title { color: #024c6f; font-weight: 700; font-size: 13px; margin-bottom: 5px; }
+.arg-desc { color: #555; font-size: 11px; line-height: 1.4; }
 .sep { color: #ccc; margin: 0 5px; }
 </style>
 
@@ -185,26 +182,11 @@ def render_top_columns():
 </div>
 
 <div class="desktop-container">
-    <div class="desktop-col">
-        <div class="arg-title">Données Certifiées 2026 :</div>
-        <div class="arg-desc">Intégration prioritaire des nouveaux textes pour une précision chirurgicale.</div>
-    </div>
-    <div class="desktop-col">
-        <div class="arg-title">Sources officielles :</div>
-        <div class="arg-desc">Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux.</div>
-    </div>
-    <div class="desktop-col">
-        <div class="arg-title">Mise à Jour Agile :</div>
-        <div class="arg-desc">Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente.</div>
-    </div>
-    <div class="desktop-col">
-        <div class="arg-title">Traçabilité Totale :</div>
-        <div class="arg-desc">Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique.</div>
-    </div>
-    <div class="desktop-col">
-        <div class="arg-title">Confidentialité Garantie :</div>
-        <div class="arg-desc">Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.</div>
-    </div>
+    <div class="desktop-col"><div class="arg-title">Données Certifiées 2026 :</div><div class="arg-desc">Intégration prioritaire des nouveaux textes pour une précision chirurgicale.</div></div>
+    <div class="desktop-col"><div class="arg-title">Sources officielles :</div><div class="arg-desc">Une analyse simultanée et croisée du BOSS, du Code du Travail, du Code de la Sécurité Sociale et des communiqués des organismes sociaux.</div></div>
+    <div class="desktop-col"><div class="arg-title">Mise à Jour Agile :</div><div class="arg-desc">Notre base est actualisée en temps réel dès la publication de nouvelles circulaires ou réformes, garantissant une conformité permanente.</div></div>
+    <div class="desktop-col"><div class="arg-title">Traçabilité Totale :</div><div class="arg-desc">Chaque réponse est systématiquement sourcée via une liste détaillée, permettant de valider instantanément le fondement juridique.</div></div>
+    <div class="desktop-col"><div class="arg-title">Confidentialité Garantie :</div><div class="arg-desc">Aucun cookie publicitaire. Vos données sont traitées exclusivement en mémoire vive (RAM) et ne sont jamais utilisées pour entraîner des modèles d'IA.</div></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -214,27 +196,101 @@ def render_top_columns():
 # ==============================================================================
 def render_subscription_cards():
     import streamlit as st
-    
     col1, col2 = st.columns(2, gap="medium")
-    
     with col1:
-        st.markdown("""
-        <div style="background-color: #e3f2fd; padding: 20px; border-radius: 10px; border: 1px solid #90caf9; height: 100%;">
-            <h3 style="color: #1565c0; margin-top:0;">Mensuel</h3>
-            <h2 style="color: #0d47a1; font-size: 28px;">35 € <span style="font-size:16px; color:#555;">HT / MOIS</span></h2>
-            <p style="color: #333; font-size: 14px; margin-top: 10px;">Sans engagement</p>
-            <p style="color: #666; font-size: 13px;">Accès complet Expert Pro 2026</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div style="background-color: #e3f2fd; padding: 20px; border-radius: 10px; border: 1px solid #90caf9; height: 100%;"><h3 style="color: #1565c0; margin-top:0;">Mensuel</h3><h2 style="color: #0d47a1; font-size: 28px;">35 € <span style="font-size:16px; color:#555;">HT / MOIS</span></h2><p style="color: #333; font-size: 14px; margin-top: 10px;">Sans engagement</p><p style="color: #666; font-size: 13px;">Accès complet Expert Pro 2026</p></div>""", unsafe_allow_html=True)
         st.link_button("Je m'abonne (35€)", "https://buy.stripe.com/6oUeVf4U0enk1g07Q77AI01", use_container_width=True)
-
     with col2:
-        st.markdown("""
-        <div style="background-color: #e8f5e9; padding: 20px; border-radius: 10px; border: 1px solid #a5d6a7; height: 100%;">
-            <h3 style="color: #2e7d32; margin-top:0;">Annuel</h3>
-            <h2 style="color: #1b5e20; font-size: 28px;">350 € <span style="font-size:16px; color:#555;">HT / AN</span></h2>
-            <p style="color: #333; font-size: 14px; margin-top: 10px;">2 mois offerts</p>
-            <p style="color: #666; font-size: 13px;">✅ Rentabilité immédiate</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div style="background-color: #e8f5e9; padding: 20px; border-radius: 10px; border: 1px solid #a5d6a7; height: 100%;"><h3 style="color: #2e7d32; margin-top:0;">Annuel</h3><h2 style="color: #1b5e20; font-size: 28px;">350 € <span style="font-size:16px; color:#555;">HT / AN</span></h2><p style="color: #333; font-size: 14px; margin-top: 10px;">2 mois offerts</p><p style="color: #666; font-size: 13px;">✅ Rentabilité immédiate</p></div>""", unsafe_allow_html=True)
         st.link_button("Je m'abonne (350€)", "https://buy.stripe.com/8x25kFgCIgvscYI2vN7AI00", use_container_width=True)
+
+
+# ==============================================================================
+# 4. MODALS & FOOTER (AVEC VOS TEXTES EXACTS)
+# ==============================================================================
+
+@st.dialog("Pourquoi Expert Social Pro existe ?")
+def modal_manifesto():
+    st.markdown("""
+    <style>
+        .manifesto-box { font-family: 'Open Sans', sans-serif; color: #1e293b; line-height: 1.6; font-size: 14px; }
+        .manifesto-title { color: #024c6f; font-size: 16px; font-weight: 700; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+        .manifesto-intro { font-size: 15px; font-weight: 600; color: #b91c1c; margin-bottom: 15px; }
+        .manifesto-list { margin-left: 20px; margin-bottom: 15px; }
+        .manifesto-strong { color: #0f172a; font-weight: 700; }
+        .manifesto-check { color: #15803d; font-weight: bold; }
+    </style>
+    <div class="manifesto-box">
+        <div class="manifesto-intro">Dans le domaine social, une réponse approximative n’est pas acceptable.<br>Une erreur de 10 €, ce n’est jamais "juste 10 €" : c’est un risque URSSAF.</div>
+        <p>Expert Social Pro est né d’un constat simple : <br>👉 <em>La majorité des IA répondent vite, mais ne calculent pas vraiment.</em></p>
+        <div class="manifesto-title">🔹 Notre différence fondamentale</div>
+        <p><span class="manifesto-strong">1. Le calcul avant la conclusion</span><br>Chaque réponse suit une logique stricte : identification des règles > application des barèmes 2026 > calcul détaillé > conclusion.<br>🚫 Aucune "devinette statistique".</p>
+        <p><span class="manifesto-strong">2. Des chiffres certifiés, pas supposés</span><br>Les montants clés (SMIC, PASS, MG) sont injectés systématiquement.<br>👉 Un chiffre officiel ne se discute pas, il s’applique.</p>
+        <p><span class="manifesto-strong">3. Une hiérarchie claire des sources</span></p>
+        <ul class="manifesto-list"><li>🥇 Barèmes officiels et données URSSAF</li><li>🥈 Doctrine BOSS</li><li>🥉 Code du travail et textes légaux</li></ul>
+        <div class="manifesto-title">👥 À qui s’adresse Expert Social Pro ?</div>
+        <ul class="manifesto-list"><li>✅ Cabinets comptables et sociaux</li><li>✅ Responsables paie / RH</li><li>✅ Juristes praticiens</li><li>❌ <em>Pas aux curieux. À ceux qui assument leurs réponses.</em></li></ul>
+        <div class="manifesto-title">🤝 Notre engagement</div>
+        <p>Nous ne promettons pas de "tout savoir" en 2 secondes.<br><span class="manifesto-check">Nous garantissons des calculs cohérents et une base défendable professionnellement.</span></p>
+    </div>
+    """, unsafe_allow_html=True)
+
+@st.dialog("Mentions Légales")
+def modal_mentions():
+    # TEXTE EXACTEMENT RESTAURÉ DEPUIS VOTRE ANCIEN APP.PY
+    st.markdown(f"""
+    <div style='font-size: 12px; color: #1e293b; font-family: sans-serif;'>
+        <p>ÉDITEUR DU SITE<br>
+        Le site <em>socialexpertfrance.fr</em> est édité par <strong>Sylvain Attal EI (BUSINESS AGENT AI)</strong>.<br>
+        SIREN : 948253711 | Directeur : Sylvain ATTAL<br>
+        Contact : sylvain.attal@businessagent-ai.com</p>
+        HÉBERGEMENT
+        Google Cloud EMEA Limited<br>
+        70 Sir John Rogerson’s Quay, Dublin 2, Irlande</p>
+        LIMITATION DE RESPONSABILITÉ (IA)<br>
+        Les réponses sont générées par une Intelligence Artificielle (Gemini 2.0 Flash Exp). 
+        Ces informations sont indicatives et <strong>ne remplacent pas une consultation juridique</strong> 
+        auprès d'un professionnel du droit. L'éditeur ne saurait être tenu responsable des erreurs.</p>
+        PROPRIÉTÉ<br>
+        Code source et design : Propriété exclusive de BUSINESS AGENT AI®.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+@st.dialog("Politique de Confidentialité")
+def modal_rgpd():
+    # TEXTE EXACTEMENT RESTAURÉ DEPUIS VOTRE ANCIEN APP.PY
+    st.markdown(f"""
+    <div style='font-size: 13px; color: #1e293b; font-family: sans-serif;'>
+        <p><strong>PROTECTION DES DONNÉES :</strong></p>
+        <ul>
+            <li><strong>Cookies :</strong> Uniquement technique pour maintenir votre session.</li>
+            <li><strong>Traçage :</strong> Aucun cookie publicitaire ou analytique tiers n'est déposé.</li>
+            <li><strong>Données :</strong> Vos saisies sont traitées en mémoire vive et ne sont pas stockées ni utilisées pour l'entraînement de l'IA.</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+def render_footer():
+    """Affiche le footer avec le bouton Manifeste (rouge) et les liens légaux"""
+    import streamlit as st
+    
+    st.markdown("<div style='margin-bottom: 5px;'></div>", unsafe_allow_html=True)
+    
+    # Colonnes : Manifeste (Large), Mentions, RGPD, Vide
+    c_line = st.columns([2.2, 0.8, 0.8, 2.2], vertical_alignment="center")
+
+    with c_line[0]: 
+        # Type "primary" = ROUGE (grâce au CSS)
+        if st.button("Pourquoi Expert Social Pro existe", type="primary", key="btn_manif"):
+            modal_manifesto()
+
+    with c_line[1]: 
+        # Type "tertiary" = GRIS
+        if st.button("Mentions Légales", type="tertiary", key="btn_mentions"):
+            modal_mentions()
+
+    with c_line[2]: 
+        if st.button("Confidentialité", type="tertiary", key="btn_rgpd"):
+            modal_rgpd()
+
+    st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)

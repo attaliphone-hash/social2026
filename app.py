@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py (CORRECTIF : VEILLE + TITRES + ARTICLES)
+# FICHIER : app.py V30
 # ============================================================
 import streamlit as st
 import os
@@ -12,17 +12,21 @@ from email.utils import parsedate_to_datetime
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from supabase import create_client, Client
-from services.stripe_service import verify_active_subscription  
+
+# --- IMPORTS SERVICES ---
+# (On garde tes imports tels quels)
+from services.stripe_service import verify_active_subscription, create_checkout_session
+
 # --- IMPORTS UI ---
-from ui.styles import apply_pro_design, render_top_columns, render_subscription_cards
+# MODIF : On ajoute render_footer pour afficher le bouton rouge et les mentions
+from ui.styles import apply_pro_design, render_top_columns, render_subscription_cards, render_footer
+
+# --- IMPORTS IA ---
 from rules.engine import SocialRuleEngine
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
-# ✅ Stripe checkout + Verification
-from services.stripe_service import create_checkout_session, verify_active_subscription
 
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
@@ -55,10 +59,8 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# DEBUT : NOUVEAU MODULE VEILLE (CORRECTIF TIMEOUT & HEADERS)
+# DEBUT : MODULE VEILLE (CODE STRICTEMENT D'ORIGINE)
 # ==============================================================================
-
-# Dictionnaire pour traduire les dates "16 janvier 2026"
 FRENCH_MONTHS = {
     "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
     "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
@@ -71,14 +73,11 @@ def get_headers():
         "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7"
     }
 
-# --- SOURCE 1 : BOSS ---
 def get_boss_status_html():
     target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
     try:
         url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
-        # Timeout augmenté à 12s pour éviter les erreurs sur Cloud Run
         response = requests.get(url, headers=get_headers(), timeout=12)
-        
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
             soup = BeautifulSoup(content, 'html.parser')
@@ -99,11 +98,9 @@ def get_boss_status_html():
         print(f"Erreur BOSS: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- SOURCE 2 : SERVICE-PUBLIC ---
 def get_service_public_status():
     target_url = "https://entreprendre.service-public.gouv.fr/actualites"
     try:
-        # Timeout augmenté
         response = requests.get(target_url, headers=get_headers(), timeout=15)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -136,12 +133,10 @@ def get_service_public_status():
         print(f"Erreur SP: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- SOURCE 3 : NET-ENTREPRISES ---
 def get_net_entreprises_status():
     target_url = "https://www.net-entreprises.fr/actualites/"
     try:
         url = "https://www.net-entreprises.fr/feed/"
-        # Timeout augmenté
         response = requests.get(url, headers=get_headers(), timeout=12)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -162,7 +157,6 @@ def get_net_entreprises_status():
         print(f"Erreur NetEnt: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- FONCTION PRINCIPALE ---
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
@@ -177,43 +171,6 @@ def show_legal_watch_bar():
             st.session_state.news_closed = True
             st.rerun()
 
-# ==============================================================================
-# FIN NOUVEAU MODULE VEILLE
-# ==============================================================================
-
-# --- POPUPS ---
-@st.dialog("Mentions Légales")
-def modal_mentions():
-    st.markdown(f"""
-    <div style='font-size: 12px; color: #1e293b; font-family: sans-serif;'>
-        <p>ÉDITEUR DU SITE<br>
-        Le site <em>socialexpertfrance.fr</em> est édité par <strong>Sylvain Attal EI (BUSINESS AGENT AI)</strong>.<br>
-        SIREN : 948253711 | Directeur : Sylvain ATTAL<br>
-        Contact : sylvain.attal@businessagent-ai.com</p>
-        HÉBERGEMENT
-        Google Cloud EMEA Limited<br>
-        70 Sir John Rogerson’s Quay, Dublin 2, Irlande</p>
-        LIMITATION DE RESPONSABILITÉ (IA)<br>
-        Les réponses sont générées par une Intelligence Artificielle (Gemini 2.0 Flash Exp). 
-        Ces informations sont indicatives et <strong>ne remplacent pas une consultation juridique</strong> 
-        auprès d'un professionnel du droit. L'éditeur ne saurait être tenu responsable des erreurs.</p>
-        PROPRIÉTÉ<br>
-        Code source et design : Propriété exclusive de BUSINESS AGENT AI®.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-@st.dialog("Politique de Confidentialité")
-def modal_rgpd():
-    st.markdown(f"""
-    <div style='font-size: 13px; color: #1e293b; font-family: sans-serif;'>
-        <p><strong>PROTECTION DES DONNÉES :</strong></p>
-        <ul>
-            <li><strong>Cookies :</strong> Uniquement technique pour maintenir votre session.</li>
-            <li><strong>Traçage :</strong> Aucun cookie publicitaire ou analytique tiers n'est déposé.</li>
-            <li><strong>Données :</strong> Vos saisies sont traitées en mémoire vive et ne sont pas stockées ni utilisées pour l'entraînement de l'IA.</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
 # --- 2. AUTHENTIFICATION ---
 def check_password():
     if "authenticated" not in st.session_state:
@@ -225,36 +182,9 @@ def check_password():
     # 1. ARGUMENTS EN HAUT
     render_top_columns()
     
-    # 2. LIGNE COPYRIGHT AVEC STYLE HARMONISE
-    st.markdown("""
-        <style>
-        .footer-text {
-            font-family: 'Open Sans', sans-serif !important;
-            font-size: 11px !important; 
-            color: #7A7A7A !important;
-        }
-        div[data-testid="column"] button[kind="tertiary"] p {
-            font-size: 11px !important;
-            font-family: 'Open Sans', sans-serif !important;
-            color: #7A7A7A !important;
-        }
-        div[data-testid="column"] button[kind="tertiary"] {
-            padding: 0px !important;
-            min-height: unset !important;
-            line-height: 1 !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-    c_line = st.columns([1.2, 0.8, 0.8, 3], vertical_alignment="center")
-    with c_line[0]: st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
-    with c_line[1]: 
-        if st.button("Mentions Légales", key="top_m", type="tertiary"): modal_mentions()
-    with c_line[2]: 
-        if st.button("Confidentialité", key="top_r", type="tertiary"): modal_rgpd()
+    # 2. FOOTER (MODIF : REMPLACEMENT PAR LA NOUVELLE FONCTION)
+    render_footer()
 
-    st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
     st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
     
     t1, t2 = st.tabs(["🔐 Je suis abonné", "J'ai un code découverte"])
@@ -270,36 +200,27 @@ def check_password():
             except: st.error("Erreur d'identification.")
         st.markdown("---")
         
-        # --- SECTION ABONNEMENT (AVEC LES CARTES UI) ---
+        # --- SECTION ABONNEMENT ---
         st.subheader("PAS ENCORE ABONNÉ ?")
         st.write("Débloquez l'accès illimité et le mode Expert Social 2026.")
-
-        # Appel de la fonction graphique (définie dans ui/styles.py)
-        # Assure-toi d'avoir mis à jour styles.py avec les prix 35/350 avant !
         render_subscription_cards()
 
-    # --- ONGLET 2 : CODES D'ACCÈS (INCHANGÉ) ---
+    # --- ONGLET 2 : CODES D'ACCÈS ---
     with t2:
         code = st.text_input("Code", type="password")
         if st.button("Valider", use_container_width=True):
-            # 1. Code Administrateur (Lecture dans ENV)
             if code == os.getenv("ADMIN_PASSWORD"):
                 st.session_state.authenticated = True
                 st.session_state.user_email = "ADMINISTRATEUR"
                 st.rerun()
-            
-            # 2. Code Utilisateur Promo Standard (Lecture dans ENV)
             elif code == os.getenv("APP_PASSWORD"):
                 st.session_state.authenticated = True
                 st.session_state.user_email = "Utilisateur Promo"
                 st.rerun()
-            
-            # 3. Code Spécial ANDRH (Lecture dans ENV)
             elif code == os.getenv("CODE_PROMO_ANDRH"):
                 st.session_state.authenticated = True
                 st.session_state.user_email = "Membre ANDRH (Invité)"
                 st.rerun()
-                
             else: 
                 st.error("Code faux")
     return False
@@ -310,12 +231,10 @@ if not check_password(): st.stop()
 # 🔴 SÉCURITÉ STRIPE : VÉRIFICATION D'ABONNEMENT
 # ============================================================
 user_email = st.session_state.get("user_email")
-ADMIN_EMAILS = ["ton.email@admin.com"] # AJOUTE TON EMAIL ICI
+ADMIN_EMAILS = ["ton.email@admin.com"] 
 
 # On ne vérifie que si c'est un email classique (pas un code admin/promo/invité)
-# ✅ CORRECTION : Ajout de "Membre ANDRH (Invité)" pour contourner Stripe
 if user_email and user_email not in ["ADMINISTRATEUR", "Utilisateur Promo", "Membre ANDRH (Invité)"]:
-    # Passe-droit pour ton email perso
     if user_email in ADMIN_EMAILS:
         is_subscribed = True
     else:
@@ -333,15 +252,11 @@ if user_email and user_email not in ["ADMINISTRATEUR", "Utilisateur Promo", "Mem
         
         col1, col2 = st.columns(2)
         with col1:
-            # On propose l'abonnement mensuel par défaut
             checkout_url = create_checkout_session("Mensuel", user_email)
             if checkout_url:
                 st.link_button("S'abonner (Mensuel)", checkout_url, type="primary")
         
         st.stop()
-# ============================================================
-# FIN SÉCURITÉ STRIPE
-# ============================================================
 
 # --- 3. CHARGEMENT MOTEUR & IA ---
 @st.cache_resource
@@ -374,16 +289,13 @@ def clean_query_for_engine(q):
     return " ".join(cleaned)
 
 def build_context(query):
-    # On augmente à k=30 pour scanner plus de documents (ton nouveau cerveau est grand !)
     raw_docs = vectorstore.similarity_search(query, k=30)
     context_text, sources_seen = "", []
     
     for d in raw_docs:
-        # On utilise la nouvelle métadonnée 'category' injectée par nos scripts
         category = d.metadata.get('category', 'AUTRE')
         raw_src = d.metadata.get('source', 'Inconnu')
         
-        # Traduction propre pour l'utilisateur final
         if category == "REF":
             pretty_src = "Barèmes & Chiffres 2026"
         elif category == "DOC":
@@ -391,10 +303,8 @@ def build_context(query):
         elif category == "CODES":
             pretty_src = "Code du Travail / Sécu"
         else:
-            # Sécurité : si la catégorie est absente, on nettoie le nom du fichier
             pretty_src = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '')
 
-        # On évite les doublons dans la liste des sources du footer
         if pretty_src not in sources_seen:
             sources_seen.append(pretty_src)
             
@@ -406,7 +316,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT EXPERT SOCIAL PRO 2026 - FINAL RENDER (0€ + HTML PROPRE) ===
+# === PROMPT EXPERT SOCIAL PRO 2026 - FINAL RENDER ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -477,10 +387,7 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
 QUESTION : {question}
 """)
     
-    # 1. AJOUTE CETTE LIGNE JUSTE ICI (elle définit la variable manquante)
     date_ref = engine.get_yaml_update_date()
-
-    # 2. ENSUITE TON BLOC DE RETOUR EXISTANT
     chain = prompt | llm | StrOutputParser()
     return chain.stream({
         "context": context, 
@@ -490,6 +397,7 @@ QUESTION : {question}
         "user_doc_section": user_doc_section,
         "date_maj": date_ref
     })
+
 # --- UI PRINCIPALE ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
@@ -502,18 +410,10 @@ if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur 
 # 1. ARGUMENTS
 render_top_columns()
 
-# 2. COPYRIGHT / LIENS (EN HAUT) AVEC STYLE HARMONISE
-st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-c_line = st.columns([1.2, 0.8, 0.8, 3], vertical_alignment="center")
-with c_line[0]: st.markdown("<span class='footer-text'>© 2026 socialexpertfrance.fr</span>", unsafe_allow_html=True)
-with c_line[1]: 
-    if st.button("Mentions Légales", key="top_mentions", type="tertiary"): modal_mentions()
-with c_line[2]: 
-    if st.button("Confidentialité", key="top_rgpd", type="tertiary"): modal_rgpd()
+# 2. FOOTER (MODIF : REMPLACEMENT PAR LA NOUVELLE FONCTION)
+render_footer()
 
-st.markdown("<hr style='margin-top:5px; margin-bottom:15px'>", unsafe_allow_html=True)
-
-# ✅ ICI LA MODIFICATION : ON APPELLE LA NOUVELLE FONCTION DE VEILLE
+# ✅ BARRE VEILLE
 if st.session_state.user_email == "ADMINISTRATEUR": show_legal_watch_bar()
 
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
