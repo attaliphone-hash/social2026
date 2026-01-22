@@ -528,13 +528,22 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pou
             # 1. CRÉATION DU NOM DE FICHIER "ANTI-BLABLA"
             
             # Liste des mots inutiles à supprimer du titre
+            # Liste des mots inutiles (enrichie)
             stop_words = {
-                "bonjour", "bonsoir", "salut", "hey", "cher", "chere",
-                "je", "tu", "il", "nous", "vous", "ils",
-                "voudrais", "aimerais", "souhaite", "désire", "veux", "peux",
-                "savoir", "connaitre", "avoir", "demande", "question",
-                "est-ce", "que", "qu", "svp", "stp", "merci", "plait",
-                "est", "ce", "le", "la", "les", "un", "une", "des", "du", "de", "d"
+                # Salutations / Politesse
+                "bonjour", "bonsoir", "salut", "hey", "cher", "chere", "merci", "svp", "stp", "plait",
+                # Pronoms
+                "je", "tu", "il", "elle", "nous", "vous", "ils", "elles", "on", "moi", "toi", "lui",
+                # Verbes de demande / volonté
+                "voudrais", "aimerais", "souhaite", "désire", "veux", "peux", "dois", "doit", "faut", "falloir",
+                "savoir", "connaitre", "avoir", "demande", "question", "est-ce", "aller", "faire",
+                # Articles et liaisons courts
+                "le", "la", "les", "un", "une", "des", "du", "de", "d", "l",
+                "et", "ou", "mais", "ou", "donc", "ni", "car", "a", "à", "en", "y", "dans", "par", "pour", "sur",
+                # Relatifs
+                "qui", "que", "quoi", "dont", "ou", "qu", "quel", "quelle", "quels", "quelles", "comment", "combien", "pourquoi",
+                # Verbe Être / Avoir courants
+                "est", "sont", "suis", "es", "ai", "as", "ont", "avez", "sommes", "etes"
             }
 
             # On normalise (enlève les accents)
