@@ -433,6 +433,16 @@ with col_act2:
 
 # 4. TITRE
 st.markdown("<h1>EXPERT SOCIAL PRO ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
+# --- INDICATEUR DE QUOTA RESTANT ---
+if user_role != "ADMINISTRATEUR":
+    remaining = QUOTA_LIMIT - st.session_state.query_count
+    if remaining <= 0:
+        st.error("🛑 Session terminée. Veuillez rafraîchir la page.")
+    elif remaining <= 5:  
+        st.warning(f"⚠️ Attention : Il ne vous reste que {remaining} question(s) dans cette session.")
+    elif remaining <= 10:
+        st.info(f"ℹ️ Info : {remaining} questions restantes avant renouvellement de session.")
+# -----------------------------------
 
 # LOGIQUE
 user_text = None
