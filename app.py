@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py V30 (FINAL - KPI + PDF SMART)
+# FICHIER : app.py V31 (FINAL - UX QUOTA + PDF ERROR)
 # ============================================================
 import streamlit as st
 import os
@@ -468,17 +468,23 @@ else:
 if "query_count" not in st.session_state:
     st.session_state.query_count = 0
 
-# 3. Vérification AVANT de laisser poser la question
-if st.session_state.query_count >= QUOTA_LIMIT:
-    st.warning(f"🛑 **Limite de session atteinte ({QUOTA_LIMIT} questions).**")
-    st.info("Cette version de démonstration est limitée. Veuillez rafraîchir la page (F5) pour démarrer une nouvelle session.")
-    st.stop() # Bloque l'affichage de la barre de saisie en dessous
+# ============================================================
+# 💬 BARRE DE SAISIE & TRAITEMENT (V31 - Quota UX Amélioré)
+# ============================================================
 
-# ============================================================
-# 💬 BARRE DE SAISIE & TRAITEMENT
-# ============================================================
-if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pour verser le document à analyser)"):
-    
+# On vérifie si le quota est atteint
+quota_reached = st.session_state.query_count >= QUOTA_LIMIT
+
+# Si quota atteint, on affiche un message et on empêche la saisie
+if quota_reached:
+    st.warning(f"🛑 **Limite de session atteinte ({QUOTA_LIMIT} questions).**")
+    st.info("💡 Pour continuer, passer à l'abonnement illimité.")
+    q = None 
+else:
+    # Sinon, on affiche la barre normalement
+    q = st.chat_input("Posez votre question (ou utilisez le bouton plus haut pour verser le document à analyser)")
+
+if q:
     # On augmente le compteur quand une question est posée
     st.session_state.query_count += 1
     
@@ -584,4 +590,7 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pou
                 key=f"pdf_btn_{st.session_state.query_count}"
             )
         except Exception as e:
-            print(f"Erreur génération PDF : {e}")
+            # On loggue pour nous (console Google)
+            print(f"[ERREUR PDF] : {e}", flush=True) 
+            # On avertit l'utilisateur (interface)
+            st.error("⚠️ Une erreur technique empêche la génération de ce PDF spécifique. Essayez de reformuler légèrement la question.")
