@@ -437,11 +437,11 @@ st.markdown("<h1>EXPERT SOCIAL PRO ESPACE ABONNÉS</h1>", unsafe_allow_html=True
 if user_role != "ADMINISTRATEUR":
     remaining = QUOTA_LIMIT - st.session_state.query_count
     if remaining <= 0:
-        st.error("🛑 Session terminée. Veuillez rafraîchir la page.")
+        st.error("🛑 Votre quota gratuit est atteint.")
     elif remaining <= 5:  
-        st.warning(f"⚠️ Attention : Il ne vous reste que {remaining} question(s) dans cette session.")
+        st.warning(f"⚠️ Attention : Il ne vous reste que {remaining} question(s) dans votre quota.")
     elif remaining <= 10:
-        st.info(f"ℹ️ Info : {remaining} questions restantes avant renouvellement de session.")
+        st.info(f"ℹ️ Info : {remaining} questions restantes.")
 # -----------------------------------
 
 # LOGIQUE
@@ -468,7 +468,7 @@ for m in st.session_state.messages:
 user_role = st.session_state.get("user_email", "Inconnu")
 
 if user_role == "Membre ANDRH (Invité)":
-    QUOTA_LIMIT = 30  # Limite pour le test ANDRH
+    QUOTA_LIMIT = 20  # Limite pour le test ANDRH
 elif user_role == "ADMINISTRATEUR":
     QUOTA_LIMIT = 9999 # Illimité pour toi
 else:
