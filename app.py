@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py V30 (NETTOYÉ)
+# FICHIER : app.py V30 (FINAL - KPI + PDF SMART)
 # ============================================================
 import streamlit as st
 import os
@@ -492,6 +492,11 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pou
         
         # Préparation du contexte
         cleaned_q = clean_query_for_engine(q)
+
+        # --- AJOUT KPI STATISTIQUES (LOGS GOOGLE CLOUD) ---
+        print(f"[KPI_QUESTION] Utilisateur a demandé : {q}", flush=True) 
+        # --------------------------------------------------
+
         facts = engine.format_certified_facts(engine.match_rules(cleaned_q))
         ctx, srcs = build_context(q)
         full_resp = ""
@@ -527,7 +532,6 @@ if q := st.chat_input("Posez votre question (ou utilisez le bouton plus haut pou
         try:
             # 1. CRÉATION DU NOM DE FICHIER "ANTI-BLABLA"
             
-            # Liste des mots inutiles à supprimer du titre
             # Liste des mots inutiles (enrichie)
             stop_words = {
                 # Salutations / Politesse
