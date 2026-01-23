@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py V31 (FINAL - UX QUOTA + PDF ERROR)
+# FICHIER : app.py V33 (CORRECTIF - ORDRE DES VARIABLES)
 # ============================================================
 import streamlit as st
 import os
@@ -431,17 +431,41 @@ with col_act2:
         st.session_state.uploader_key += 1
         st.rerun()
 
+# ============================================================
+# 🛡️ DÉFINITION DES RÔLES & QUOTAS (AVANT L'AFFICHAGE)
+# ============================================================
+# 1. On définit les limites selon le profil
+user_role = st.session_state.get("user_email", "Inconnu")
+
+if user_role == "Membre ANDRH (Invité)":
+    QUOTA_LIMIT = 30  # Limite pour le test ANDRH
+elif user_role == "ADMINISTRATEUR":
+    QUOTA_LIMIT = 9999 # Illimité pour toi
+else:
+    QUOTA_LIMIT = 20   # Sécurité standard
+
+# 2. Initialisation du compteur
+if "query_count" not in st.session_state:
+    st.session_state.query_count = 0
+
 # 4. TITRE
 st.markdown("<h1>EXPERT SOCIAL PRO ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
-# --- INDICATEUR DE QUOTA RESTANT ---
+
+# --- INDICATEUR DE QUOTA RESTANT (V32 - Messages Pro/Neutres) ---
 if user_role != "ADMINISTRATEUR":
     remaining = QUOTA_LIMIT - st.session_state.query_count
+    
+    # Cas 1 : C'est fini (0 question)
     if remaining <= 0:
-        st.error("🛑 Votre quota gratuit est atteint.")
+        st.error("🛑 **Session terminée.** Veuillez vous reconnecter ou démarrer une nouvelle session pour continuer.")
+    
+    # Cas 2 : Il reste très peu (Zone Rouge)
     elif remaining <= 5:  
-        st.warning(f"⚠️ Attention : Il ne vous reste que {remaining} question(s) dans votre quota.")
+        st.warning(f"⚠️ **Attention :** Il ne vous reste que {remaining} question(s) dans cette session.")
+    
+    # Cas 3 : Il reste un peu (Zone Bleue)
     elif remaining <= 10:
-        st.info(f"ℹ️ Info : {remaining} questions restantes.")
+        st.info(f"ℹ️ **Info Session :** {remaining} questions restantes.")
 # -----------------------------------
 
 # LOGIQUE
@@ -462,24 +486,7 @@ for m in st.session_state.messages:
         st.markdown(m["content"], unsafe_allow_html=True)
 
 # ============================================================
-# 🛡️ LIMITEUR D'USAGE (QUOTA SÉCURITÉ)
-# ============================================================
-# 1. On définit les limites selon le profil
-user_role = st.session_state.get("user_email", "Inconnu")
-
-if user_role == "Membre ANDRH (Invité)":
-    QUOTA_LIMIT = 20  # Limite pour le test ANDRH
-elif user_role == "ADMINISTRATEUR":
-    QUOTA_LIMIT = 9999 # Illimité pour toi
-else:
-    QUOTA_LIMIT = 20   # Sécurité standard
-
-# 2. Initialisation du compteur
-if "query_count" not in st.session_state:
-    st.session_state.query_count = 0
-
-# ============================================================
-# 💬 BARRE DE SAISIE & TRAITEMENT (V31 - Quota UX Amélioré)
+# 💬 BARRE DE SAISIE & TRAITEMENT (V32 - Quota UX Amélioré)
 # ============================================================
 
 # On vérifie si le quota est atteint
@@ -488,7 +495,7 @@ quota_reached = st.session_state.query_count >= QUOTA_LIMIT
 # Si quota atteint, on affiche un message et on empêche la saisie
 if quota_reached:
     st.warning(f"🛑 **Limite de session atteinte ({QUOTA_LIMIT} questions).**")
-    st.info("💡 Pour continuer, passer à l'abonnement illimité.")
+    st.info("💡 Pour continuer, veuillez démarrer une nouvelle session.")
     q = None 
 else:
     # Sinon, on affiche la barre normalement
