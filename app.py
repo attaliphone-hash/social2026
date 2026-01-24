@@ -322,7 +322,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT IA (VERSION V41 - LOGIQUE V40 + CITATIONS & FOOTER V33) ===
+# === PROMPT IA (VERSION V42 - LOGIQUE V40 + SOURCES STRICTES V33) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -350,10 +350,16 @@ C. INCERTITUDE EFFECTIF :
 - Si non précisé : Calcul < 50 salariés.
 - OBLIGATOIRE : Remplis le bloc "Variante" pour > 50 salariés.
 
---- 3. GESTION DES SOURCES (CRITIQUE) ---
-CITE TOUJOURS L'ARTICLE PRÉCIS (ex: Code du travail - Art. L1234-9, ou BOSS - Fiche Frais Pro).
-Ne dis JAMAIS juste "Code du Travail".
-Interdiction d'afficher les noms de fichiers techniques (REF_, DOC_, PDF).
+--- 3. GESTION DES SOURCES (MAPPING OBLIGATOIRE) ---
+- NOMENCLATURE :
+  * [cite_start]Les fichiers "REF_" doivent être cités comme : "Barèmes & Chiffres 2026"[cite: 7].
+  * [cite_start]Les fichiers "DOC_" doivent être cités comme : "BOSS / Jurisprudence"[cite: 6].
+  * Les fichiers "CODES" doivent être cités comme : "Code du Travail / Sécu".
+  
+- RÈGLES D'AFFICHAGE :
+  * CITE TOUJOURS L'ARTICLE PRÉCIS (ex: Code du travail - Art. L1234-9).
+  * ⛔ INTERDICTION FORMELLE d'afficher les noms techniques (ex: "REF_SMIC.pdf", "DOC_BOSS.txt").
+  * Ne dis jamais juste "Selon le document fourni". Cite la source juridique réelle.
 
 --- 4. CONTEXTE RAG ---
 {certified_facts}
