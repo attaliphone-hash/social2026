@@ -505,7 +505,8 @@ if len(st.session_state.messages) == 0 and user_role in DISCOVERY_USERS:
         st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Apprentissage 2026</div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?\"</div>", unsafe_allow_html=True)
         if st.button("Tester ce cas", key="btn_start_1", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?"})
+            # 👇 CHANGEMENT ICI : On stocke pour l'IA
+            st.session_state.pending_prompt = "Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?"
             st.rerun()
 
     # --- COLONNE 2 : LICENCIEMENT ---
@@ -513,7 +514,8 @@ if len(st.session_state.messages) == 0 and user_role in DISCOVERY_USERS:
         st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Licenciement</div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté ayant un salaire de référence de 4500€.\"</div>", unsafe_allow_html=True)
         if st.button("Tester ce cas", key="btn_start_2", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté ayant un salaire de référence de 4500€."})
+            # 👇 CHANGEMENT ICI
+            st.session_state.pending_prompt = "Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté ayant un salaire de référence de 4500€."
             st.rerun()
 
     # --- COLONNE 3 : VÉHICULE ---
@@ -521,7 +523,8 @@ if len(st.session_state.messages) == 0 and user_role in DISCOVERY_USERS:
         st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Avantage Auto</div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Comment calculer l'avantage voiture électrique en 2026 ?\"</div>", unsafe_allow_html=True)
         if st.button("Tester ce cas", key="btn_start_3", use_container_width=True):
-            st.session_state.messages.append({"role": "user", "content": "Comment calculer l'avantage en nature pour une voiture électrique de société en 2026 ?"})
+            # 👇 CHANGEMENT ICI
+            st.session_state.pending_prompt = "Comment calculer l'avantage en nature pour une voiture électrique de société en 2026 ?"
             st.rerun()
 
     st.markdown("---")
@@ -539,11 +542,18 @@ quota_reached = st.session_state.query_count >= QUOTA_LIMIT
 # Si quota atteint, on affiche un message et on empêche la saisie
 if quota_reached:
     st.warning(f"🛑 **Limite de session atteinte ({QUOTA_LIMIT} questions).**")
-    st.info("💡 Pour continuer, veuillez démarrer une nouvelle session.")
+    st.info("Pour continuer, envisagez de vous abonner.")
     q = None 
 else:
-    # ✅ NOUVEAU TEXTE D'AIDE "MENTAL FRAMING" (Avec Rappel Document)
-    q = st.chat_input("Posez votre situation concrète (ex: calcul paie...) ou utilisez le bouton plus haut pour analyser un document.")
+    # ✅ LOGIQUE "TRIGGER" : On récupère le clic bouton s'il existe
+    if "pending_prompt" in st.session_state and st.session_state.pending_prompt:
+        q = st.session_state.pending_prompt
+        del st.session_state.pending_prompt # On vide la mémoire après usage
+    else:
+        # Sinon, saisie manuelle classique
+        q = st.chat_input("Posez votre situation concrète (ex: calcul paie...) ou utilisez le bouton plus haut pour analyser un document.")
+
+# La suite (if q: ...) ne change pas !
 
 if q:
     # On augmente le compteur quand une question est posée
