@@ -502,7 +502,7 @@ if len(st.session_state.messages) == 0 and user_role in DISCOVERY_USERS:
     
    # --- COLONNE 1 : APPRENTI ---
     with c1:
-        st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>ExempleApprentissage 2026</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Apprentissage 2026</div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?\"</div>", unsafe_allow_html=True)
         if st.button("Tester ce cas", key="btn_start_1", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?"})
@@ -518,7 +518,7 @@ if len(st.session_state.messages) == 0 and user_role in DISCOVERY_USERS:
 
     # --- COLONNE 3 : VÉHICULE ---
     with c3:
-        st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>ExempleAvantage Auto</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Avantage Auto</div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Comment calculer l'avantage voiture électrique en 2026 ?\"</div>", unsafe_allow_html=True)
         if st.button("Tester ce cas", key="btn_start_3", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Comment calculer l'avantage en nature pour une voiture électrique de société en 2026 ?"})
