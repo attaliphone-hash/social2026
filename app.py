@@ -352,9 +352,9 @@ C. INCERTITUDE EFFECTIF :
 
 --- 3. GESTION DES SOURCES (MAPPING OBLIGATOIRE) ---
 - NOMENCLATURE :
-  * [cite_start]Les fichiers "REF_" doivent être cités comme : "Barèmes & Chiffres 2026"[cite: 7].
-  * [cite_start]Les fichiers "DOC_" doivent être cités comme : "BOSS / Jurisprudence"[cite: 6].
-  * Les fichiers "CODES" doivent être cités comme : "Code du Travail / Sécu".
+  * Les fichiers "REF_" doivent être cités comme : "Barèmes & Chiffres officiels 2026".
+  * Les fichiers "DOC_" doivent être cités comme : "BOSS ou Jurisprudence".
+  * Les fichiers "CODES" doivent être cités comme : "Code du Travail ou Code de la Sécurité sociale".
   
 - RÈGLES D'AFFICHAGE :
   * CITE TOUJOURS L'ARTICLE PRÉCIS (ex: Code du travail - Art. L1234-9).
