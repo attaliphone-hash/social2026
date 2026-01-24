@@ -322,7 +322,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT IA ===
+# === PROMPT IA (VERSION STABLE CORRIGÉE) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -340,13 +340,21 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
 
 - MAPPING SMIC/FILLON : Utilise 'T_moins_50' (0.3981) ou 'T_plus_50' (0.4021) uniquement pour la Réduction Générale.
 
-- RÈGLE "COÛT ZÉRO" (SMIC) :
-  Si on demande le coût ou les charges pour un salaire égal au SMIC :
-  1. Règle Juridique : Au niveau du SMIC, la Réduction Générale est maximale et égale au paramètre T.
-  2. Calcul du Coefficient : Utilise STRICTEMENT Coefficient = T (soit T_moins_50 ou T_plus_50). Ne fais JAMAIS le calcul (1.6 * ...).
+- RÈGLE "COÛT vs CHARGES" (CORRECTION CRITIQUE) :
+  1. Règle Juridique : Au niveau du SMIC, la Réduction Générale est maximale.
+  2. Calcul du Coefficient : Utilise STRICTEMENT Coefficient = T.
   3. Montant Exonération = Salaire Brut x T.
-  4. Considère que [Charges Dues] = [Montant Exonération].
-  5. Affiche "0,00 €" en résultat final (car Charges - Exonération = 0).
+  4. Considère que [Charges Dues] = 0,00 € (car l'exonération annule les charges).
+  5. ⚠️ ATTENTION AU RÉSULTAT FINAL :
+     - Si on demande les **CHARGES** : Le résultat est **0,00 €**.
+     - Si on demande le **COÛT TOTAL** : Le résultat est **Salaire Brut** (car Charges = 0, mais le salaire reste dû !).
+     - Si applicable, déduis l'**Aide à l'embauche** (trouvée dans le contexte) du Coût Total.
+
+- GESTION DE L'INCERTITUDE (TAILLE ENTREPRISE) :
+  Si l'utilisateur ne précise pas l'effectif :
+  1. Fais le calcul standard (< 50 salariés).
+  2. Ajoute une phrase "Variante si > 50 salariés" avec le calcul ajusté (T différent).
+  ⛔ Ne parle JAMAIS de "remboursement sous forme d'avances" (Hallucination interdite).
   
   ⚠️ GESTION DES SOURCES (CRITIQUE) :
   CITE TOUJOURS L'ARTICLE PRÉCIS (ex: Code du travail - Art. L1234-9, ou BOSS - Fiche Frais Pro).

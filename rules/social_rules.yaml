@@ -90,6 +90,14 @@
   source: "LFSS 2026"
   text: "RÈGLE 2026 : L'exonération des cotisations salariales pour les apprentis est plafonnée à 50% du SMIC. La part de rémunération au-delà de 50% du SMIC est soumise à cotisations."
 
+- id: AIDE_EMBAUCHE_APPRENTI_2026
+  keywords: ["aide", "embauche", "apprenti", "apprentissage", "prime", "soutien", "6000"]
+  valeurs:
+    montant_annuel: 6000
+  derniere_maj: "Janvier 2026"
+  source: "Décret Aides à l'emploi 2026"
+  text: "Une aide exceptionnelle de 6 000 € est versée aux employeurs pour la première année d'exécution des contrats d'apprentissage conclus en 2026." 
+
 - id: SBI_2026
   keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie"]
   valeurs:
