@@ -322,7 +322,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT IA (VERSION V45 - DESIGN V33 + LOGIQUE 1ère ANNÉE FORCÉE) ===
+# === PROMPT IA (VERSION V46 - FIX FINAL AFFICHAGE + LOGIQUE V45) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -378,9 +378,11 @@ C. INCERTITUDE EFFECTIF :
     <strong>Données utilisées :</strong> [Lister les données chiffrées exactes]<br>
     <strong>Détail :</strong><br>
     
-    [INSTRUCTION DE RENDU DU CALCUL] :
-    - Génère une liste à puces HTML (<ul><li>) sans indentation Markdown avant.
-    - Détaille le calcul étape par étape.
+    <ul>
+       <li>[Calcul du Salaire Brut (ex: 53% du SMIC pour 22 ans)]</li>
+       <li>[Charges Patronales : 0,00 € (Annulées par Fillon)]</li>
+       <li>[Déduction Aide : 6000 € / 12 = 500 €]</li>
+    </ul>
     
     <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #999; font-size: 13px; color: #444;">
         <strong>⚠️ Variante si effectif > 50 salariés :</strong><br>
