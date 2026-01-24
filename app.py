@@ -30,7 +30,13 @@ from langchain_core.output_parsers import StrOutputParser
 
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
-st.set_page_config(page_title="Expert Social Pro France", layout="wide")
+
+# ✅ CONFIGURATION DE LA PAGE AVEC TON AVATAR
+st.set_page_config(
+    page_title="Expert Social Pro2026 - Le Copilote RH et Paie",
+    page_icon="avatar-logo.png",
+    layout="wide"
+)
 
 # --- APPLICATION DU DESIGN PRO ---
 apply_pro_design()
