@@ -488,41 +488,39 @@ if uploaded_file:
 
 if "messages" not in st.session_state: st.session_state.messages = []
 
-# ✅ NOUVELLE SECTION ONBOARDING (CIBLÉE & LIGHT)
-# 1. On identifie les utilisateurs "Découverte" (ceux qui ont utilisé un code)
+# ✅ NOUVELLE SECTION ONBOARDING (CIBLÉE & LIGHT - SANS TITRE)
+# 1. On identifie les utilisateurs "Découverte"
 user_role = st.session_state.get("user_email", "")
 DISCOVERY_USERS = ["Utilisateur Promo", "Membre ANDRH (Invité)"]
 
 # 2. On affiche SEULEMENT si : Historique vide ET Utilisateur Découverte
 if len(st.session_state.messages) == 0 and user_role in DISCOVERY_USERS:
     
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h5 style='text-align: center; color: #6c757d;'>💡 Idées pour tester l'expert :</h5>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True) # Un peu d'espace pour aérer
     
     c1, c2, c3 = st.columns(3, gap="large")
     
-    # --- COLONNE 1 : APPRENTI ---
+   # --- COLONNE 1 : APPRENTI ---
     with c1:
-        st.markdown("**🎓 Apprentissage 2026**")
-        st.caption('"Je veux embaucher un apprenti de 22 ans. Quel est le coût exact et les exonérations ?"')
-        if st.button("👉 Tester ce cas", key="btn_start_1", use_container_width=True):
+        st.markdown("<div style='text-align: center; font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Apprentissage 2026</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Je veux embaucher un apprenti de 22 ans. Quel est le coût exact ?\"</div>", unsafe_allow_html=True)
+        if st.button("Tester ce cas", key="btn_start_1", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Je veux embaucher un apprenti de 22 ans. Quel est le coût exact et les exonérations en 2026 ?"})
             st.rerun()
 
     # --- COLONNE 2 : LICENCIEMENT ---
     with c2:
-        st.markdown("**⚖️ Licenciement**")
-        st.caption('"Calcule l\'indemnité pour un cadre avec 12 ans et 5 mois d\'ancienneté (salaire 4500€)."')
-        if st.button("👉 Tester ce cas", key="btn_start_2", use_container_width=True):
+        st.markdown("<div style='text-align: center; font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>⚖️ Licenciement</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Calcule l'indemnité pour un cadre avec 12 ans d'ancienneté.\"</div>", unsafe_allow_html=True)
+        if st.button("Tester ce cas", key="btn_start_2", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté (salaire 4500€)."})
             st.rerun()
 
     # --- COLONNE 3 : VÉHICULE ---
     with c3:
-        st.markdown("**🚗 Avantage Auto**")
-        st.caption('"Comment calculer l\'avantage en nature pour une voiture électrique de société en 2026 ?"')
-        if st.button("👉 Tester ce cas", key="btn_start_3", use_container_width=True):
+        st.markdown("<div style='text-align: center; font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>🚗 Avantage Auto</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Comment calculer l'avantage voiture électrique en 2026 ?\"</div>", unsafe_allow_html=True)
+        if st.button("Tester ce cas", key="btn_start_3", use_container_width=True):
             st.session_state.messages.append({"role": "user", "content": "Comment calculer l'avantage en nature pour une voiture électrique de société en 2026 ?"})
             st.rerun()
 
