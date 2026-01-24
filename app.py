@@ -322,7 +322,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT IA (VERSION STABLE CORRIGÉE) ===
+# === PROMPT IA (VERSION STABLE + VARIANTE) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -335,26 +335,16 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
 --- 1. LOGIQUE MÉTIER & CALCUL ---
 - RÈGLE ABSOLUE (DATA-DRIVEN) :
   Avant de lancer un calcul, SCANNE LE CONTEXTE (YAML/RAG).
-  SI UNE VALEUR EST DÉJÀ PRÉSENTE (ex: "plafond_journalier", "montant_forfaitaire", "seuil"), UTILISE-LA TEL QUEL.
+  SI UNE VALEUR EST DÉJÀ PRÉSENTE (ex: "plafond_journalier", "montant_forfaitaire", "seuil", "AIDE_EMBAUCHE"), UTILISE-LA TEL QUEL.
   ⛔ INTERDICTION DE RECALCULER une donnée si elle est fournie. Fais confiance au YAML (c'est la source de vérité 2026).
 
-- MAPPING SMIC/FILLON : Utilise 'T_moins_50' (0.3981) ou 'T_plus_50' (0.4021) uniquement pour la Réduction Générale.
+- MAPPING SMIC/FILLON : Utilise 'T_moins_50' ou 'T_plus_50' selon le cas.
 
-- RÈGLE "COÛT vs CHARGES" (CORRECTION CRITIQUE) :
-  1. Règle Juridique : Au niveau du SMIC, la Réduction Générale est maximale.
-  2. Calcul du Coefficient : Utilise STRICTEMENT Coefficient = T.
-  3. Montant Exonération = Salaire Brut x T.
-  4. Considère que [Charges Dues] = 0,00 € (car l'exonération annule les charges).
-  5. ⚠️ ATTENTION AU RÉSULTAT FINAL :
-     - Si on demande les **CHARGES** : Le résultat est **0,00 €**.
-     - Si on demande le **COÛT TOTAL** : Le résultat est **Salaire Brut** (car Charges = 0, mais le salaire reste dû !).
-     - Si applicable, déduis l'**Aide à l'embauche** (trouvée dans le contexte) du Coût Total.
-
-- GESTION DE L'INCERTITUDE (TAILLE ENTREPRISE) :
-  Si l'utilisateur ne précise pas l'effectif :
-  1. Fais le calcul standard (< 50 salariés).
-  2. Ajoute une phrase "Variante si > 50 salariés" avec le calcul ajusté (T différent).
-  ⛔ Ne parle JAMAIS de "remboursement sous forme d'avances" (Hallucination interdite).
+- RÈGLE "COÛT vs CHARGES" & INCERTITUDE :
+  1. Si la taille de l'entreprise n'est pas précisée, fais le calcul principal pour < 50 salariés.
+  2. OBLIGATOIRE : Remplis le bloc "Variante" dans le template pour indiquer le coût si > 50 salariés.
+  3. Si on demande le COÛT : Résultat = Salaire Brut + Charges résiduelles - Aides (ex: Aide 6000€).
+  4. Si on demande les CHARGES : Résultat = 0 € (si exonéré).
   
   ⚠️ GESTION DES SOURCES (CRITIQUE) :
   CITE TOUJOURS L'ARTICLE PRÉCIS (ex: Code du travail - Art. L1234-9, ou BOSS - Fiche Frais Pro).
@@ -381,9 +371,14 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
     <strong>Données utilisées :</strong> [Lister les données chiffrées]<br>
     <strong>Détail :</strong><br>
     
-    [INSTRUCTION DE RENDU DU CALCUL] :
-    - Génère une liste à puces HTML (<ul><li>) sans indentation Markdown avant.
-    - Détaille le calcul étape par étape.
+    [INSTRUCTION DE RENDU DU CALCUL PRINCIPAL] :
+    - Génère une liste à puces HTML (<ul><li>).
+    - Détaille le calcul étape par étape (Hypothèse < 50 salariés par défaut).
+    
+    <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #999; font-size: 13px; color: #444;">
+        <strong>⚠️ Variante si effectif > 50 salariés :</strong><br>
+        [Indiquer ici l'écart de coût ou de charges si l'entreprise a plus de 50 salariés]
+    </div>
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
