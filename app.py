@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py V33 (CORRECTIF - ORDRE DES VARIABLES)
+# FICHIER : app.py V34 (ONBOARDING & FRAMING)
 # ============================================================
 import streamlit as st
 import os
@@ -33,7 +33,7 @@ load_dotenv()
 
 # ✅ CONFIGURATION DE LA PAGE AVEC TON AVATAR
 st.set_page_config(
-    page_title="Expert Social Pro2026 - Le Copilote RH et Paie",
+    page_title="Expert Social Pro 2026 - Le Copilote RH et Paie",
     page_icon="avatar-logo.png",
     layout="wide"
 )
@@ -487,6 +487,30 @@ if uploaded_file:
     except: st.error("Erreur lecture")
 
 if "messages" not in st.session_state: st.session_state.messages = []
+
+# ✅ NOUVELLE SECTION ONBOARDING (S'affiche si aucun message)
+if len(st.session_state.messages) == 0:
+    st.markdown("### 💡 Exemples de questions pour tester l'expert :")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    # Question 1 : Le calcul complexe (Apprenti)
+    if col1.button("🎓 Coût Apprenti 2026", help="Testez le calcul des nouvelles règles d'exonération 50%"):
+        st.session_state.messages.append({"role": "user", "content": "Je veux embaucher un apprenti de 22 ans. Quel est le coût exact et les exonérations en 2026 ?"})
+        st.rerun()
+
+    # Question 2 : Le juridique précis (Licenciement)
+    if col2.button("⚖️ Indemnité Licenciement", help="Testez le calcul légal avec ancienneté"):
+        st.session_state.messages.append({"role": "user", "content": "Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté (salaire 4500€)."})
+        st.rerun()
+
+    # Question 3 : La niche fiscale (Véhicule élec)
+    if col3.button("🚗 Avantage Véhicule Élec", help="Testez les plafonds d'abattement spécifiques"):
+        st.session_state.messages.append({"role": "user", "content": "Comment calculer l'avantage en nature pour une voiture électrique de société en 2026 ?"})
+        st.rerun()
+
+    st.markdown("---")
+
 for m in st.session_state.messages:
     with st.chat_message(m["role"], avatar=("avatar-logo.png" if m["role"]=="assistant" else None)): 
         st.markdown(m["content"], unsafe_allow_html=True)
@@ -504,8 +528,8 @@ if quota_reached:
     st.info("💡 Pour continuer, veuillez démarrer une nouvelle session.")
     q = None 
 else:
-    # Sinon, on affiche la barre normalement
-    q = st.chat_input("Posez votre question (ou utilisez le bouton plus haut pour verser le document à analyser)")
+    # ✅ NOUVEAU TEXTE D'AIDE "MENTAL FRAMING" (Avec Rappel Document)
+    q = st.chat_input("Posez votre situation concrète (ex: calcul paie...) ou utilisez le bouton plus haut pour analyser un document.")
 
 if q:
     # On augmente le compteur quand une question est posée
