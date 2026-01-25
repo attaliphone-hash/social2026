@@ -74,6 +74,17 @@
 # -------------------------------------------------------------------------
 # 3. STAGES & APPRENTISSAGE (RÈGLES STRICTES)
 # -------------------------------------------------------------------------
+- id: REMUNERATION_APPRENTI_2026
+  keywords: ["salaire", "apprenti", "pourcentage", "smic", "age", "21 ans", "26 ans", "grille"]
+  valeurs:
+    moins_18_an1: 27
+    18_20_an1: 43
+    21_25_an1: 53
+    26_plus: 100
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail (Art. D6222-26)"
+  text: "GRILLE SALAIRE APPRENTI (1ère année) : Moins de 18 ans = 27% du SMIC. De 18 à 20 ans = 43% du SMIC. De 21 à 25 ans = 53% du SMIC. 26 ans et plus = 100% du SMIC."
+
 - id: GRATIFICATION_STAGE_2026
   keywords: ["stage", "stagiaire", "gratification", "minimale", "indemnité", "heure", "taux"]
   valeurs:

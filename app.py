@@ -322,7 +322,37 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-# === PROMPT IA (VERSION V46 - FIX FINAL AFFICHAGE + LOGIQUE V45) ===
+<ul>
+   <li>[Calcul du Salaire Brut (ex: 53% du SMIC pour 22 ans)]</li> <li>[Charges Patronales : 0,00 € (Annulées par Fillon)]</li>   <li>[Déduction Aide : 6000 € / 12 = 500 €]</li>                </ul>
+...
+<h2>🎯 RÉSULTAT (Coût Mensuel)</h2> ```
+👉 **Conséquence :** Si la question n'est pas un calcul de coût, l'IA écrit n'importe quoi pour remplir ces cases obligatoires.
+
+### 🚨 2. La Logique "1ère Année" est Aveugle
+Ta règle :
+> *"Combine l'âge [...] avec l'année par défaut (**1ère année**) [...]"*
+
+👉 **Conséquence :** Si un utilisateur demande *"Quel est le salaire d'un apprenti en 2ème année ?"*, l'IA entre en conflit. Elle lit "2ème année" dans la question, mais ton prompt lui hurle "NON ! C'EST LA 1ÈRE ANNÉE PAR DÉFAUT !". Résultat : une réponse schizophrène.
+
+### 🚨 3. L'Instruction "Instruction de rendu"
+Même si on l'a nettoyée, la structure reste trop directive sur le *comment* calculer au lieu de laisser l'IA utiliser son intelligence pour choisir la bonne formule.
+
+---
+
+### ✅ LA SOLUTION : La Version V47 "Intelligente" (Polymorphe)
+
+Il faut garder le **Design V33** (couleurs, HTML) mais rendre le contenu du template **GÉNÉRIQUE**.
+
+* Au lieu de `Calcul & Détail` -> on met `Détail & Chiffres`.
+* Au lieu de `<li>Déduction Aide</li>` -> on met `<li>[Étape clé ou Donnée]</li>`.
+* Au lieu de `RÉSULTAT (Coût Mensuel)` -> on met `RÉSULTAT`.
+
+Ainsi, l'IA peut s'en servir pour un coût apprenti **OU** pour donner le montant du PASS sans bugger.
+
+Voici le code **V47**. C'est le plus mature. Il garde la rigueur du calcul apprenti (via la section Logique) mais libère l'affichage.
+
+```python
+# === PROMPT IA (VERSION V47 - DESIGN V33 + TEMPLATE UNIVERSEL) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -330,76 +360,66 @@ RÈGLE DE FORME ABSOLUE (CRITIQUE) :
 1. Tu dois générer du **HTML BRUT** destiné à être injecté directement dans une page web.
 2. ⚠️ Ne mets JAMAIS de balises de code (pas de ```html, pas de ```).
 3. INTERDICTION TOTALE du Markdown pour les titres (Pas de #, ##, ###, ####). Utilise uniquement <h4 style="...">.
-4. Ne laisse jamais apparaître les balises <ul>, <li> ou <br> sous forme de texte visible. Elles doivent servir au formatage invisible.
+4. Ne laisse jamais apparaître les balises <ul>, <li> ou <br> sous forme de texte visible.
 
---- 1. SÉCURITÉ & DATA (PRIORITÉ ABSOLUE) ---
-- RÈGLE : Utilise STRICTEMENT les valeurs du YAML (ex: "REDUCTION_GENERALE_2026", "AIDE_EMBAUCHE").
-- ⛔ INTERDICTION d'inventer des taux. Cherche 'T_moins_50' dans le contexte (valeur 2026).
+--- 1. SÉCURITÉ & DATA ---
+- RÈGLE : Utilise STRICTEMENT les valeurs du YAML.
+- ⛔ INTERDICTION d'inventer des taux.
 
---- 2. LOGIQUE COMPTABLE (CRITIQUE) ---
-A. LE CAS SPÉCIAL APPRENTI :
-- SALAIRE : Combine l'âge indiqué dans la question (ex: 22 ans) avec l'année par défaut (**1ère année**) pour trouver le % LÉGAL (ex: 53% pour 21-25 ans). Ne prends 100% que si demandé.
-- CHARGES PATRONALES : Considère qu'elles sont à **0,00 €** (car annulées par l'exonération Fillon/Apprenti).
-- COÛT EMPLOYEUR = Salaire Brut (calculé au %) - Aide à l'embauche (mensualisée).
-- ⛔ ERREUR FATALE : NE JAMAIS SOUSTRAIRE LA RÉDUCTION FILLON DU SALAIRE BRUT.
+--- 2. LOGIQUE MÉTIER (INTELLIGENTE) ---
+A. SI QUESTION = CALCUL DE COÛT (Embauche, Salaire) :
+- APPRENTI : Si l'année n'est pas précisée, pars du principe que c'est une **1ère année**. 
+- COÛT : Salaire Brut - Aide (si applicable). NE JAMAIS SOUSTRAIRE LA FILLON DU BRUT.
+- CHARGES : 0€ si exonéré.
 
-B. RÈGLE GÉNÉRALE (COÛT vs CHARGES) :
-- Si on demande les CHARGES : 0 € (si exonéré).
-- Si on demande le COÛT : Salaire Brut + Charges résiduelles (0€) - Aides.
+B. SI QUESTION = INFORMATIVE (Taux, Plafond, Définition) :
+- Donne simplement la valeur ou la règle exacte sans inventer de calcul inutile.
 
-C. INCERTITUDE EFFECTIF :
-- Si non précisé : Calcul < 50 salariés.
-- OBLIGATOIRE : Remplis le bloc "Variante" pour > 50 salariés (voir Template).
-
---- 3. GESTION DES SOURCES (MAPPING OBLIGATOIRE) ---
-- CITE TOUJOURS L'ARTICLE PRÉCIS (ex: Code du travail - Art. L1234-9).
-- NOMENCLATURE OBLIGATOIRE (TRADUCTION) :
-  * Si la source est un fichier "REF_", cite : "Barèmes & Chiffres officiels 2026".
-  * Si la source est un fichier "DOC_", cite : "BOSS / Jurisprudence".
-  * Ne cite JAMAIS les noms de fichiers techniques (ex: DOC_BOSS.txt).
+--- 3. GESTION DES SOURCES ---
+- CITE TOUJOURS L'ARTICLE PRÉCIS.
+- NOMENCLATURE : "REF_" -> "Barèmes & Chiffres 2026", "DOC_" -> "BOSS / Jurisprudence".
 
 --- 4. CONTEXTE RAG ---
 {certified_facts}
 {context}
 {user_doc_section}
 
---- 5. TEMPLATE DE RÉPONSE (A REMPLIR) ---
+--- 5. TEMPLATE DE RÉPONSE (ADAPTATIF) ---
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li>[Insérer ici les règles juridiques avec Article Précis]</li>
+    <li>[Règle juridique ou Définition avec Source]</li>
 </ul>
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">
-    Calcul & Détail
+    Détail & Chiffres
 </h4>
 
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
-    <strong>Données utilisées :</strong> [Lister les données chiffrées exactes]<br>
+    <strong>Données clés :</strong> [Lister les valeurs utilisées]<br>
     <strong>Détail :</strong><br>
     
     <ul>
-       <li>[Calcul du Salaire Brut (ex: 53% du SMIC pour 22 ans)]</li>
-       <li>[Charges Patronales : 0,00 € (Annulées par Fillon)]</li>
-       <li>[Déduction Aide : 6000 € / 12 = 500 €]</li>
+       <li>[Étape 1 : Calcul ou Valeur]</li>
+       <li>[Étape 2 : Déduction ou Précision (si applicable)]</li>
     </ul>
     
     <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #999; font-size: 13px; color: #444;">
-        <strong>⚠️ Variante si effectif > 50 salariés :</strong><br>
-        [Indiquer l'écart minime dû au FNAL (0.50%)]
+        <strong>⚠️ Note :</strong><br>
+        [Mention variante effectif > 50 OU Validité date]
     </div>
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
-    <h2 style="color: #024c6f; margin-top: 0;">🎯 RÉSULTAT (Coût Mensuel)</h2>
-    <p style="font-size: 18px;"><strong>[Montant Final : Salaire - Aide]</strong></p>
-    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Phrase de conclusion]</p>
+    <h2 style="color: #024c6f; margin-top: 0;">🎯 RÉSULTAT</h2>
+    <p style="font-size: 18px;"><strong>[Montant Final ou Réponse Directe]</strong></p>
+    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Conclusion courte]</p>
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
     <strong>Sources utilisées :</strong> {sources_list}<br>
     <em>Données chiffrées issues de la mise à jour : {date_maj}.</em><br>
-    <span style="font-style: italic; color: #626267;">Attention : Cette réponse est basée sur le droit commun. Une convention collective (CCN) peut être plus favorable. Vérifiez toujours votre CCN.</span>
+    <span style="font-style: italic; color: #626267;">Attention : Cette réponse est basée sur le droit commun. Vérifiez toujours votre CCN.</span>
 </div>
 
 QUESTION : {question}
