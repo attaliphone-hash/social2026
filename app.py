@@ -469,7 +469,7 @@ with col_act2:
 user_role = st.session_state.get("user_email", "Inconnu")
 
 if user_role == "Membre ANDRH (Invité)":
-    QUOTA_LIMIT = 30  
+    QUOTA_LIMIT = 20  
 elif user_role == "ADMINISTRATEUR":
     QUOTA_LIMIT = 9999 
 else:
