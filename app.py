@@ -539,7 +539,7 @@ else:
         q = st.session_state.pending_prompt
         del st.session_state.pending_prompt 
     else:
-        q = st.chat_input("Posez votre situation concrète (ex: calcul paie...)")
+        q = st.chat_input("Posez votre situation concrète (ex: règles, calcul paie...) et/ou chargez un document grace au bouton plus haut")
 
 if q:
     st.session_state.query_count += 1
