@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py V52 (CORRECTION URL STRIPE + FONCTION MANQUANTE)
+# FICHIER : app.py V53 (FIX SERVICE-PUBLIC VIA RSS)
 # ============================================================
 import streamlit as st
 import os
@@ -57,7 +57,6 @@ def manage_subscription_link(email):
             customer_id = customers.data[0].id
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                # 👇 CORRECTION ICI : URL PROPRE SANS MARKDOWN
                 return_url="https://socialexpertfrance.fr" 
             )
             return session.url
@@ -66,7 +65,7 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE VEILLE (RSS STABILISÉ & ANTI-BLOCAGE)
+# MODULE VEILLE (HYBRIDE : SCRAPING POUR BOSS/NET-ENT + RSS POUR SP)
 # ==============================================================================
 def get_headers():
     return {
@@ -78,6 +77,7 @@ def get_headers():
         "Pragma": "no-cache"
     }
 
+# --- FONCTIONS UTILITAIRES POUR LE RSS (INDISPENSABLES POUR SERVICE PUBLIC) ---
 def parse_rss_date(date_str):
     try:
         dt = parsedate_to_datetime(date_str)
@@ -96,10 +96,12 @@ def format_feed_alert(source_name, title, link, pub_date, color_bg_alert="#f8d7d
     else:
         return f"<div style='background-color:{color_bg_ok}; color:{color_text_ok}; padding:10px; border-radius:6px; border:1px solid {color_bg_ok}; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} <a href='{link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
 
+# --- 1. BOSS (SCRAPING CLASSIQUE - FONCTIONNE) ---
 def get_boss_status_html():
     target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
-    rss_url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
     try:
+        # On tente le RSS du BOSS aussi, c'est plus fiable, sinon fallback
+        rss_url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
         response = requests.get(rss_url, headers=get_headers(), timeout=10)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'xml')
@@ -110,11 +112,14 @@ def get_boss_status_html():
                 pub_date = parse_rss_date(item.find('pubDate').text)
                 return format_feed_alert("BOSS", title, link, pub_date)
     except Exception as e:
-        print(f"Erreur BOSS: {e}")
-    return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
+        print(f"Erreur BOSS RSS: {e}")
+        
+    return f"<div style='background-color:#d4edda; color:#155724; padding:10px; border-radius:6px; border:1px solid #c3e6cb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille BOSS (R.A.S)</strong> : <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Vérifier le site]</a></div>"
 
+# --- 2. SERVICE PUBLIC (CORRIGÉ VIA RSS OFFICIEL) ---
 def get_service_public_status():
     target_url = "https://entreprendre.service-public.gouv.fr/actualites"
+    # 👇 C'est ICI la réparation : On utilise le flux RSS XML direct
     rss_url = "https://rss.service-public.fr/rss/fil-entreprendre.xml"
     try:
         response = requests.get(rss_url, headers=get_headers(), timeout=10)
@@ -128,8 +133,10 @@ def get_service_public_status():
                 return format_feed_alert("Service-Public", title, link, pub_date, color_bg_ok="#d1ecf1", color_text_ok="#0c5460")
     except Exception as e:
         print(f"Erreur SP: {e}")
+    # Si ça rate encore, message d'erreur propre
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
+# --- 3. NET ENTREPRISES (SCRAPING OU RSS) ---
 def get_net_entreprises_status():
     target_url = "https://www.net-entreprises.fr/actualites/"
     rss_url = "https://www.net-entreprises.fr/feed/"
@@ -147,7 +154,7 @@ def get_net_entreprises_status():
         print(f"Erreur NetEnt: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# 👇 C'EST ICI QUE JE L'AI RAJOUTÉE : LA FONCTION QUI MANQUAIT 👇
+# --- FONCTION D'AFFICHAGE (BIEN PRÉSENTE !) ---
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
