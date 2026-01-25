@@ -65,19 +65,17 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE VEILLE (HYBRIDE : SCRAPING POUR BOSS/NET-ENT + RSS POUR SP)
+# MODULE VEILLE (V3 - BLINDAGE LIENS RSS & AFFICHAGE)
 # ==============================================================================
 def get_headers():
     return {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
-        "Referer": "https://www.google.com/",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache"
     }
 
-# --- FONCTIONS UTILITAIRES POUR LE RSS (INDISPENSABLES POUR SERVICE PUBLIC) ---
 def parse_rss_date(date_str):
     try:
         dt = parsedate_to_datetime(date_str)
@@ -96,27 +94,51 @@ def format_feed_alert(source_name, title, link, pub_date, color_bg_alert="#f8d7d
     else:
         return f"<div style='background-color:{color_bg_ok}; color:{color_text_ok}; padding:10px; border-radius:6px; border:1px solid {color_bg_ok}; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} <a href='{link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
 
-# --- 1. BOSS (SCRAPING CLASSIQUE - FONCTIONNE) ---
+def get_robust_link(item, default_url):
+    """Récupère le lien coûte que coûte (Link, Guid ou Regex)."""
+    # 1. Essai balise <link> standard
+    try:
+        link = item.find('link')
+        if link and link.text.strip():
+            return link.text.strip()
+    except: pass
+
+    # 2. Essai balise <guid> (Souvent le permalink dans le RSS)
+    try:
+        guid = item.find('guid')
+        if guid and guid.text.strip() and "http" in guid.text:
+            return guid.text.strip()
+    except: pass
+
+    # 3. Essai Regex Brutale (Dernier recours si le parser a vidé la balise)
+    try:
+        match = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', str(item))
+        if match:
+            return match.group(0)
+    except: pass
+
+    return default_url
+
+# --- BOSS ---
 def get_boss_status_html():
     target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
+    rss_url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
     try:
-        # On tente le RSS du BOSS aussi, c'est plus fiable, sinon fallback
-        rss_url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
-        response = requests.get(rss_url, headers=get_headers(), timeout=10)
+        response = requests.get(rss_url, headers=get_headers(), timeout=8)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'xml')
+            soup = BeautifulSoup(response.content, 'html.parser')
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
-                link = item.find('link').text.strip() if item.find('link') else target_url
-                pub_date = parse_rss_date(item.find('pubDate').text)
+                link = get_robust_link(item, target_url)
+                date_tag = item.find('pubdate') or item.find('pubDate')
+                pub_date = parse_rss_date(date_tag.text) if date_tag else datetime.now(timezone.utc)
                 return format_feed_alert("BOSS", title, link, pub_date)
     except Exception as e:
-        print(f"Erreur BOSS RSS: {e}")
-        
-    return f"<div style='background-color:#d4edda; color:#155724; padding:10px; border-radius:6px; border:1px solid #c3e6cb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille BOSS (R.A.S)</strong> : <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Vérifier le site]</a></div>"
+        print(f"Erreur BOSS: {e}")
+    return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- 2. SERVICE PUBLIC (CORRIGÉ VIA RSS OFFICIEL) ---
+# --- SERVICE PUBLIC ---
 def get_service_public_status():
     target_url = "https://entreprendre.service-public.gouv.fr/actualites"
     rss_url = "https://www.service-public.fr/abonnements/rss/actu-actu-pro.rss"
@@ -127,7 +149,8 @@ def get_service_public_status():
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
-                link = get_safe_link(item, target_url) # Utilisation de l'extracteur sûr
+                # Utilisation de la fonction robuste pour éviter le lien vide
+                link = get_robust_link(item, target_url)
                 date_tag = item.find('pubdate') or item.find('pubDate')
                 pub_date = parse_rss_date(date_tag.text) if date_tag else datetime.now(timezone.utc)
                 return format_feed_alert("Service-Public", title, link, pub_date, color_bg_ok="#d1ecf1", color_text_ok="#0c5460")
@@ -135,25 +158,25 @@ def get_service_public_status():
         print(f"Erreur SP: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- 3. NET ENTREPRISES (SCRAPING OU RSS) ---
+# --- NET ENTREPRISES ---
 def get_net_entreprises_status():
     target_url = "https://www.net-entreprises.fr/actualites/"
     rss_url = "https://www.net-entreprises.fr/feed/"
     try:
-        response = requests.get(rss_url, headers=get_headers(), timeout=10)
+        response = requests.get(rss_url, headers=get_headers(), timeout=8)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'xml')
+            soup = BeautifulSoup(response.content, 'html.parser')
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
-                link = item.find('link').text.strip() if item.find('link') else target_url
-                pub_date = parse_rss_date(item.find('pubDate').text)
+                link = get_robust_link(item, target_url)
+                date_tag = item.find('pubdate') or item.find('pubDate')
+                pub_date = parse_rss_date(date_tag.text) if date_tag else datetime.now(timezone.utc)
                 return format_feed_alert("Net-Entreprises", title, link, pub_date, color_bg_ok="#fff3cd", color_text_ok="#856404")
     except Exception as e:
         print(f"Erreur NetEnt: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# --- FONCTION D'AFFICHAGE (BIEN PRÉSENTE !) ---
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
