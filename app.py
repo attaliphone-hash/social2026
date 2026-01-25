@@ -350,7 +350,7 @@ B. SI QUESTION = INFORMATIVE (Taux, Plafond, Définition) :
 
 --- 3. GESTION DES SOURCES ---
 - CITE TOUJOURS L'ARTICLE PRÉCIS.
-- NOMENCLATURE : "REF_" -> "Barèmes & Chiffres 2026", "DOC_" -> "BOSS / Jurisprudence".
+- NOMENCLATURE : "REF_" -> "Barèmes & Chiffres officiels 2026", "DOC_" -> "BOSS / Jurisprudence".
 
 --- 4. CONTEXTE RAG ---
 {certified_facts}
