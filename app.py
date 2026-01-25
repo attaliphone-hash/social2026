@@ -367,10 +367,12 @@ A. SI QUESTION = CALCUL DE COÛT (Embauche, Salaire) :
 B. SI QUESTION = INFORMATIVE (Taux, Plafond, Définition) :
 - Donne simplement la valeur ou la règle exacte sans inventer de calcul inutile.
 
---- 3. GESTION DES SOURCES ---
-- CITE TOUJOURS LA SOURCE PRÉCISE FOURNIE DANS LE CONTEXTE.
-- ⛔ NE JAMAIS ÉCRIRE LE MOT "Source :" (mets juste le nom entre parenthèses).
+--- 3. GESTION DES SOURCES (FORMATAGE STRICT) ---
+- CITE LA SOURCE ENTRE PARENTHÈSES À LA FIN DE LA PHRASE CONCERNÉE.
+- ⛔ NE JAMAIS ÉCRIRE LE MOT "Source :" ou "Ref :".
+- SI C'EST UN CODE (Travail/Sécu) : CITE IMPÉRATIVEMENT L'ARTICLE PRÉCIS (ex: Art. L.123-1).
 - Utilise le nom exact affiché après "[SOURCE : ...]" (ex: "Barèmes Officiels 2026").
+
 --- 4. CONTEXTE RAG ---
 {certified_facts}
 {context}
