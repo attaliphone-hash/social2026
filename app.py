@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py V47 (FINAL - PROMPT V47 + FIX SYNTAXE)
+# FICHIER : app.py V52 (CORRECTION URL STRIPE + FONCTION MANQUANTE)
 # ============================================================
 import streamlit as st
 import os
@@ -31,7 +31,7 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 1. CHARGEMENT CONFIG & SECRETS ---
 load_dotenv()
 
-# ✅ CONFIGURATION DE LA PAGE AVEC TON AVATAR
+# ✅ CONFIGURATION DE LA PAGE
 st.set_page_config(
     page_title="Expert Social Pro 2026 - Le Copilote RH et Paie",
     page_icon="avatar-logo.png",
@@ -57,7 +57,8 @@ def manage_subscription_link(email):
             customer_id = customers.data[0].id
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                return_url="[https://socialexpertfrance.fr](https://socialexpertfrance.fr)" 
+                # 👇 CORRECTION ICI : URL PROPRE SANS MARKDOWN
+                return_url="https://socialexpertfrance.fr" 
             )
             return session.url
     except Exception as e:
@@ -65,7 +66,7 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE VEILLE (BOSS / SERVICE-PUBLIC / NET-ENTREPRISES) - V2 (RSS STABILISÉ)
+# MODULE VEILLE (RSS STABILISÉ & ANTI-BLOCAGE)
 # ==============================================================================
 def get_headers():
     return {
@@ -78,7 +79,6 @@ def get_headers():
     }
 
 def parse_rss_date(date_str):
-    """Tente de parser la date RSS avec gestion des erreurs de fuseau."""
     try:
         dt = parsedate_to_datetime(date_str)
         if dt.tzinfo is None:
@@ -88,11 +88,10 @@ def parse_rss_date(date_str):
         return datetime.now(timezone.utc)
 
 def format_feed_alert(source_name, title, link, pub_date, color_bg_alert="#f8d7da", color_text_alert="#721c24", color_bg_ok="#d4edda", color_text_ok="#155724"):
-    """Génère le HTML standardisé pour une alerte."""
     days = (datetime.now(timezone.utc) - pub_date).days
     date_str = pub_date.strftime("%d/%m")
     
-    if days < 8: # Alerte si moins de 8 jours
+    if days < 8:
         return f"<div style='background-color:{color_bg_alert}; color:{color_text_alert}; padding:10px; border-radius:6px; border:1px solid {color_bg_alert}; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : <a href='{link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
     else:
         return f"<div style='background-color:{color_bg_ok}; color:{color_text_ok}; padding:10px; border-radius:6px; border:1px solid {color_bg_ok}; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} <a href='{link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
@@ -103,7 +102,7 @@ def get_boss_status_html():
     try:
         response = requests.get(rss_url, headers=get_headers(), timeout=10)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'xml') # Parser XML pour RSS
+            soup = BeautifulSoup(response.content, 'xml')
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
@@ -148,7 +147,7 @@ def get_net_entreprises_status():
         print(f"Erreur NetEnt: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
-# 👇 VOICI LA PARTIE QUI MANQUAIT DANS VOTRE VERSION :
+# 👇 C'EST ICI QUE JE L'AI RAJOUTÉE : LA FONCTION QUI MANQUAIT 👇
 def show_legal_watch_bar():
     if "news_closed" not in st.session_state: st.session_state.news_closed = False
     if st.session_state.news_closed: return
@@ -162,7 +161,7 @@ def show_legal_watch_bar():
         if st.button("✖️", key="btn_close_news", help="Masquer"): 
             st.session_state.news_closed = True
             st.rerun()
-            
+
 # --- 2. AUTHENTIFICATION ---
 def check_password():
     if "authenticated" not in st.session_state:
@@ -171,10 +170,7 @@ def check_password():
     if st.session_state.authenticated:
         return True
 
-    # 1. ARGUMENTS EN HAUT
     render_top_columns()
-    
-    # 2. FOOTER
     render_footer()
 
     st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
@@ -192,12 +188,10 @@ def check_password():
             except: st.error("Erreur d'identification.")
         st.markdown("---")
         
-        # --- SECTION ABONNEMENT ---
         st.subheader("PAS ENCORE ABONNÉ ?")
         st.write("Débloquez l'accès illimité et le mode Expert Social 2026.")
         render_subscription_cards()
 
-    # --- ONGLET 2 : CODES D'ACCÈS ---
     with t2:
         code = st.text_input("Code", type="password")
         if st.button("Valider", use_container_width=True):
@@ -220,12 +214,11 @@ def check_password():
 if not check_password(): st.stop()
 
 # ============================================================
-# SÉCURITÉ STRIPE : VÉRIFICATION D'ABONNEMENT
+# SÉCURITÉ STRIPE
 # ============================================================
 user_email = st.session_state.get("user_email")
 ADMIN_EMAILS = ["ton.email@admin.com"] 
 
-# On ne vérifie que si c'est un email classique (pas un code admin/promo/invité)
 if user_email and user_email not in ["ADMINISTRATEUR", "Utilisateur Promo", "Membre ANDRH (Invité)"]:
     if user_email in ADMIN_EMAILS:
         is_subscribed = True
@@ -305,13 +298,13 @@ def build_context(query):
     return context_text, sources_seen
 
 # ==============================================================================
-# FONCTION IA PRINCIPALE (AVEC PROMPT V47 INTÉGRÉ)
+# FONCTION IA PRINCIPALE
 # ==============================================================================
 def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-    # === PROMPT IA (VERSION V47 - DESIGN V33 + TEMPLATE UNIVERSEL) ===
+    # === PROMPT IA (VERSION V47 - TEMPLATE UNIVERSEL) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -336,7 +329,7 @@ B. SI QUESTION = INFORMATIVE (Taux, Plafond, Définition) :
 
 --- 3. GESTION DES SOURCES ---
 - CITE TOUJOURS L'ARTICLE PRÉCIS.
-- NOMENCLATURE : "REF_" -> "Barèmes & Chiffres officiels 2026", "DOC_" -> "BOSS / Jurisprudence".
+- NOMENCLATURE : "REF_" -> "Barèmes & Chiffres 2026", "DOC_" -> "BOSS / Jurisprudence".
 
 --- 4. CONTEXTE RAG ---
 {certified_facts}
@@ -415,7 +408,7 @@ if st.session_state.user_email == "ADMINISTRATEUR": show_legal_watch_bar()
 
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
 
-# 3. ACTIONS (UPLOAD & RESET)
+# 3. ACTIONS
 col_act1, col_act2, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
 
 with col_act1:
@@ -429,41 +422,30 @@ with col_act2:
         st.rerun()
 
 # ============================================================
-# 🛡️ DÉFINITION DES RÔLES & QUOTAS (AVANT L'AFFICHAGE)
+# 🛡️ RÔLES & QUOTAS
 # ============================================================
-# 1. On définit les limites selon le profil
 user_role = st.session_state.get("user_email", "Inconnu")
 
 if user_role == "Membre ANDRH (Invité)":
-    QUOTA_LIMIT = 30  # Limite pour le test ANDRH
+    QUOTA_LIMIT = 30  
 elif user_role == "ADMINISTRATEUR":
-    QUOTA_LIMIT = 9999 # Illimité pour toi
+    QUOTA_LIMIT = 9999 
 else:
-    QUOTA_LIMIT = 20   # Sécurité standard
+    QUOTA_LIMIT = 20   
 
-# 2. Initialisation du compteur
 if "query_count" not in st.session_state:
     st.session_state.query_count = 0
 
-# 4. TITRE
 st.markdown("<h1>EXPERT SOCIAL PRO ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
 
-# --- INDICATEUR DE QUOTA RESTANT (V32 - Messages Pro/Neutres) ---
 if user_role != "ADMINISTRATEUR":
     remaining = QUOTA_LIMIT - st.session_state.query_count
-    
-    # Cas 1 : C'est fini (0 question)
     if remaining <= 0:
-        st.error("🛑 **Session terminée.** Veuillez vous reconnecter ou démarrer une nouvelle session pour continuer.")
-    
-    # Cas 2 : Il reste très peu (Zone Rouge)
+        st.error("🛑 **Session terminée.**")
     elif remaining <= 5:  
-        st.warning(f"⚠️ **Attention :** Il ne vous reste que {remaining} question(s) dans cette session.")
-    
-    # Cas 3 : Il reste un peu (Zone Bleue)
+        st.warning(f"⚠️ **Attention :** Il ne vous reste que {remaining} question(s).")
     elif remaining <= 10:
         st.info(f"ℹ️ **Info Session :** {remaining} questions restantes.")
-# -----------------------------------
 
 # LOGIQUE
 user_text = None
@@ -479,171 +461,96 @@ if uploaded_file:
 
 if "messages" not in st.session_state: st.session_state.messages = []
 
-# ✅ NOUVELLE SECTION ONBOARDING (CIBLÉE & LIGHT - SANS TITRE)
-# 1. On identifie les utilisateurs "Découverte"
+# ONBOARDING
 user_role = st.session_state.get("user_email", "")
 DISCOVERY_USERS = ["Utilisateur Promo", "Membre ANDRH (Invité)"]
 
-# 2. On affiche SEULEMENT si : Historique vide ET Utilisateur Découverte
 if len(st.session_state.messages) == 0 and user_role in DISCOVERY_USERS:
-    
-    st.markdown("<br>", unsafe_allow_html=True) # Un peu d'espace pour aérer
-    
+    st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3, gap="large")
-    
-   # --- COLONNE 1 : APPRENTI ---
     with c1:
         st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Apprentissage 2026</div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?\"</div>", unsafe_allow_html=True)
         if st.button("Tester ce cas", key="btn_start_1", use_container_width=True):
-            # 👇 CHANGEMENT ICI : On stocke pour l'IA
             st.session_state.pending_prompt = "Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?"
             st.rerun()
-
-    # --- COLONNE 2 : LICENCIEMENT ---
     with c2:
         st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Licenciement</div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté ayant un salaire de référence de 4500€.\"</div>", unsafe_allow_html=True)
         if st.button("Tester ce cas", key="btn_start_2", use_container_width=True):
-            # 👇 CHANGEMENT ICI
             st.session_state.pending_prompt = "Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté ayant un salaire de référence de 4500€."
             st.rerun()
-
-    # --- COLONNE 3 : VÉHICULE ---
     with c3:
         st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Avantage Auto</div>", unsafe_allow_html=True)
         st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Comment calculer l'avantage voiture électrique en 2026 ?\"</div>", unsafe_allow_html=True)
         if st.button("Tester ce cas", key="btn_start_3", use_container_width=True):
-            # 👇 CHANGEMENT ICI
             st.session_state.pending_prompt = "Comment calculer l'avantage en nature pour une voiture électrique de société en 2026 ?"
             st.rerun()
-
     st.markdown("---")
+
 for m in st.session_state.messages:
     with st.chat_message(m["role"], avatar=("avatar-logo.png" if m["role"]=="assistant" else None)): 
         st.markdown(m["content"], unsafe_allow_html=True)
 
-# ============================================================
-# 💬 BARRE DE SAISIE & TRAITEMENT (V32 - Quota UX Amélioré)
-# ============================================================
-
-# On vérifie si le quota est atteint
+# BARRE DE SAISIE
 quota_reached = st.session_state.query_count >= QUOTA_LIMIT
 
-# Si quota atteint, on affiche un message et on empêche la saisie
 if quota_reached:
     st.warning(f"🛑 **Limite de session atteinte ({QUOTA_LIMIT} questions).**")
     st.info("Pour continuer, envisagez de vous abonner.")
     q = None 
 else:
-    # ✅ LOGIQUE "TRIGGER" : On récupère le clic bouton s'il existe
     if "pending_prompt" in st.session_state and st.session_state.pending_prompt:
         q = st.session_state.pending_prompt
-        del st.session_state.pending_prompt # On vide la mémoire après usage
+        del st.session_state.pending_prompt 
     else:
-        # Sinon, saisie manuelle classique
-        q = st.chat_input("Posez votre situation concrète (ex: calcul paie...) ou utilisez le bouton plus haut pour analyser un document.")
-
-# La suite (if q: ...) ne change pas !
+        q = st.chat_input("Posez votre situation concrète (ex: calcul paie...)")
 
 if q:
-    # On augmente le compteur quand une question est posée
     st.session_state.query_count += 1
-    
-    # Gestion du message utilisateur
     st.session_state.messages.append({"role": "user", "content": q})
     with st.chat_message("user"): st.markdown(q)
     
-    # Gestion de la réponse IA
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         ph = st.empty()
-        
-        # Préparation du contexte
         cleaned_q = clean_query_for_engine(q)
-
-        # --- AJOUT KPI STATISTIQUES (LOGS GOOGLE CLOUD) ---
         print(f"[KPI_QUESTION] Utilisateur a demandé : {q}", flush=True) 
-        # --------------------------------------------------
 
         facts = engine.format_certified_facts(engine.match_rules(cleaned_q))
         ctx, srcs = build_context(q)
         full_resp = ""
         
-        # Fonction locale pour nettoyer le texte (Code blocks + Indentation parasite)
         def clean_text_for_display(text):
-            # 1. On vire les balises de code Markdown
             text = text.replace("```html", "").replace("```", "")
-            # 2. On supprime l'indentation (espaces) au début de chaque ligne
             lines = [line.lstrip() for line in text.splitlines()]
             return "\n".join(lines)
 
-        # Boucle de génération (Streaming)
         for chunk in get_gemini_response_stream(q, ctx, srcs, facts, user_text):
             full_resp += chunk
             clean_resp = clean_text_for_display(full_resp)
             ph.markdown(f'<div class="ai-response">{clean_resp}▌</div>', unsafe_allow_html=True)
         
-        # Nettoyage final et affichage
         final_clean_resp = clean_text_for_display(full_resp)
-        
-        # Ajout du document analysé si nécessaire
         if uploaded_file: 
             final_clean_resp += f'<br><p style="font-size:12px; color:gray;">📄 Document analysé : {uploaded_file.name}</p>'
         
-        # Rendu final sans curseur
         ph.markdown(f'<div class="ai-response">{final_clean_resp}</div>', unsafe_allow_html=True)
-        
-        # Enregistrement dans l'historique
         st.session_state.messages.append({"role": "assistant", "content": final_clean_resp})
 
-        # --- GÉNÉRATION ET TÉLÉCHARGEMENT PDF ---
+        # PDF GENERATION
         try:
-            # 1. CRÉATION DU NOM DE FICHIER "ANTI-BLABLA"
-            
-            # Liste des mots inutiles (enrichie)
-            stop_words = {
-                # Salutations / Politesse
-                "bonjour", "bonsoir", "salut", "hey", "cher", "chere", "merci", "svp", "stp", "plait",
-                # Pronoms
-                "je", "tu", "il", "elle", "nous", "vous", "ils", "elles", "on", "moi", "toi", "lui",
-                # Verbes de demande / volonté
-                "voudrais", "aimerais", "souhaite", "désire", "veux", "peux", "dois", "doit", "faut", "falloir",
-                "savoir", "connaitre", "avoir", "demande", "question", "est-ce", "aller", "faire",
-                # Articles et liaisons courts
-                "le", "la", "les", "un", "une", "des", "du", "de", "d", "l",
-                "et", "ou", "mais", "ou", "donc", "ni", "car", "a", "à", "en", "y", "dans", "par", "pour", "sur",
-                # Relatifs
-                "qui", "que", "quoi", "dont", "ou", "qu", "quel", "quelle", "quels", "quelles", "comment", "combien", "pourquoi",
-                # Verbe Être / Avoir courants
-                "est", "sont", "suis", "es", "ai", "as", "ont", "avez", "sommes", "etes"
-            }
-
-            # On normalise (enlève les accents)
+            stop_words = {"bonjour", "merci", "je", "tu", "le", "la", "les", "un", "une", "des", "et", "ou", "est", "sont"}
             nfkd_form = unicodedata.normalize('NFKD', q)
             no_accent = "".join([c for c in nfkd_form if not unicodedata.combining(c)])
-            
-            # On ne garde que les lettres et chiffres
             clean_str = re.sub(r'[^a-zA-Z0-9\s]', '', no_accent)
-            
-            # On découpe en mots
             all_words = clean_str.split()
-            
-            # ON FILTRE : On ne garde que les mots utiles
             useful_words = [w for w in all_words if w.lower() not in stop_words][:8]
-            
-            # Sécurité : Si le filtre a tout supprimé, on remet les premiers mots bruts
-            if not useful_words:
-                useful_words = all_words[:8]
-
+            if not useful_words: useful_words = all_words[:8]
             short_title = "_".join(useful_words) 
-            
-            # Nom final
             final_filename = f"Reponse_{short_title}.pdf"
 
-            # 2. GÉNÉRATION DU PDF
             pdf_bytes = create_pdf_report(q, full_resp, ", ".join(srcs))
             
-            # 3. AFFICHAGE DU BOUTON
             st.download_button(
                 label="📄 Télécharger le rapport (PDF)",
                 data=pdf_bytes,
@@ -652,7 +559,5 @@ if q:
                 key=f"pdf_btn_{st.session_state.query_count}"
             )
         except Exception as e:
-            # On loggue pour nous (console Google)
             print(f"[ERREUR PDF] : {e}", flush=True) 
-            # On avertit l'utilisateur (interface)
-            st.error("⚠️ Une erreur technique empêche la génération de ce PDF spécifique. Essayez de reformuler légèrement la question.")
+            st.error("⚠️ Erreur PDF.")
