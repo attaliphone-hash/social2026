@@ -315,9 +315,9 @@ def build_context(query):
         
         # 1. CIBLAGE SPÉCIFIQUE DES CODES (Pour virer "FULL")
         if "Code_Travail" in filename or "Code Travail" in filename:
-            pretty_src = "Code du Travail (2026)"
+            pretty_src = "Code du Travail 2026"
         elif "Code_Secu" in filename or "Code Secu" in filename:
-            pretty_src = "Code de la Sécurité Sociale (2026)"
+            pretty_src = "Code de la Sécurité Sociale 2026"
             
         # 2. LES AUTRES CATÉGORIES
         elif category == "REF":
@@ -369,8 +369,8 @@ B. SI QUESTION = INFORMATIVE (Taux, Plafond, Définition) :
 
 --- 3. GESTION DES SOURCES ---
 - CITE TOUJOURS LA SOURCE PRÉCISE FOURNIE DANS LE CONTEXTE.
+- ⛔ NE JAMAIS ÉCRIRE LE MOT "Source :" (mets juste le nom entre parenthèses).
 - Utilise le nom exact affiché après "[SOURCE : ...]" (ex: "Barèmes Officiels 2026").
-
 --- 4. CONTEXTE RAG ---
 {certified_facts}
 {context}
