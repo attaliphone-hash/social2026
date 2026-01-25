@@ -363,8 +363,8 @@ B. SI QUESTION = INFORMATIVE (Taux, Plafond, Définition) :
 - Donne simplement la valeur ou la règle exacte sans inventer de calcul inutile.
 
 --- 3. GESTION DES SOURCES ---
-- CITE TOUJOURS L'ARTICLE PRÉCIS.
-- NOMENCLATURE : "REF_" -> "Barèmes & Chiffres 2026", "DOC_" -> "BOSS / Jurisprudence".
+- CITE TOUJOURS LA SOURCE PRÉCISE FOURNIE DANS LE CONTEXTE.
+- Utilise le nom exact affiché après "[SOURCE : ...]" (ex: "Barèmes Officiels 2026").
 
 --- 4. CONTEXTE RAG ---
 {certified_facts}
