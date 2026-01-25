@@ -1,5 +1,5 @@
 # ============================================================
-# FICHIER : app.py V34 (ONBOARDING & FRAMING)
+# FICHIER : app.py V47 (FINAL - PROMPT V47 + FIX SYNTAXE)
 # ============================================================
 import streamlit as st
 import os
@@ -57,7 +57,7 @@ def manage_subscription_link(email):
             customer_id = customers.data[0].id
             session = stripe.billing_portal.Session.create(
                 customer=customer_id,
-                return_url="https://socialexpertfrance.fr" 
+                return_url="[https://socialexpertfrance.fr](https://socialexpertfrance.fr)" 
             )
             return session.url
     except Exception as e:
@@ -80,9 +80,9 @@ def get_headers():
     }
 
 def get_boss_status_html():
-    target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
+    target_url = "[https://boss.gouv.fr/portail/accueil/actualites.html](https://boss.gouv.fr/portail/accueil/actualites.html)"
     try:
-        url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
+        url = "[https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss](https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss)"
         response = requests.get(url, headers=get_headers(), timeout=12)
         if response.status_code == 200:
             content = response.content.decode('utf-8', errors='ignore')
@@ -105,7 +105,7 @@ def get_boss_status_html():
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 def get_service_public_status():
-    target_url = "https://entreprendre.service-public.gouv.fr/actualites"
+    target_url = "[https://entreprendre.service-public.gouv.fr/actualites](https://entreprendre.service-public.gouv.fr/actualites)"
     try:
         response = requests.get(target_url, headers=get_headers(), timeout=15)
         if response.status_code == 200:
@@ -140,9 +140,9 @@ def get_service_public_status():
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 def get_net_entreprises_status():
-    target_url = "https://www.net-entreprises.fr/actualites/"
+    target_url = "[https://www.net-entreprises.fr/actualites/](https://www.net-entreprises.fr/actualites/)"
     try:
-        url = "https://www.net-entreprises.fr/feed/"
+        url = "[https://www.net-entreprises.fr/feed/](https://www.net-entreprises.fr/feed/)"
         response = requests.get(url, headers=get_headers(), timeout=12)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -318,41 +318,14 @@ def build_context(query):
     
     return context_text, sources_seen
 
+# ==============================================================================
+# FONCTION IA PRINCIPALE (AVEC PROMPT V47 INTÉGRÉ)
+# ==============================================================================
 def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-<ul>
-   <li>[Calcul du Salaire Brut (ex: 53% du SMIC pour 22 ans)]</li> <li>[Charges Patronales : 0,00 € (Annulées par Fillon)]</li>   <li>[Déduction Aide : 6000 € / 12 = 500 €]</li>                </ul>
-...
-<h2>🎯 RÉSULTAT (Coût Mensuel)</h2> ```
-👉 **Conséquence :** Si la question n'est pas un calcul de coût, l'IA écrit n'importe quoi pour remplir ces cases obligatoires.
-
-### 🚨 2. La Logique "1ère Année" est Aveugle
-Ta règle :
-> *"Combine l'âge [...] avec l'année par défaut (**1ère année**) [...]"*
-
-👉 **Conséquence :** Si un utilisateur demande *"Quel est le salaire d'un apprenti en 2ème année ?"*, l'IA entre en conflit. Elle lit "2ème année" dans la question, mais ton prompt lui hurle "NON ! C'EST LA 1ÈRE ANNÉE PAR DÉFAUT !". Résultat : une réponse schizophrène.
-
-### 🚨 3. L'Instruction "Instruction de rendu"
-Même si on l'a nettoyée, la structure reste trop directive sur le *comment* calculer au lieu de laisser l'IA utiliser son intelligence pour choisir la bonne formule.
-
----
-
-### ✅ LA SOLUTION : La Version V47 "Intelligente" (Polymorphe)
-
-Il faut garder le **Design V33** (couleurs, HTML) mais rendre le contenu du template **GÉNÉRIQUE**.
-
-* Au lieu de `Calcul & Détail` -> on met `Détail & Chiffres`.
-* Au lieu de `<li>Déduction Aide</li>` -> on met `<li>[Étape clé ou Donnée]</li>`.
-* Au lieu de `RÉSULTAT (Coût Mensuel)` -> on met `RÉSULTAT`.
-
-Ainsi, l'IA peut s'en servir pour un coût apprenti **OU** pour donner le montant du PASS sans bugger.
-
-Voici le code **V47**. C'est le plus mature. Il garde la rigueur du calcul apprenti (via la section Logique) mais libère l'affichage.
-
-```python
-# === PROMPT IA (VERSION V47 - DESIGN V33 + TEMPLATE UNIVERSEL) ===
+    # === PROMPT IA (VERSION V47 - DESIGN V33 + TEMPLATE UNIVERSEL) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
