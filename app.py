@@ -119,25 +119,20 @@ def get_boss_status_html():
 # --- 2. SERVICE PUBLIC (CORRIGÉ VIA RSS OFFICIEL) ---
 def get_service_public_status():
     target_url = "https://entreprendre.service-public.gouv.fr/actualites"
-    # 👇 URL OFFICIELLE CORRIGÉE (Flux RSS "Actualités Professionnels")
     rss_url = "https://www.service-public.fr/abonnements/rss/actu-actu-pro.rss"
     try:
-        response = requests.get(rss_url, headers=get_headers(), timeout=10)
+        response = requests.get(rss_url, headers=get_headers(), timeout=8)
         if response.status_code == 200:
-            # On utilise html.parser qui est plus tolérant et installé par défaut
             soup = BeautifulSoup(response.content, 'html.parser')
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
-                link = item.find('link').text.strip() if item.find('link') else target_url
-                # Gestion de la date (parfois 'pubDate', parfois 'pubdate')
+                link = get_safe_link(item, target_url) # Utilisation de l'extracteur sûr
                 date_tag = item.find('pubdate') or item.find('pubDate')
                 pub_date = parse_rss_date(date_tag.text) if date_tag else datetime.now(timezone.utc)
-                
                 return format_feed_alert("Service-Public", title, link, pub_date, color_bg_ok="#d1ecf1", color_text_ok="#0c5460")
     except Exception as e:
         print(f"Erreur SP: {e}")
-    
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 # --- 3. NET ENTREPRISES (SCRAPING OU RSS) ---
