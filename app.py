@@ -65,117 +65,89 @@ def manage_subscription_link(email):
     return None
 
 # ==============================================================================
-# MODULE VEILLE (BOSS / SERVICE-PUBLIC / NET-ENTREPRISES)
+# MODULE VEILLE (BOSS / SERVICE-PUBLIC / NET-ENTREPRISES) - V2 (RSS STABILISÉ)
 # ==============================================================================
-FRENCH_MONTHS = {
-    "janvier": 1, "février": 2, "mars": 3, "avril": 4, "mai": 5, "juin": 6,
-    "juillet": 7, "août": 8, "septembre": 9, "octobre": 10, "novembre": 11, "décembre": 12
-}
-
 def get_headers():
     return {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7"
+        "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
+        "Referer": "https://www.google.com/",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache"
     }
 
-def get_boss_status_html():
-    target_url = "[https://boss.gouv.fr/portail/accueil/actualites.html](https://boss.gouv.fr/portail/accueil/actualites.html)"
+def parse_rss_date(date_str):
+    """Tente de parser la date RSS avec gestion des erreurs de fuseau."""
     try:
-        url = "[https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss](https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss)"
-        response = requests.get(url, headers=get_headers(), timeout=12)
+        dt = parsedate_to_datetime(date_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except:
+        return datetime.now(timezone.utc)
+
+def format_feed_alert(source_name, title, link, pub_date, color_bg_alert="#f8d7da", color_text_alert="#721c24", color_bg_ok="#d4edda", color_text_ok="#155724"):
+    """Génère le HTML standardisé pour une alerte."""
+    days = (datetime.now(timezone.utc) - pub_date).days
+    date_str = pub_date.strftime("%d/%m")
+    
+    if days < 8: # Alerte si moins de 8 jours
+        return f"<div style='background-color:{color_bg_alert}; color:{color_text_alert}; padding:10px; border-radius:6px; border:1px solid {color_bg_alert}; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : <a href='{link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
+    else:
+        return f"<div style='background-color:{color_bg_ok}; color:{color_text_ok}; padding:10px; border-radius:6px; border:1px solid {color_bg_ok}; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} <a href='{link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
+
+def get_boss_status_html():
+    target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
+    rss_url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
+    try:
+        response = requests.get(rss_url, headers=get_headers(), timeout=10)
         if response.status_code == 200:
-            content = response.content.decode('utf-8', errors='ignore')
-            soup = BeautifulSoup(content, 'html.parser')
+            soup = BeautifulSoup(response.content, 'xml') # Parser XML pour RSS
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
-                date_tag = item.find('pubdate') or item.find('pubDate')
-                if date_tag:
-                    dt = parsedate_to_datetime(date_tag.text.strip())
-                    if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
-                    days = (datetime.now(timezone.utc) - dt).days
-                    date_str = dt.strftime("%d/%m")
-                    if days < 8:
-                        return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU BOSS ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
-                    else:
-                        return f"<div style='background-color:#d4edda; color:#155724; padding:10px; border-radius:6px; border:1px solid #c3e6cb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille BOSS (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
+                link = item.find('link').text.strip() if item.find('link') else target_url
+                pub_date = parse_rss_date(item.find('pubDate').text)
+                return format_feed_alert("BOSS", title, link, pub_date)
     except Exception as e:
         print(f"Erreur BOSS: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 def get_service_public_status():
-    target_url = "[https://entreprendre.service-public.gouv.fr/actualites](https://entreprendre.service-public.gouv.fr/actualites)"
+    # NOUVEAU : On utilise le FLUX RSS officiel "Actualités - Entreprendre" au lieu de scraper la page
+    target_url = "https://entreprendre.service-public.gouv.fr/actualites"
+    rss_url = "https://rss.service-public.fr/rss/fil-entreprendre.xml"
     try:
-        response = requests.get(target_url, headers=get_headers(), timeout=15)
+        response = requests.get(rss_url, headers=get_headers(), timeout=10)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
-            card = soup.find('div', class_='fr-card')
-            if card:
-                title_tag = card.find(class_='fr-card__title')
-                title = title_tag.text.strip() if title_tag else "Actualité"
-                desc_tag = card.find(class_='fr-card__desc')
-                pub_date = None
-                if desc_tag:
-                    text_date = desc_tag.text.lower().replace("publié le", "").strip()
-                    parts = text_date.split() 
-                    if len(parts) >= 3:
-                        try:
-                            day = int(parts[0])
-                            month_str = parts[1]
-                            year = int(parts[2])
-                            if month_str in FRENCH_MONTHS:
-                                month = FRENCH_MONTHS[month_str]
-                                pub_date = datetime(year, month, day, tzinfo=timezone.utc)
-                        except: pass
-                if pub_date:
-                    days = (datetime.now(timezone.utc) - pub_date).days
-                    date_str = pub_date.strftime("%d/%m")
-                    if days < 8:
-                        return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU SERVICE-PUBLIC ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
-                    else:
-                        return f"<div style='background-color:#d1ecf1; color:#0c5460; padding:10px; border-radius:6px; border:1px solid #bee5eb; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Service-Public (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
+            soup = BeautifulSoup(response.content, 'xml')
+            item = soup.find('item')
+            if item:
+                title = item.find('title').text.strip()
+                link = item.find('link').text.strip() if item.find('link') else target_url
+                pub_date = parse_rss_date(item.find('pubDate').text)
+                return format_feed_alert("Service-Public", title, link, pub_date, color_bg_ok="#d1ecf1", color_text_ok="#0c5460")
     except Exception as e:
         print(f"Erreur SP: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Service-Public</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 def get_net_entreprises_status():
-    target_url = "[https://www.net-entreprises.fr/actualites/](https://www.net-entreprises.fr/actualites/)"
+    target_url = "https://www.net-entreprises.fr/actualites/"
+    rss_url = "https://www.net-entreprises.fr/feed/"
     try:
-        url = "[https://www.net-entreprises.fr/feed/](https://www.net-entreprises.fr/feed/)"
-        response = requests.get(url, headers=get_headers(), timeout=12)
+        response = requests.get(rss_url, headers=get_headers(), timeout=10)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response.content, 'xml')
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
-                date_tag = item.find('pubdate') or item.find('pubDate')
-                if date_tag:
-                    dt = parsedate_to_datetime(date_tag.text.strip())
-                    if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
-                    days = (datetime.now(timezone.utc) - dt).days
-                    date_str = dt.strftime("%d/%m")
-                    if days < 8:
-                        return f"<div style='background-color:#f8d7da; color:#721c24; padding:10px; border-radius:6px; border:1px solid #f5c6cb; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU NET-ENTREPRISES ({date_str})</strong> : <a href='{target_url}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
-                    else:
-                        return f"<div style='background-color:#fff3cd; color:#856404; padding:10px; border-radius:6px; border:1px solid #ffeeba; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille Net-Entreprises (R.A.S)</strong> : Dernière actu du {date_str} <a href='{target_url}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
+                link = item.find('link').text.strip() if item.find('link') else target_url
+                pub_date = parse_rss_date(item.find('pubDate').text)
+                return format_feed_alert("Net-Entreprises", title, link, pub_date, color_bg_ok="#fff3cd", color_text_ok="#856404")
     except Exception as e:
         print(f"Erreur NetEnt: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
-
-def show_legal_watch_bar():
-    if "news_closed" not in st.session_state: st.session_state.news_closed = False
-    if st.session_state.news_closed: return
-
-    c1, c2 = st.columns([0.95, 0.05])
-    with c1:
-        st.markdown(get_boss_status_html(), unsafe_allow_html=True)
-        st.markdown(get_service_public_status(), unsafe_allow_html=True)
-        st.markdown(get_net_entreprises_status(), unsafe_allow_html=True)
-    with c2: 
-        if st.button("✖️", key="btn_close_news", help="Masquer"): 
-            st.session_state.news_closed = True
-            st.rerun()
 
 # --- 2. AUTHENTIFICATION ---
 def check_password():
