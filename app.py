@@ -311,24 +311,29 @@ def build_context(query):
         raw_src = d.metadata.get('source', 'Inconnu')
         filename = os.path.basename(raw_src).replace('.pdf', '').replace('.txt', '')
         
-        # ✅ TRANSLATION PURE ET DURE (C'est ici qu'on renomme AVANT l'IA)
-        if category == "REF":
+        # ✅ TRANSLATION PURE (RENOMMAGE INTELLIGENT)
+        
+        # 1. CIBLAGE SPÉCIFIQUE DES CODES (Pour virer "FULL")
+        if "Code_Travail" in filename or "Code Travail" in filename:
+            pretty_src = "Code du Travail (2026)"
+        elif "Code_Secu" in filename or "Code Secu" in filename:
+            pretty_src = "Code de la Sécurité Sociale (2026)"
+            
+        # 2. LES AUTRES CATÉGORIES
+        elif category == "REF":
             pretty_src = "Barèmes Officiels 2026"
         elif category == "DOC":
             pretty_src = "BOSS 2026 et Jurisprudences"
         elif category == "CODES":
-            # Pour les codes, on garde le nom du fichier (qui contient souvent l'article)
-            # On remplace juste les underscores pour faire plus propre
+            # Pour les articles isolés s'il y en a
             pretty_src = filename.replace('_', ' ')
         else:
             pretty_src = filename.replace('_', ' ')
 
-        # On évite les doublons dans la liste finale
+        # On évite les doublons
         if pretty_src not in sources_seen:
             sources_seen.append(pretty_src)
             
-        # 🚨 C'EST ICI LE CHANGEMENT MAJEUR : 
-        # On donne à l'IA le nom TRADUIT ("Barèmes Officiels...") et non plus le nom de fichier ("REF_...")
         context_text += f"[SOURCE : {pretty_src}]\n{d.page_content}\n\n"
     
     return context_text, sources_seen
