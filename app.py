@@ -115,7 +115,6 @@ def get_boss_status_html():
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
 def get_service_public_status():
-    # NOUVEAU : On utilise le FLUX RSS officiel "Actualités - Entreprendre" au lieu de scraper la page
     target_url = "https://entreprendre.service-public.gouv.fr/actualites"
     rss_url = "https://rss.service-public.fr/rss/fil-entreprendre.xml"
     try:
@@ -149,6 +148,21 @@ def get_net_entreprises_status():
         print(f"Erreur NetEnt: {e}")
     return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille Net-Entreprises</strong> : Flux indisponible <a href='{target_url}' target='_blank' style='text-decoration:underline; color:inherit; font-weight:bold;'>[Accès direct]</a></div>"
 
+# 👇 VOICI LA PARTIE QUI MANQUAIT DANS VOTRE VERSION :
+def show_legal_watch_bar():
+    if "news_closed" not in st.session_state: st.session_state.news_closed = False
+    if st.session_state.news_closed: return
+
+    c1, c2 = st.columns([0.95, 0.05])
+    with c1:
+        st.markdown(get_boss_status_html(), unsafe_allow_html=True)
+        st.markdown(get_service_public_status(), unsafe_allow_html=True)
+        st.markdown(get_net_entreprises_status(), unsafe_allow_html=True)
+    with c2: 
+        if st.button("✖️", key="btn_close_news", help="Masquer"): 
+            st.session_state.news_closed = True
+            st.rerun()
+            
 # --- 2. AUTHENTIFICATION ---
 def check_password():
     if "authenticated" not in st.session_state:
