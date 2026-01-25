@@ -89,7 +89,7 @@ def format_feed_alert(source_name, title, link, pub_date, color_bg_alert="#f8d7d
     days = (datetime.now(timezone.utc) - pub_date).days
     date_str = pub_date.strftime("%d/%m")
     
-    if days < 8:
+    if days < 3:
         return f"<div style='background-color:{color_bg_alert}; color:{color_text_alert}; padding:10px; border-radius:6px; border:1px solid {color_bg_alert}; margin-bottom:8px; font-size:13px;'>🚨 <strong>NOUVEAU {source_name} ({date_str})</strong> : <a href='{link}' target='_blank' style='text-decoration:underline; font-weight:bold; color:inherit;'>{title}</a></div>"
     else:
         return f"<div style='background-color:{color_bg_ok}; color:{color_text_ok}; padding:10px; border-radius:6px; border:1px solid {color_bg_ok}; margin-bottom:8px; font-size:13px; opacity:0.9;'>✅ <strong>Veille {source_name} (R.A.S)</strong> : Dernière actu du {date_str} <a href='{link}' target='_blank' style='margin-left:5px; text-decoration:underline; color:inherit; font-size:11px;'>[Voir]</a></div>"
