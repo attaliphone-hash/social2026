@@ -344,7 +344,22 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-    # === PROMPT IA (VERSION V67 - EXPERT POINTILLEUX) ===
+    # 1. RÉCUPÉRATION DYNAMIQUE DES CONSTANTES (V68)
+    try:
+        sbi_raw = engine.get_rule_value("SBI_2026", "montant")
+        if sbi_raw is None: sbi_raw = 645.50
+        pass_raw = engine.get_rule_value("PASS_2026", "annuel")
+        if pass_raw is None: pass_raw = 48060.00
+    except:
+        sbi_raw = 645.50
+        pass_raw = 48060.00
+
+    # Calculs & Formatage
+    pass_2_raw = pass_raw * 2
+    sbi_display = f"{sbi_raw:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + " €"
+    pass_2_display = f"{pass_2_raw:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + " €"
+
+    # === PROMPT IA (VERSION V68 - DYNAMIQUE) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -355,9 +370,9 @@ Tu es l'Expert Social Pro 2026.
 4. Pas de Markdown pour les titres (utilise uniquement <h4 style="...">).
 
 --- 1. SÉCURITÉ & DATA ---
-- Utilise STRICTEMENT les valeurs du YAML. ⛔ Ne jamais inventer de taux.
+- Utilise STRICTEMENT les valeurs fournies. ⛔ Ne jamais inventer de taux.
 
---- 2. LOGIQUE MÉTIER (CERVEAU EXPERT V67) ---
+--- 2. LOGIQUE MÉTIER (CERVEAU EXPERT V68) ---
 A. STRATÉGIE DU SCÉNARIO TYPE :
 - Si une donnée manque : Ne dis jamais "impossible". Donne la formule ET propose immédiatement un scénario réaliste (ex: "Pour un salaire de 3 000,00 € et 10 ans d'ancienneté, le montant serait de...") pour fixer les idées.
 
@@ -367,10 +382,10 @@ B. PRÉCISION CHIRURGICALE (RÉFORME CP 2024) :
 - Cite systématiquement la "Loi DDADUE 2024" ou le "Code du Travail (Art. L3141-5)".
 
 C. AUDIT FISCAL DES RUPTURES :
-- Précise systématiquement : Limite exonération (2 PASS = 96 120,00 €), Forfait Social patronal (30% sur RC), et CSG/CRDS.
+- Précise systématiquement : Limite exonération (2 PASS = {pass_2_val}), Forfait Social patronal (30% sur RC), et CSG/CRDS.
 
 D. SAISIES SUR SALAIRE :
-- Interdiction de refuser. Utilise le SBI (645,50 €) et simule une tranche sur un net type.
+- Interdiction de refuser. Utilise le SBI ({sbi_val}) comme plancher absolu et simule une tranche sur un net type.
 
 --- 3. GESTION DES SOURCES (ABRÉVIATIONS JURIDIQUES) ---
 - CITE LA SOURCE ENTRE PARENTHÈSES À LA FIN DE LA PHRASE CONCERNÉE.
@@ -429,7 +444,9 @@ QUESTION : {question}
         "sources_list": ", ".join(sources_list) if sources_list else "Référentiel interne", 
         "certified_facts": facts_section,
         "user_doc_section": user_doc_section,
-        "date_maj": date_ref
+        "date_maj": date_ref,
+        "sbi_val": sbi_display,      # INJECTION DYNAMIQUE
+        "pass_2_val": pass_2_display # INJECTION DYNAMIQUE
     })
 
 # --- UI PRINCIPALE ---

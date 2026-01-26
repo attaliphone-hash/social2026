@@ -4,6 +4,7 @@ import re
 
 class SocialRuleEngine:
     def __init__(self, yaml_path="rules/social_rules.yaml"):
+        # Gestion robuste du chemin (local vs cloud)
         if not os.path.exists(yaml_path):
             if os.path.exists(os.path.join("rules", "social_rules.yaml")):
                 self.yaml_path = os.path.join("rules", "social_rules.yaml")
@@ -27,6 +28,7 @@ class SocialRuleEngine:
         if not text:
             return []
         text = text.lower()
+        # Nettoyage standard pour le matching
         text = re.sub(r"[^0-9a-zàâäçéèêëîïôöùûüÿñæœ'\s-]", " ", text)
         text = text.replace("-", " ")
         words = [w.strip("'") for w in text.split() if w.strip("'")]
@@ -38,15 +40,13 @@ class SocialRuleEngine:
 
         query_words = self._tokenize(query)
         
-        # 1. RÉCUPÉRATION SYSTÉMATIQUE DES CONSTANTES (Le "Socle")
-        # Ces IDs doivent correspondre exactement à ceux de ton YAML
+        # 1. LE SOCLE : Récupération systématique des constantes vitales
         vital_ids = ["SMIC_2026", "PASS_2026", "MG_2026"]
         vital_rules = [r for r in self.rules if r.get("id") in vital_ids]
 
-        # 2. RECHERCHE PAR MOTS-CLÉS (La "Règle métier")
+        # 2. RECHERCHE PAR MOTS-CLÉS
         results = []
         for rule in self.rules:
-            # On ne recalcule pas le score pour les constantes déjà isolées
             if rule.get("id") in vital_ids:
                 continue
 
@@ -56,10 +56,13 @@ class SocialRuleEngine:
 
             score = 0
             rule_kw_set = set(rule_keywords)
+            
+            # Score par mot exact
             for w in query_words:
                 if w in rule_kw_set:
                     score += 1
 
+            # Bonus pour les requêtes courtes (détection d'intention)
             if len(query_words) <= 3:
                 for kw in rule_keywords:
                     if kw in query.lower():
@@ -71,8 +74,6 @@ class SocialRuleEngine:
         results.sort(key=lambda x: x[0], reverse=True)
         matched_rules = [r for _, r in results[:top_k]]
 
-        # 3. FUSION (Constantes + Règles spécifiques)
-        # On place les constantes en premier pour qu'elles soient lues en priorité
         return vital_rules + matched_rules
 
     def format_certified_facts(self, matched_rules):
@@ -88,12 +89,24 @@ class SocialRuleEngine:
 
         return "\n".join(lines).strip()
 
-    # --- AJOUT UNIQUE POUR LA GESTION DU FOOTER ---
     def get_yaml_update_date(self):
         """Récupère la date de dernière mise à jour définie dans le YAML."""
         if not self.rules:
             return "Janvier 2026"
+        # On regarde la première règle qui a une date, ou par défaut Janvier 2026
         for r in self.rules:
             if r.get("derniere_maj"):
                 return r.get("derniere_maj")
         return "Janvier 2026"
+
+    # --- NOUVELLE MÉTHODE POUR LA V68 (CRITIQUE) ---
+    def get_rule_value(self, rule_id: str, value_key: str):
+        """
+        Extrait une valeur numérique précise du YAML pour l'injection dans le Prompt.
+        Ex: get_rule_value("SBI_2026", "montant") -> 645.50
+        """
+        for rule in self.rules:
+            if rule.get("id") == rule_id:
+                valeurs = rule.get("valeurs", {})
+                return valeurs.get(value_key)
+        return None
