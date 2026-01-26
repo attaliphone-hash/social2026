@@ -338,28 +338,29 @@ def build_context(query):
     
     return context_text, sources_seen
 # ==============================================================================
-# FONCTION IA PRINCIPALE (VERSION V70 - EXPERT SOBRE)
+# FONCTION IA PRINCIPALE (VERSION V72 - CORRECTION FORMATAGE)
 # ==============================================================================
 def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-    # 1. RÉCUPÉRATION DYNAMIQUE DES CONSTANTES (V68/V69)
+    # 1. RÉCUPÉRATION DYNAMIQUE DES CONSTANTES
     try:
         sbi_raw = engine.get_rule_value("SBI_2026", "montant")
         if sbi_raw is None: sbi_raw = 645.50
+        
         pass_raw = engine.get_rule_value("PASS_2026", "annuel")
         if pass_raw is None: pass_raw = 48060.00
     except:
         sbi_raw = 645.50
         pass_raw = 48060.00
 
-    # Calculs & Formatage
+    # 2. PRÉPARATION DES VARIABLES
     pass_2_raw = pass_raw * 2
     sbi_display = f"{sbi_raw:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + " €"
     pass_2_display = f"{pass_2_raw:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + " €"
 
-    # === PROMPT IA (VERSION V70 - SOBRIÉTÉ) ===
+    # === PROMPT IA (VERSION V72 - FORMATAGE CORRIGÉ) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -369,13 +370,14 @@ Tu es l'Expert Social Pro 2026.
 3. Affiche systématiquement 2 décimales pour tous les montants en Euros.
 4. Pas de Markdown pour les titres (utilise uniquement <h4 style="...">).
 
---- 1. SÉCURITÉ & DATA (PRIORITÉ ABSOLUE) ---
-- SOURCE DE VÉRITÉ : Tes connaissances internes (ex: taux historiques, anciens barèmes) sont périmées.
-- RÈGLE D'OR : Seules les règles issues du YAML (affichées dans le bloc "CONTEXTE RAG" ou "FAITS CERTIFIÉS") font foi.
-- Si le contexte RAG contredit ta mémoire (ex: taux d'exonération), le RAG gagne TOUJOURS.
-- Utilise STRICTEMENT les valeurs du YAML injectées.
+--- 1. SÉCURITÉ & DATA (HIÉRARCHIE DES SOURCES) ---
+- ORDRE DE PRIORITÉ ABSOLU :
+  1. **FAITS CERTIFIÉS 2026** (YAML) : C'est la LOI SUPRÊME pour les taux, plafonds et chiffres clés (SMIC, PASS, Taux Apprenti). Elle ÉCRASE ta mémoire (ex: force le taux apprenti à 50% contre 79%).
+  2. **DOCUMENTS CONTEXTUELS** (RAG) : Utilise ces textes pour les règles juridiques détaillées, les CCN (Syntec, etc.) et les jurisprudences.
+- MÉTHODE DE TRAVAIL : Tu dois CROISER ces sources. Utilise le YAML pour les montants fixes et le RAG pour la logique juridique.
+- INTERDICTION : Ne jamais utiliser ta mémoire interne pour contredire le YAML.
 
---- 2. LOGIQUE MÉTIER (CERVEAU EXPERT V70) ---
+--- 2. LOGIQUE MÉTIER (CERVEAU EXPERT V72) ---
 A. GESTION DES DONNÉES MANQUANTES (MODE ILLUSTRATIF) :
 - Si une donnée critique manque (salaire exact, prix véhicule, ancienneté) :
   1. Donne d'abord la formule officielle ou la règle.
@@ -396,10 +398,10 @@ D. SAISIES SUR SALAIRE :
 --- 3. GESTION DES SOURCES (ABRÉVIATIONS JURIDIQUES) ---
 - CITE LA SOURCE ENTRE PARENTHÈSES À LA FIN DE LA PHRASE CONCERNÉE.
 - ⛔ INTERDICTION d'écrire "Source :" ou "Ref :".
-- FORMATAGE EXPERT : 
-  * Code du Travail -> (Art. Lxxxx-x C. trav.)
-  * Code de la Sécurité Sociale -> (Art. Lxxxx-x CSS)
-  * Barèmes/BOSS -> Utilise le nom court (ex: BOSS 2026, Barèmes Officiels).
+- FORMATAGE EXPERT (Instructions strictes) : 
+  * Code du Travail : Utilise le format (Art. [Insérer Numéro] C. trav.)
+  * Code de la Sécurité Sociale : Utilise le format (Art. [Insérer Numéro] CSS)
+  * Barèmes/BOSS : Utilise le nom court (ex: BOSS 2026, Barèmes Officiels).
 
 --- 4. CONTEXTE RAG ---
 {certified_facts}
@@ -444,6 +446,7 @@ QUESTION : {question}
     
     date_ref = engine.get_yaml_update_date()
     chain = prompt | llm | StrOutputParser()
+    
     return chain.stream({
         "context": context, 
         "question": query, 
