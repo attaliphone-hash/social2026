@@ -338,13 +338,13 @@ def build_context(query):
     
     return context_text, sources_seen
 # ==============================================================================
-# FONCTION IA PRINCIPALE
+# FONCTION IA PRINCIPALE (VERSION V70 - EXPERT SOBRE)
 # ==============================================================================
 def get_gemini_response_stream(query, context, sources_list, certified_facts="", user_doc_content=None):
     user_doc_section = f"\n--- DOCUMENT UTILISATEUR ---\n{user_doc_content}\n" if user_doc_content else ""
     facts_section = f"\n--- FAITS CERTIFIÉS 2026 ---\n{certified_facts}\n" if certified_facts else ""
     
-    # 1. RÉCUPÉRATION DYNAMIQUE DES CONSTANTES (V68)
+    # 1. RÉCUPÉRATION DYNAMIQUE DES CONSTANTES (V68/V69)
     try:
         sbi_raw = engine.get_rule_value("SBI_2026", "montant")
         if sbi_raw is None: sbi_raw = 645.50
@@ -359,7 +359,7 @@ def get_gemini_response_stream(query, context, sources_list, certified_facts="",
     sbi_display = f"{sbi_raw:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + " €"
     pass_2_display = f"{pass_2_raw:,.2f}".replace(",", "X").replace(".", ",").replace("X", " ") + " €"
 
-    # === PROMPT IA (VERSION V68 - DYNAMIQUE) ===
+    # === PROMPT IA (VERSION V70 - SOBRIÉTÉ) ===
     prompt = ChatPromptTemplate.from_template("""
 Tu es l'Expert Social Pro 2026.
 
@@ -372,9 +372,12 @@ Tu es l'Expert Social Pro 2026.
 --- 1. SÉCURITÉ & DATA ---
 - Utilise STRICTEMENT les valeurs fournies. ⛔ Ne jamais inventer de taux.
 
---- 2. LOGIQUE MÉTIER (CERVEAU EXPERT V68) ---
-A. STRATÉGIE DU SCÉNARIO TYPE :
-- Si une donnée manque : Ne dis jamais "impossible". Donne la formule ET propose immédiatement un scénario réaliste (ex: "Pour un salaire de 3 000,00 € et 10 ans d'ancienneté, le montant serait de...") pour fixer les idées.
+--- 2. LOGIQUE MÉTIER (CERVEAU EXPERT V70) ---
+A. GESTION DES DONNÉES MANQUANTES (MODE ILLUSTRATIF) :
+- Si une donnée critique manque (salaire exact, prix véhicule, ancienneté) :
+  1. Donne d'abord la formule officielle ou la règle.
+  2. Lance une simulation en l'annonçant CLAIREMENT par la mention exacte : "⚠️ SIMULATION (données réelles non fournies)".
+  3. Utilise le conditionnel ("Si le salaire était de..., le montant serait de...").
 
 B. PRÉCISION CHIRURGICALE (RÉFORME CP 2024) :
 - ATTENTION : Pour un arrêt maladie NON-PROFESSIONNEL, l'acquisition est LIMITÉE à 2 jours ouvrables par mois (soit 24 jours/an).
@@ -385,7 +388,7 @@ C. AUDIT FISCAL DES RUPTURES :
 - Précise systématiquement : Limite exonération (2 PASS = {pass_2_val}), Forfait Social patronal (30% sur RC), et CSG/CRDS.
 
 D. SAISIES SUR SALAIRE :
-- Interdiction de refuser. Utilise le SBI ({sbi_val}) comme plancher absolu et simule une tranche sur un net type.
+- Interdiction de refuser. Utilise le SBI ({sbi_val}) comme plancher absolu et simule une tranche sur un net type (en précisant que c'est une simulation).
 
 --- 3. GESTION DES SOURCES (ABRÉVIATIONS JURIDIQUES) ---
 - CITE LA SOURCE ENTRE PARENTHÈSES À LA FIN DE LA PHRASE CONCERNÉE.
@@ -417,7 +420,7 @@ D. SAISIES SUR SALAIRE :
        <li>[Étape 2 : Résultat au format 0 000,00 €]</li>
     </ul>
     <div style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #999; font-size: 13px; color: #444;">
-        <strong>⚠️ Note :</strong> [Scénario type ou Précision Maladie Non-Pro vs AT]
+        <strong>⚠️ Note :</strong> [Mention "SIMULATION (données réelles non fournies)" si applicable]
     </div>
 </div>
 
@@ -445,10 +448,9 @@ QUESTION : {question}
         "certified_facts": facts_section,
         "user_doc_section": user_doc_section,
         "date_maj": date_ref,
-        "sbi_val": sbi_display,      # INJECTION DYNAMIQUE
-        "pass_2_val": pass_2_display # INJECTION DYNAMIQUE
+        "sbi_val": sbi_display,      
+        "pass_2_val": pass_2_display 
     })
-
 # --- UI PRINCIPALE ---
 user_email = st.session_state.get("user_email", "")
 if user_email and user_email != "ADMINISTRATEUR" and user_email != "Utilisateur Promo":
