@@ -40,8 +40,8 @@ h2 {
     font-family: 'Open Sans', sans-serif!important;
     color: #253E92 !important;
     font-size: 20px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important; 
+    font-weight: 600 !important;
+    text-transform: none !important; 
     margin-top: 10px !important;
     margin-bottom: 20px !important; 
     text-align: left !important;
