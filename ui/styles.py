@@ -224,47 +224,43 @@ def render_subscription_cards():
 @st.dialog("Pourquoi Expert Social Pro existe ?")
 def modal_manifesto():
     st.markdown("""
-    <style>
-        .manifesto-box { font-family: 'Open Sans', sans-serif; color: #1e293b; line-height: 1.6; font-size: 14px; }
-        .manifesto-title { color: #024c6f; font-size: 16px; font-weight: 700; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
-        .manifesto-intro { font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 15px; font-style: italic; }
-        .manifesto-highlight { color: #b91c1c; font-weight: 700; }
-        .manifesto-list { margin-left: 20px; margin-bottom: 15px; }
-        .manifesto-strong { color: #0f172a; font-weight: 700; }
-        .manifesto-check { color: #15803d; font-weight: bold; font-size: 15px; }
-        .manifesto-punchline { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1; text-align: center; font-size: 16px; font-weight: 800; color: #024c6f; }
-    </style>
-    <div class="manifesto-box">
-        <p>Pendant des années, j’ai vu des professionnels RH passer des heures à chercher la bonne règle. Entre le BOSS, le Code du travail, l’URSSAF, les circulaires, les mises à jour…</p>
-        
-        <p>Le problème n’était pas le manque d’information.<br>
-        <span class="manifesto-highlight">C’était l’excès d’information.</span></p>
+<style>
+    .manifesto-box { font-family: 'Open Sans', sans-serif; color: #1e293b; line-height: 1.6; font-size: 14px; }
+    .manifesto-title { color: #024c6f; font-size: 16px; font-weight: 700; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+    .manifesto-intro { font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 15px; font-style: italic; }
+    .manifesto-highlight { color: #b91c1c; font-weight: 700; }
+    .manifesto-list { margin-left: 20px; margin-bottom: 15px; }
+    .manifesto-strong { color: #0f172a; font-weight: 700; }
+    .manifesto-check { color: #15803d; font-weight: bold; font-size: 15px; }
+    .manifesto-punchline { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1; text-align: center; font-size: 16px; font-weight: 800; color: #024c6f; }
+</style>
+<div class="manifesto-box">
+<p>Pendant des années, j’ai vu des professionnels RH passer des heures à chercher la bonne règle. Entre le BOSS, le Code du travail, l’URSSAF, les circulaires, les mises à jour…</p>
+<p>Le problème n’était pas le manque d’information.<br>
+<span class="manifesto-highlight">C’était l’excès d’information.</span></p>
+<div class="manifesto-title">Aujourd’hui :</div>
+<ul class="manifesto-list">
+    <li>Tout existe,</li>
+    <li>Tout est accessible,</li>
+    <li>Mais rien n’est centralisé intelligemment.</li>
+</ul>
+<p>👉 <strong>Résultat :</strong> des décisions prises avec un doute permanent.</p>
+<div class="manifesto-title">Une seule mission</div>
+<p>J’ai créé Expert Social Pro pour répondre à une seule question :</p>
+<div class="manifesto-intro">“Est-ce que je peux décider sereinement ?”</div>
+<p style="margin-left: 10px;">
+❌ Pas : <em>“Est-ce que j’ai trouvé un article ?”</em><br>
+❌ Pas : <em>“Est-ce que ça ressemble à la bonne réponse ?”</em><br>
+<br>
+<span class="manifesto-check">✅ Mais : “Est-ce que c’est juridiquement sûr ?”</span>
+</p>
+<div class="manifesto-punchline">
+    Expert Social Pro n’est pas une IA qui répond.<br>
+    <span style="color: #b91c1c;">C’est une IA qui sécurise.</span>
+</div>
+</div>
+""", unsafe_allow_html=True)
 
-        <div class="manifesto-title">Aujourd’hui :</div>
-        <ul class="manifesto-list">
-            <li>Tout existe,</li>
-            <li>Tout est accessible,</li>
-            <li>Mais rien n’est centralisé intelligemment.</li>
-        </ul>
-        <p>👉 <strong>Résultat :</strong> des décisions prises avec un doute permanent.</p>
-
-        <div class="manifesto-title">Une seule mission</div>
-        <p>J’ai créé Expert Social Pro pour répondre à une seule question :</p>
-        <div class="manifesto-intro">“Est-ce que je peux décider sereinement ?”</div>
-
-        <p style="margin-left: 10px;">
-        ❌ Pas : <em>“Est-ce que j’ai trouvé un article ?”</em><br>
-        ❌ Pas : <em>“Est-ce que ça ressemble à la bonne réponse ?”</em><br>
-        <br>
-        <span class="manifesto-check">✅ Mais : “Est-ce que c’est juridiquement sûr ?”</span>
-        </p>
-
-        <div class="manifesto-punchline">
-            Expert Social Pro n’est pas une IA qui répond.<br>
-            <span style="color: #b91c1c;">C’est une IA qui sécurise.</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
 # --- POPUP : MENTIONS LÉGALES (Sylvain Attal) ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
