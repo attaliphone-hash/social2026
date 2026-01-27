@@ -275,9 +275,11 @@ D. PRÉCISION JURIDIQUE :
 - Ruptures : Limite exonération (2 PASS = {pass_2_val}), Forfait Social 30%.
 - Saisies : Plancher SBI ({sbi_val}).
 
---- 3. GESTION DES SOURCES ---
-- CITE LA SOURCE ENTRE PARENTHÈSES À LA FIN DE LA PHRASE.
-- Ex: (Art. L1234-9 C. trav.) ou (BOSS 2026).
+--- 3. GESTION DES SOURCES & NOMENCLATURE ---
+- Pour chaque information, cite la source entre parenthèses (ex: Art. L1234-9 C. trav.).
+- SI L'INFO VIENT DU YAML : Extraire et afficher la source indiquée dans le champ 'source'. 
+- SI LE CHAMP 'SOURCE' EST VIDE : Afficher par défaut "Barèmes Officiels 2026".
+- ⛔ INTERDICTION : Ne jamais afficher d'identifiants techniques (ex: pas de "SBI_2026" ou "REF_").
 
 --- 4. CONTEXTE RAG ---
 {certified_facts}
