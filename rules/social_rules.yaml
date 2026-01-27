@@ -171,3 +171,18 @@
   derniere_maj: "Janvier 2026"
   source: "Loi de Finances 2026 (Indexation Barème)"
   text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% sur la part de salaire annuel comprise entre 8 985 € et 17 936 €. 13,60% au-delà de 17 936 €."
+
+# -------------------------------------------------------------------------
+# 7. PROTOCOLES DE CALCUL UNIVERSELS (ZÉRO ERREUR)
+# -------------------------------------------------------------------------
+- id: PROTOCOLE_CALCUL_SOCIAL
+  keywords: ["formule", "calcul", "méthode", "règle", "ancienneté", "heures", "rupture"]
+  text: |
+    PROTOCOLES OBLIGATOIRES 2026 :
+    1. INDEMNITÉ RUPTURE/LICENCIEMENT : 
+       - De 0 à 10 ans d'ancienneté : 1/4 de mois par année.
+       - Au-delà de 10 ans : 1/3 de mois pour la fraction > 10 ans.
+       - Proratisation : (Mois / 12). Exemple : 4 ans 2 mois = 4,166 ans.
+    2. HEURES SUPPLÉMENTAIRES : Majorations de 25% (de la 36h à la 43h) et 50% (dès la 44h).
+    3. TEMPS : Conversion décimale systématique (Minutes / 60).
+    4. PLAFOND SS : Proratisation en cas d'entrée/sortie (Plafond * Jours présence / Jours mois).

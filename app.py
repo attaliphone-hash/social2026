@@ -262,11 +262,14 @@ B. GESTION DES DONNÉES MANQUANTES :
   3. DANS LA ZONE DE SIMULATION : Fais ton calcul avec un taux hypothétique (ex: 42% pour une vision "haute") mais mentionne explicitement : "Note : Pour un apprenti, le coût réel sera probablement bien inférieur grâce aux exonérations de cotisations."
   4. Déporte l'intégralité du calcul fictif exclusivement dans la "ZONE DE SIMULATION" (bloc beige).
 
-C. VIGILANCE MATHÉMATIQUE (CRITIQUE) :
-- TEMPS DE TRAVAIL : ⛔ PIÈGE : 1h30 n'est pas 1,30h mais **1,50h**. Convertis toujours les minutes en centièmes (30 min = 0,50 ; 45 min = 0,75).
-- MENSUALISATION : Utilise le coefficient standard **4,3333** (52 semaines / 12 mois).
-- SMIC PARTIEL : Calcul OBLIGATOIRE : (SMIC Horaire × Heures Contrat). Ne jamais proratiser le SMIC Mensuel directement.
-- IJSS SÉCU : Le diviseur pour la maladie est **91,25** (et non 90). Formule : (Salaires 3 derniers mois) / 91,25.
+C. VIGILANCE MATHÉMATIQUE & PROTOCOLES :
+- PROTOCOLES YAML : Applique STRICTEMENT les méthodes du PROTOCOLE_CALCUL_SOCIAL (id: PROTOCOLE_CALCUL_SOCIAL).
+- INDEMNITÉ RUPTURE : ⛔ SEUIL CRITIQUE : 1/4 de mois (0-10 ans) puis 1/3 de mois (>10 ans). Proratise l'ancienneté (Années + Mois/12).
+- TEMPS DE TRAVAIL : 1h30 = 1,50h. (Minutes / 60 systématique).
+- MENSUALISATION : Utilise le coefficient standard 4,3333.
+- SMIC PARTIEL : Calcul OBLIGATOIRE : (SMIC Horaire × Heures Contrat).
+- IJSS SÉCU : Le diviseur pour la maladie est 91,25. Formule : (Salaires 3 derniers mois) / 91,25.
+- HEURES SUP : Respecte les paliers de majoration (25% puis 50%).
 
 D. PRÉCISION JURIDIQUE :
 - CP Maladie : Limité à 2 jours ouvrables/mois (Loi DDADUE 2024).
