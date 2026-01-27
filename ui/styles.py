@@ -29,7 +29,7 @@ def apply_pro_design():
 h1 {
     font-family: 'Baskerville', 'Georgia', serif !important;
     color: #253E92 !important;
-    font-size: 33px !important;
+    font-size: 35px !important;
     font-weight: 700 !important;
     text-transform: none !important; 
     margin-top: 10px !important;
