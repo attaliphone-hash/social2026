@@ -20,7 +20,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # ==============================================================================
-# 1. INITIALISATION
+# 1. INITIALISATION & CONFIGURATION
 # ==============================================================================
 st.set_page_config(
     page_title="Expert Social Pro 2026 - Le Copilote RH et Paie",
@@ -28,24 +28,30 @@ st.set_page_config(
     layout="wide"
 )
 
-# Init Session
+# Initialisation du Session State
 if "messages" not in st.session_state: st.session_state.messages = []
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
 if "query_count" not in st.session_state: st.session_state.query_count = 0
 if "user_info" not in st.session_state: st.session_state.user_info = None
+
 if "services_ready" not in st.session_state:
+    # 1. ON CRÉE LA CONFIG EN PREMIER (Crucial pour les autres services)
+    st.session_state.config = Config() 
+    
+    # 2. PUIS ON LANCE LES MANAGERS
     st.session_state.auth_manager = AuthManager()
     st.session_state.sub_manager = SubscriptionManager()
     st.session_state.ia_service = IAService()
     st.session_state.doc_service = DocumentService()
     st.session_state.quota_service = QuotaService()
     st.session_state.rule_engine = SocialRuleEngine()
+    
     st.session_state.services_ready = True
 
-# Design
+# Application du design
 apply_pro_design()
 
-# Raccourcis
+# Raccourcis pour lisibilité
 auth = st.session_state.auth_manager
 sub = st.session_state.sub_manager
 ia = st.session_state.ia_service
@@ -55,21 +61,29 @@ engine = st.session_state.rule_engine
 ui = UIComponents()
 
 # ==============================================================================
-# 2. NETTOYAGE DES SOURCES
+# 2. NETTOYAGE DES SOURCES (Helper)
 # ==============================================================================
 def clean_source_name(filename, category="AUTRE"):
+    """Transforme les noms techniques en noms lisibles pour l'utilisateur"""
     filename = os.path.basename(filename).replace('.pdf', '').replace('.txt', '')
-    if "Code_Travail" in filename or "Code Travail" in filename: return "Code du Travail 2026"
-    elif "Code_Secu" in filename or "Code Secu" in filename: return "Code de la Sécurité Sociale 2026"
-    elif category == "REF" or filename.startswith("REF_"): return "Barèmes Officiels 2026"
-    elif category == "DOC" or filename.startswith("DOC_"): return "BOSS 2026 et Jurisprudences"
+    
+    if "Code_Travail" in filename or "Code Travail" in filename:
+        return "Code du Travail 2026"
+    elif "Code_Secu" in filename or "Code Secu" in filename:
+        return "Code de la Sécurité Sociale 2026"
+    elif category == "REF" or filename.startswith("REF_"):
+        return "Barèmes Officiels 2026"
+    elif category == "DOC" or filename.startswith("DOC_"):
+        return "BOSS 2026 et Jurisprudences"
+    
     return filename.replace('_', ' ')
 
 # ==============================================================================
 # 3. PAGE DE LOGIN
 # ==============================================================================
 def check_password():
-    if st.session_state.user_info: return True
+    if st.session_state.user_info:
+        return True
 
     ui.render_top_arguments()
     ui.render_footer()
@@ -111,7 +125,7 @@ if not check_password():
     st.stop()
 
 # ==============================================================================
-# 4. DASHBOARD (SANS SIDEBAR)
+# 4. DASHBOARD (ESPACE ABONNÉS)
 # ==============================================================================
 
 # 1. ARGUMENTS
@@ -123,7 +137,7 @@ ui.render_footer()
 # 3. VEILLE JURIDIQUE
 show_legal_watch_bar()
 
-# 4. ACTIONS (UPLOAD / NEW)
+# 4. ACTIONS (UPLOAD / NOUVELLE SESSION)
 col_act1, col_act2, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
 with col_act1:
     st.markdown('<div class="fake-upload-btn">Charger un document</div>', unsafe_allow_html=True)
@@ -138,14 +152,15 @@ with col_act2:
 # 5. TITRE ESPACE ABONNÉS
 st.markdown("<h1 style='color:#253E92; margin-top:10px;'>EXPERT SOCIAL PRO ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
 
-# 6. ANALYSE DOC
+# 6. ANALYSE DU DOCUMENT UPLOADÉ
 user_doc_content = ""
 if uploaded_file:
-    with st.spinner("Analyse..."):
+    with st.spinner("Analyse du document en cours..."):
         user_doc_content = docs_srv.extract_text(uploaded_file)
-        if user_doc_content: st.toast(f"📎 {uploaded_file.name} analysé", icon="✅")
+        if user_doc_content:
+            st.toast(f"📎 {uploaded_file.name} analysé avec succès", icon="✅")
 
-# 7. ONBOARDING
+# 7. ONBOARDING (EXEMPLES)
 if not st.session_state.messages:
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3, gap="large")
@@ -169,11 +184,12 @@ if not st.session_state.messages:
             st.rerun()
     st.markdown("---")
 
-# 8. CHAT & PROMPT
+# 8. AFFICHAGE DES MESSAGES
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)
 
+# 9. GESTION DE LA SAISIE
 user_input = None
 if "pending_prompt" in st.session_state:
     user_input = st.session_state.pending_prompt
@@ -185,23 +201,25 @@ if user_input:
     # Quota check
     role = st.session_state.user_info.get("role", "GUEST")
     if not quota.check_quota(role):
-        st.warning("🛑 Limite atteinte.")
+        st.warning("🛑 Limite de requêtes atteinte.")
         ui.render_subscription_cards()
         st.stop()
         
     st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"): st.markdown(user_input)
+    with st.chat_message("user"):
+        st.markdown(user_input)
+    
     quota.increment()
 
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         box = st.empty()
         
-        # Moteur V2 + Prompt V1
+        # Moteur de règles : Extraction des faits
         cleaned_q = user_input.lower().replace("quel est", "").replace("le montant", "")
         matched = engine.match_rules(cleaned_q)
         facts = engine.format_certified_facts(matched)
 
-        # RAG
+        # RAG : Recherche de documents
         docs = ia.search_documents(user_input, k=6)
         context_str = ""
         sources_seen = []
@@ -209,14 +227,15 @@ if user_input:
             raw_name = d.metadata.get('source', 'Inconnu')
             cat = d.metadata.get('category', 'AUTRE')
             pretty_name = clean_source_name(raw_name, cat)
-            if pretty_name not in sources_seen: sources_seen.append(pretty_name)
+            if pretty_name not in sources_seen:
+                sources_seen.append(pretty_name)
             context_str += f"[SOURCE: {pretty_name}]\n{d.page_content}\n\n"
 
-        # Valeurs dynamiques
+        # Préparation des valeurs dynamiques pour le prompt
         sbi_val = f"{engine.get_rule_value('SBI_2026', 'montant') or 645.50:,.2f} €".replace(",", "X").replace(".", ",").replace("X", " ")
         pass_val = f"{(engine.get_rule_value('PASS_2026', 'annuel') or 48060)*2:,.2f} €".replace(",", "X").replace(".", ",").replace("X", " ")
 
-        # Prompt V1 (Strict + V74 MATHS + CORRECTIF COÛT)
+        # --- LE CERVEAU V75 (PROMPT ELITE) ---
         template = """
 Tu es l'Expert Social Pro 2026.
 
@@ -294,6 +313,8 @@ D. PRÉCISION JURIDIQUE :
 
 QUESTION : {question}
 """
+        
+        # Exécution de la chaîne IA
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | ia.get_llm() | StrOutputParser()
         
@@ -316,4 +337,4 @@ QUESTION : {question}
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             
         except Exception as e:
-            box.error(f"Erreur IA : {e}")
+            box.error(f"Une erreur est survenue lors de la génération de la réponse : {e}")

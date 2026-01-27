@@ -9,7 +9,9 @@ class AuthManager:
     """
     
     def __init__(self):
-        self.config = Config.from_env()
+        # CORRECTION : Utilisation de l'instanciation simple conforme au backup
+        self.config = Config()
+        
         # Initialisation du client Supabase uniquement si les clés existent
         if self.config.supabase_url and self.config.supabase_key:
             try:
@@ -26,7 +28,6 @@ class AuthManager:
         Retourne un dictionnaire user_info si succès, None sinon.
         """
         # 1. TEST : EST-CE UN ADMIN ?
-        # On vérifie si l'input correspond au mot de passe Admin
         if email_or_code == "ADMIN" or password == self.config.admin_password:
             if password == self.config.admin_password or email_or_code == self.config.admin_password:
                 return {"email": "ADMINISTRATEUR", "role": "ADMINISTRATEUR"}
@@ -40,7 +41,6 @@ class AuthManager:
              return {"email": "Membre ANDRH (Invité)", "role": "ANDRH"}
 
         # 4. TEST : EST-CE UN ABONNÉ (SUPABASE) ?
-        # Si on a un email (avec @) et un mot de passe, on interroge Supabase
         if self.supabase and "@" in str(email_or_code) and password:
             try:
                 res = self.supabase.auth.sign_in_with_password({
@@ -50,7 +50,6 @@ class AuthManager:
                 if res.user:
                     return {"email": res.user.email, "role": "SUBSCRIBER"}
             except Exception as e:
-                # Erreur classique (mauvais mot de passe ou user inconnu)
                 print(f"Refus connexion Supabase: {e}")
                 return None
         

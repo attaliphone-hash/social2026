@@ -1,54 +1,26 @@
 import os
-import streamlit as st
-from dataclasses import dataclass
 from dotenv import load_dotenv
 
-# Charge les variables locales (.env) pour le mode Dev
+# Charge les variables locales (.env)
 load_dotenv()
 
-@dataclass
 class Config:
-    """
-    Configuration centrale complète.
-    """
-    # APIs Externes
-    google_api_key: str
-    pinecone_api_key: str
-    stripe_secret_key: str
-    
-    # Base de données
-    supabase_url: str
-    supabase_key: str
-    
-    # Sécurité & Accès
-    admin_password: str
-    app_password: str
-    code_promo_andrh: str
-    
-    @classmethod
-    def from_env(cls):
-        """
-        Récupère la configuration (Priorité : Cloud Run ENV > Streamlit Secrets)
-        """
-        def get_var(key):
-            # 1. Environnement Système (Docker / Cloud Run / .env local)
-            value = os.getenv(key)
-            if value:
-                return value
-            
-            # 2. Fallback Streamlit Secrets (si utilisé)
-            try:
-                return st.secrets.get(key, "")
-            except (FileNotFoundError, AttributeError):
-                return ""
+    def __init__(self):
+        # 1. APIs Externes
+        self.google_api_key = os.getenv("GOOGLE_API_KEY")
+        self.pinecone_api_key = os.getenv("PINECONE_API_KEY")
+        self.stripe_api_key = os.getenv("STRIPE_API_KEY")
 
-        return cls(
-            google_api_key=get_var("GOOGLE_API_KEY"),
-            pinecone_api_key=get_var("PINECONE_API_KEY"),
-            stripe_secret_key=get_var("STRIPE_SECRET_KEY"),
-            supabase_url=get_var("SUPABASE_URL"),
-            supabase_key=get_var("SUPABASE_KEY"),
-            admin_password=get_var("ADMIN_PASSWORD"),
-            app_password=get_var("APP_PASSWORD"),
-            code_promo_andrh=get_var("CODE_PROMO_ANDRH")
-        )
+        # 2. Base de données (Supabase)
+        self.supabase_url = os.getenv("SUPABASE_URL")
+        self.supabase_key = os.getenv("SUPABASE_KEY")
+
+        # 3. Sécurité & Accès
+        # ADMIN_PASSWORD pour l'admin, CODE_PROMO_GENERAL pour les invités
+        self.admin_password = os.getenv("ADMIN_PASSWORD", "expert2026")
+        self.app_password = os.getenv("CODE_PROMO_GENERAL", "SOCIAL2026")
+        self.code_promo_andrh = os.getenv("CODE_PROMO_ANDRH", "ANDRH2026")
+
+    def is_production(self):
+        """Détecte si l'app tourne sur Cloud Run"""
+        return os.getenv("K_SERVICE") is not None
