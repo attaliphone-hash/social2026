@@ -205,7 +205,7 @@ def check_password():
    # --- TITRE & SOUS-TITRE (Nouvelle Version) ---
     st.markdown("""
         <h1 style='text-align: center; color: #024c6f; margin-bottom: 8px;'>
-            EXPERT SOCIAL PRO — VOTRE COPILOTE RH & PAIE EN 2026.
+            EXPERT SOCIAL PRO Votre Copilote RH et Paie.
         </h1>
         <h2 style='text-align: center; text-transform: none !important; color: #2c3e50; font-family: "Open Sans", sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 30px; line-height: 1.5;'>
             Des règles officielles. Des calculs sans erreur. Des décisions que vous pouvez défendre.
