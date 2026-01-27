@@ -301,8 +301,18 @@ D. PRÉCISION JURIDIQUE :
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 RÉSULTAT</h2>
-    <p style="font-size: 18px;"><strong>[Montant Final]</strong></p>
-    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Conclusion]</p>
+    <p style="font-size: 18px;"><strong>[Montant Final Officiel]</strong></p>
+    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Conclusion brève basée sur la loi]</p>
+</div>
+
+[INSTRUCTION CRITIQUE : Si (et seulement si) des données manquent pour répondre précisément, insère obligatoirement le bloc suivant après le RÉSULTAT :]
+<hr style="border: 0; border-top: 1px dashed #253E92; margin: 30px 0;">
+<div style="background-color: #fdf6e3; padding: 20px; border-radius: 8px; border: 1px solid #e6dbb9;">
+    <h4 style="color: #856404; margin-top: 0;">🔍 APPLICATION PRATIQUE (SIMULATION)</h4>
+    <p style="font-size: 13px; color: #856404; font-style: italic;">
+        Certaines variables personnalisées n'étant pas fournies dans votre question, voici une mise en situation pour illustrer le mécanisme :
+    </p>
+    [Détaille ici ton exemple chiffré basé sur tes hypothèses, de manière très claire]
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
