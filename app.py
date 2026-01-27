@@ -202,7 +202,7 @@ def check_password():
     render_top_columns()
     render_footer()
 
-    st.markdown("<h1>EXPERT SOCIAL PRO - ACCÈS</h1>", unsafe_allow_html=True)
+    st.markdown("<h1>Expert Social Pro — Votre Copilote RH & Paie en 2026. Des règles officielles. Des calculs sans erreur. Des décisions que vous pouvez défendre.</h1>", unsafe_allow_html=True)
     
     t1, t2 = st.tabs(["🔐 Je suis abonné", "J'ai un code découverte"])
     with t1:
