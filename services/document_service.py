@@ -1,5 +1,5 @@
 import io
-import PyPDF2
+import pypdf  # ✅ CORRECTION : On utilise la librairie moderne installée
 import streamlit as st
 
 class DocumentService:
@@ -37,7 +37,8 @@ class DocumentService:
 
     def _extract_from_pdf(self, uploaded_file):
         """Méthode interne pour lire les PDF"""
-        pdf_reader = PyPDF2.PdfReader(uploaded_file)
+        # ✅ CORRECTION ICI AUSSI : pypdf au lieu de PyPDF2
+        pdf_reader = pypdf.PdfReader(uploaded_file)
         text = ""
         for page in pdf_reader.pages:
             page_text = page.extract_text()
