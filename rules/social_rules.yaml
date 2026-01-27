@@ -177,6 +177,7 @@
 # -------------------------------------------------------------------------
 - id: PROTOCOLE_CALCUL_SOCIAL
   keywords: ["formule", "calcul", "méthode", "règle", "ancienneté", "heures", "rupture"]
+  source: "Art. L1234-9, R1234-2 et L3121-33 du Code du travail"
   text: |
     PROTOCOLES OBLIGATOIRES 2026 (À APPLIQUER STRICTEMENT) :
     1. INDEMNITÉ RUPTURE/LICENCIEMENT (CALCUL PAR TRANCHES) : 
