@@ -227,26 +227,44 @@ def modal_manifesto():
     <style>
         .manifesto-box { font-family: 'Open Sans', sans-serif; color: #1e293b; line-height: 1.6; font-size: 14px; }
         .manifesto-title { color: #024c6f; font-size: 16px; font-weight: 700; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
-        .manifesto-intro { font-size: 15px; font-weight: 600; color: #b91c1c; margin-bottom: 15px; }
+        .manifesto-intro { font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 15px; font-style: italic; }
+        .manifesto-highlight { color: #b91c1c; font-weight: 700; }
         .manifesto-list { margin-left: 20px; margin-bottom: 15px; }
         .manifesto-strong { color: #0f172a; font-weight: 700; }
-        .manifesto-check { color: #15803d; font-weight: bold; }
+        .manifesto-check { color: #15803d; font-weight: bold; font-size: 15px; }
+        .manifesto-punchline { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1; text-align: center; font-size: 16px; font-weight: 800; color: #024c6f; }
     </style>
     <div class="manifesto-box">
-        <div class="manifesto-intro">Dans le domaine social, une réponse approximative n’est pas acceptable.<br>Une erreur de 10 €, ce n’est jamais "juste 10 €" : c’est un risque URSSAF.</div>
-        <p>Expert Social Pro est né d’un constat simple : <br>👉 <em>La majorité des IA répondent vite, mais ne calculent pas vraiment.</em></p>
-        <div class="manifesto-title">🔹 Notre différence fondamentale</div>
-        <p><span class="manifesto-strong">1. Le calcul avant la conclusion</span><br>Chaque réponse suit une logique stricte : identification des règles > application des barèmes 2026 > calcul détaillé > conclusion.<br>🚫 Aucune "devinette statistique".</p>
-        <p><span class="manifesto-strong">2. Des chiffres certifiés, pas supposés, voire imaginés</span><br>Notamment, tous les taux et montants clés sont mis à jours quotidiennement injectés systématiquement.<br>👉 Un chiffre officiel ne se discute pas, il s’applique.</p>
-        <p><span class="manifesto-strong">3. Une hiérarchie claire des sources</span></p>
-        <ul class="manifesto-list"><li>🥇 Barèmes officiels et données URSSAF</li><li>🥈 Doctrine BOSS</li><li>🥉 Code du travail, Code de la sécurité sociale et textes légaux</li></ul>
-        <div class="manifesto-title">👥 À qui s’adresse Expert Social Pro ?</div>
-        <ul class="manifesto-list"><li>✅ Cabinets de conseil.</li><li>✅ Responsables paie.</li><li>✅ Équipes RH</li><li>❌ <em>Pas aux curieux. À ceux qui assument leurs réponses.</em></li></ul>
-        <div class="manifesto-title">🤝 Notre engagement</div>
-        <p>Notre application est un copilote RH et Paie avant consultation.<br><span class="manifesto-check">Nous garantissons des calculs cohérents et une base défendable professionnellement.</span></p>
+        <p>Pendant des années, j’ai vu des professionnels RH passer des heures à chercher la bonne règle. Entre le BOSS, le Code du travail, l’URSSAF, les circulaires, les mises à jour…</p>
+        
+        <p>Le problème n’était pas le manque d’information.<br>
+        <span class="manifesto-highlight">C’était l’excès d’information.</span></p>
+
+        <div class="manifesto-title">Aujourd’hui :</div>
+        <ul class="manifesto-list">
+            <li>Tout existe,</li>
+            <li>Tout est accessible,</li>
+            <li>Mais rien n’est centralisé intelligemment.</li>
+        </ul>
+        <p>👉 <strong>Résultat :</strong> des décisions prises avec un doute permanent.</p>
+
+        <div class="manifesto-title">Une seule mission</div>
+        <p>J’ai créé Expert Social Pro pour répondre à une seule question :</p>
+        <div class="manifesto-intro">“Est-ce que je peux décider sereinement ?”</div>
+
+        <p style="margin-left: 10px;">
+        ❌ Pas : <em>“Est-ce que j’ai trouvé un article ?”</em><br>
+        ❌ Pas : <em>“Est-ce que ça ressemble à la bonne réponse ?”</em><br>
+        <br>
+        <span class="manifesto-check">✅ Mais : “Est-ce que c’est juridiquement sûr ?”</span>
+        </p>
+
+        <div class="manifesto-punchline">
+            Expert Social Pro n’est pas une IA qui répond.<br>
+            <span style="color: #b91c1c;">C’est une IA qui sécurise.</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-
 # --- POPUP : MENTIONS LÉGALES (Sylvain Attal) ---
 @st.dialog("Mentions Légales")
 def modal_mentions():
