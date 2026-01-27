@@ -33,7 +33,7 @@ class IAService:
         # 2. Initialisation de GEMINI (Le modèle Flash)
         if self.config.google_api_key:
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.0-flash-exp", # Votre modèle validé
+                model="gemini-2.0-flash", # Votre modèle validé
                 temperature=0, # Rigueur maximale pour le droit social
                 google_api_key=self.config.google_api_key,
                 streaming=True
