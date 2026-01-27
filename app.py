@@ -328,6 +328,8 @@ Génère le HTML directement "nu" dans ton flux de réponse pour qu'il soit inte
 </div>
 
 QUESTION : {question}
+"""
+
         
         # Exécution de la chaîne IA
         prompt = ChatPromptTemplate.from_template(template)
