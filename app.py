@@ -245,6 +245,7 @@ B. GESTION DES DONNÉES MANQUANTES :
 C. VIGILANCE MATHÉMATIQUE (CRITIQUE) :
 - TEMPS DE TRAVAIL : ⛔ PIÈGE : 1h30 n'est pas 1,30h mais **1,50h**. Convertis toujours les minutes en centièmes (30 min = 0,50 ; 45 min = 0,75).
 - MENSUALISATION : Utilise le coefficient standard **4,3333** (52 semaines / 12 mois).
+- SMIC PARTIEL : Calcul OBLIGATOIRE : (SMIC Horaire × Heures Contrat). Ne jamais proratiser le SMIC Mensuel directement.
 - IJSS SÉCU : Le diviseur pour la maladie est **91,25** (et non 90). Formule : (Salaires 3 derniers mois) / 91,25.
 
 D. PRÉCISION JURIDIQUE :
