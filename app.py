@@ -285,6 +285,10 @@ D. PRÉCISION JURIDIQUE :
 
 --- 5. TEMPLATE DE RÉPONSE ---
 
+💎 RÈGLE CRITIQUE DE RENDU : 
+⛔ INTERDICTION ABSOLUE de mettre du texte ou du HTML dans un bloc de code (pas de ```). 
+Génère le HTML directement "nu" dans ton flux de réponse pour qu'il soit interprété par le navigateur.
+
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
     <li>[Règle juridique avec Citation]</li>
@@ -295,35 +299,35 @@ D. PRÉCISION JURIDIQUE :
     <strong>Données clés :</strong> [Valeurs]<br>
     <strong>Calcul :</strong><br>
     <ul>
-       <li>[Étape 1]</li>
-       <li>[Résultat]</li>
+       <li>[Étape 1 : Formule textuelle uniquement si manque d'infos]</li>
+       <li>[Étape 2 : Pas de simulation chiffrée ici]</li>
     </ul>
 </div>
 
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 RÉSULTAT</h2>
-    <p style="font-size: 18px;"><strong>[Montant Final Officiel]</strong></p>
+    <p style="font-size: 18px;"><strong>[Montant Final Officiel ou Règle Finale]</strong></p>
     <p style="font-size: 14px; margin-top: 5px; color: #444;">[Conclusion brève basée sur la loi]</p>
 </div>
 
-[INSTRUCTION CRITIQUE : Si (et seulement si) des données manquent pour répondre précisément, insère obligatoirement le bloc suivant après le RÉSULTAT :]
+[INSTRUCTION CRITIQUE : Si (et seulement si) des données manquent pour répondre précisément, insère obligatoirement le bloc suivant APRÈS le RÉSULTAT :]
 <hr style="border: 0; border-top: 1px dashed #253E92; margin: 30px 0;">
 <div style="background-color: #fdf6e3; padding: 20px; border-radius: 8px; border: 1px solid #e6dbb9;">
     <h4 style="color: #856404; margin-top: 0;">🔍 APPLICATION PRATIQUE (SIMULATION)</h4>
     <p style="font-size: 13px; color: #856404; font-style: italic;">
         Certaines variables personnalisées n'étant pas fournies dans votre question, voici une mise en situation pour illustrer le mécanisme :
     </p>
-    [Détaille ici ton exemple chiffré basé sur tes hypothèses, de manière très claire]
+    [Détaille ici ton exemple chiffré basé sur tes hypothèses, de manière très claire, en utilisant des balises HTML directes]
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
     <strong>Sources utilisées :</strong> {sources_list}<br>
+    <strong>Données chiffrées :</strong> SMIC 2026 : {sbi_val} | PASS 2026 : {pass_2_val}<br>
     <em>Données chiffrées issues de la mise à jour : {date_maj}.</em><br>
     <span style="font-style: italic; color: #626267;">Attention : Cette réponse est basée sur le droit commun. Vérifiez toujours votre CCN.</span>
 </div>
 
 QUESTION : {question}
-"""
         
         # Exécution de la chaîne IA
         prompt = ChatPromptTemplate.from_template(template)
