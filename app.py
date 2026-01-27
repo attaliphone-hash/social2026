@@ -214,9 +214,8 @@ if user_input:
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         box = st.empty()
         
-        # Moteur de règles : Extraction des faits
-        cleaned_q = user_input.lower().replace("quel est", "").replace("le montant", "")
-        matched = engine.match_rules(cleaned_q)
+        # Moteur de règles : Extraction des faits (Correction : Utilisation de l'input brut pour le matching)
+        matched = engine.match_rules(user_input)
         facts = engine.format_certified_facts(matched)
 
         # RAG : Recherche de documents
@@ -272,7 +271,6 @@ C. VIGILANCE MATHÉMATIQUE & PROTOCOLES :
 - HEURES SUP : Respecte les paliers de majoration (25% puis 50%).
 
 D. PRÉCISION JURIDIQUE :
-- CP Maladie : Limité à 2 jours ouvrables/mois (Loi DDADUE 2024).
 - CP AT/MP : 2,5 jours/mois.
 - Ruptures : Limite exonération (2 PASS = {pass_2_val}), Forfait Social 30%.
 - Saisies : Plancher SBI ({sbi_val}).
@@ -325,7 +323,7 @@ Génère le HTML directement "nu" dans ton flux de réponse pour qu'il soit inte
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
     <strong>Sources utilisées :</strong> {sources_list}<br>
-    <strong>Données chiffrées :</strong> SMIC 2026 : {sbi_val} | PASS 2026 : {pass_2_val}<br>
+    <strong>Données chiffrées :</strong> SBI 2026 : {sbi_val} | PASS 2026 : {pass_2_val}<br>
     <em>Données chiffrées issues de la mise à jour : {date_maj}.</em><br>
     <span style="font-style: italic; color: #626267;">Attention : Cette réponse est basée sur le droit commun. Vérifiez toujours votre CCN.</span>
 </div>

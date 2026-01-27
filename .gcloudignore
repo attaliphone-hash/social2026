@@ -5,21 +5,28 @@
 venv/
 .venv/
 __pycache__/
+*.pyc
 
-# --- DONNÉES (MODIFICATION ICI) ---
-# On INTERDIT l'envoi de chroma_db pour que le Cloud le recrée à neuf
+# --- DONNÉES & MÉMOIRE ---
+# On ignore la DB locale pour forcer l'utilisation de la version Cloud/RAG
 chroma_db/
-
-# On ignore les PDF et les scripts inutiles
 sources_pdf/
 *.pdf
+
+# --- SCRIPTS DE CONSTRUCTION (À NE PAS DÉPLOYER) ---
 convert_pdf.py
 build_db.py
 generate_knowledge.py
+tests/
 
-# --- EXCEPTIONS ---
+# --- EXCEPTIONS (CE QUI DOIT ABSOLUMENT MONTER) ---
 !requirements.txt
 !*.png
 !*.jpg
 !*.webp
 !data_clean/
+
+# FORCE L'INCLUSION DU CERVEAU (CRITIQUE)
+!rules/
+!rules/*.yaml
+!rules/*.py
