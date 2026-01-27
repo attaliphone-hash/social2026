@@ -21,7 +21,7 @@
     horaire: 12.02
     mensuel_35h: 1823.03
   derniere_maj: "Janvier 2026"
-  source: "Décret Revalorisation Janvier 2026"
+  source: "Décret n° 2025-XXXX de revalorisation du SMIC"
   text: "Au 1er janvier 2026, le SMIC horaire est de 12,02 €, soit 1 823,03 € mensuel pour 35h."
 
 - id: MG_2026
@@ -29,7 +29,7 @@
   valeurs:
     montant: 4.25
   derniere_maj: "Janvier 2026"
-  source: "Barème URSSAF 2026"
+  source: "Décret n° 2025-XXXX (Valeur du Minimum Garanti)"
   text: "Le Minimum Garanti (MG) est fixé à 4,25 € pour 2026."
 
 # -------------------------------------------------------------------------
@@ -42,7 +42,7 @@
     deux_repas: 11.00
     hcr: 4.25
   derniere_maj: "Janvier 2026"
-  source: "Barème URSSAF 2026"
+  source: "Barème URSSAF 2026 (Avantages en nature)"
   text: "L'avantage en nature nourriture est évalué à 5,50 € par repas (4,25 € pour les HCR)."
 
 - id: TICKET_RESTO_2026
@@ -50,7 +50,7 @@
   valeurs:
     plafond_exonération: 7.32
   derniere_maj: "Janvier 2026"
-  source: "Loi de Finances 2026"
+  source: "Art. 81, 19° ter du Code général des impôts (LF 2026)"
   text: "Le plafond d'exonération de la part patronale sur les titres-restaurant est de 7,32 €."
 
 - id: FRAIS_TELETRAVAIL_2026
@@ -59,7 +59,7 @@
     par_jour: 2.80
     limite_mensuelle_1j_semaine: 11.20
   derniere_maj: "Janvier 2026"
-  source: "Barème URSSAF 2026"
+  source: "BOSS - Frais professionnels (Barème URSSAF 2026)"
   text: "L'indemnité forfaitaire de télétravail exonérée est de 2,80 € par jour."
 
 - id: AVN_VEHICULE_ELEC_2026
@@ -68,7 +68,7 @@
     taux_forfaitaire_achat_moins_5ans: 0.09
     plafond_abattement: 2003.00
   derniere_maj: "Janvier 2026"
-  source: "Arrêté 2026"
+  source: "Arrêté du 26 déc. 2024 (Prolongation des mesures incitatives)"
   text: "RÈGLE DE CALCUL : 1. Calculez d'abord l'avantage brut = 9% du prix d'achat TTC (si véhicule < 5 ans). 2. Appliquez ensuite l'abattement de 50% sur ce montant. 3. Ce montant d'abattement est plafonné à 2 003 € par an."
 
 # -------------------------------------------------------------------------
@@ -82,7 +82,7 @@
     21_25_an1: 53
     26_plus: 100
   derniere_maj: "Janvier 2026"
-  source: "Code du Travail (Art. D6222-26)"
+  source: "Art. D6222-26 du Code du travail"
   text: "GRILLE SALAIRE APPRENTI (1ère année) : Moins de 18 ans = 27% du SMIC. De 18 à 20 ans = 43% du SMIC. De 21 à 25 ans = 53% du SMIC. 26 ans et plus = 100% du SMIC."
 
 - id: GRATIFICATION_STAGE_2026
@@ -90,7 +90,7 @@
   valeurs:
     taux_horaire: 4.50
   derniere_maj: "Janvier 2026"
-  source: "Code Sécu. Sociale (15% du PASS horaire)"
+  source: "Art. L124-6 du Code de l'éducation (15% du PASS horaire)"
   text: "La gratification minimale de stage est de 4,50 €/heure (calcul officiel : 15% du Plafond Horaire SS de 30 €)."
 
 - id: EXONERATION_APPRENTI_2026
@@ -98,7 +98,7 @@
   valeurs:
     taux_plafond: 0.50
   derniere_maj: "Janvier 2026"
-  source: "LFSS 2026"
+  source: "Art. L6243-2 du Code du travail (LFSS 2026)"
   text: "RÈGLE 2026 : L'exonération des cotisations salariales pour les apprentis est plafonnée à 50% du SMIC. La part de rémunération au-delà de 50% du SMIC est soumise à cotisations."
 
 - id: AIDE_EMBAUCHE_APPRENTI_2026
@@ -106,7 +106,7 @@
   valeurs:
     montant_annuel: 6000
   derniere_maj: "Janvier 2026"
-  source: "Décret Aides à l'emploi 2026"
+  source: "Décret n° 2024-1248 (Prorogation Aide Exceptionnelle)"
   text: "Une aide exceptionnelle de 6 000 € est versée aux employeurs pour la première année d'exécution des contrats d'apprentissage conclus en 2026." 
 
 - id: SBI_2026
@@ -114,7 +114,7 @@
   valeurs:
     montant: 645.50
   derniere_maj: "Janvier 2026"
-  source: "Décret Saisie 2026"
+  source: "Art. R162-2 du Code des procédures civiles d'exécution"
   text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 645,50 €."
 
 # -------------------------------------------------------------------------
@@ -127,7 +127,7 @@
     T_plus_50: 0.4021
     smic_annuel: 21876.36
   derniere_maj: "Janvier 2026"
-  source: "Décret Paramètres 2026"
+  source: "Art. L241-13 du Code de la sécurité sociale"
   text: "RÈGLE RGDU 2026 : T = 0,3981 (moins de 50 salariés) et T = 0,4021 (50 salariés et plus). Au niveau du SMIC, l'exonération patronale est totale."
 
 # -------------------------------------------------------------------------
@@ -138,7 +138,7 @@
   valeurs:
     plafond_journalier: 54.69
   derniere_maj: "Janvier 2026"
-  source: "Calcul sur 1,8 SMIC"
+  source: "Art. R323-4 du Code de la sécurité sociale"
   text: "L'IJSS Maladie maximale est de 54,69 € bruts par jour en 2026 (Calculée sur la base de 1,8 SMIC)."
 
 - id: IJSS_MATERNITE_2026
@@ -146,7 +146,7 @@
   valeurs:
     plafond_journalier: 105.33
   derniere_maj: "Janvier 2026"
-  source: "Calcul sur le PASS 2026"
+  source: "Art. R331-5 du Code de la sécurité sociale"
   text: "L'IJSS Maternité maximale est de 105,33 € par jour en 2026 (Calculée sur le Plafond Mensuel SS de 4 005 €)."
 
 - id: EXONERATION_RUPTURE_2026
@@ -154,7 +154,7 @@
   valeurs:
     plafond_ss_2pass: 96120
   derniere_maj: "Janvier 2026"
-  source: "Code Sécu. (2 PASS)"
+  source: "Art. L242-1 du Code de la sécurité sociale"
   text: "L'indemnité de rupture est exonérée de cotisations sociales dans la limite de 2 PASS, soit 96 120 € en 2026."
 
 # -------------------------------------------------------------------------
@@ -169,7 +169,7 @@
     seuil_tranche_1: 8985
     seuil_tranche_2: 17936
   derniere_maj: "Janvier 2026"
-  source: "Loi de Finances 2026 (Indexation Barème)"
+  source: "Art. 231 du Code général des impôts (Barème 2026)"
   text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% sur la part de salaire annuel comprise entre 8 985 € et 17 936 €. 13,60% au-delà de 17 936 €."
 
 # -------------------------------------------------------------------------
@@ -177,7 +177,7 @@
 # -------------------------------------------------------------------------
 - id: PROTOCOLE_CALCUL_SOCIAL
   keywords: ["formule", "calcul", "méthode", "règle", "ancienneté", "heures", "rupture"]
-  source: "Art. L1234-9, R1234-2 et L3121-33 du Code du travail"
+  source: "Art. L1234-9, R1234-2 (Rupture) et L3121-33 (Heures Sup) du Code du travail"
   text: |
     PROTOCOLES OBLIGATOIRES 2026 (À APPLIQUER STRICTEMENT) :
     1. INDEMNITÉ RUPTURE/LICENCIEMENT (CALCUL PAR TRANCHES) : 
