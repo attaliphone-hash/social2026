@@ -33,7 +33,7 @@ h1 {
     font-weight: 700 !important;
     text-transform: none !important; 
     margin-top: 10px !important;
-    margin-bottom: 20px !important; 
+    margin-bottom: 10px !important; 
     text-align: left !important;
 }
 h2 {
