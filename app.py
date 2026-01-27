@@ -179,7 +179,7 @@ if "pending_prompt" in st.session_state:
     user_input = st.session_state.pending_prompt
     del st.session_state.pending_prompt
 else:
-    user_input = st.chat_input("Posez votre situation concrète (ex: règles, calcul paie...)")
+    user_input = st.chat_input("Posez votre situation concrète (ex: règles, calcul paie...) et/ou chargez un document pour analyse")
 
 if user_input:
     # Quota check
