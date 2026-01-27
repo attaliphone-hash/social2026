@@ -178,11 +178,12 @@
 - id: PROTOCOLE_CALCUL_SOCIAL
   keywords: ["formule", "calcul", "méthode", "règle", "ancienneté", "heures", "rupture"]
   text: |
-    PROTOCOLES OBLIGATOIRES 2026 :
-    1. INDEMNITÉ RUPTURE/LICENCIEMENT : 
-       - De 0 à 10 ans d'ancienneté : 1/4 de mois par année.
-       - Au-delà de 10 ans : 1/3 de mois pour la fraction > 10 ans.
-       - Proratisation : (Mois / 12). Exemple : 4 ans 2 mois = 4,166 ans.
-    2. HEURES SUPPLÉMENTAIRES : Majorations de 25% (de la 36h à la 43h) et 50% (dès la 44h).
-    3. TEMPS : Conversion décimale systématique (Minutes / 60).
-    4. PLAFOND SS : Proratisation en cas d'entrée/sortie (Plafond * Jours présence / Jours mois).
+    PROTOCOLES OBLIGATOIRES 2026 (À APPLIQUER STRICTEMENT) :
+    1. INDEMNITÉ RUPTURE/LICENCIEMENT (CALCUL PAR TRANCHES) : 
+       - Tranche A (0 à 10 ans) : (Salaire_Ref / 4) * 10.
+       - Tranche B (Au-delà de 10 ans) : (Salaire_Ref / 3) * (Ancienneté_Totale - 10).
+       - Total = Tranche A + Tranche B.
+       - Proratisation ancienneté : Années + (Mois / 12). (Ex: 12 ans 9 mois = 12,75 ans).
+    2. HEURES SUPPLÉMENTAIRES : Majoration de 25% (heures 36 à 43) puis 50% (dès la 44ème heure).
+    3. TEMPS : Conversion décimale obligatoire (Minutes / 60). Jamais de format 1h30 pour les calculs.
+    4. PLAFOND SS : Proratisation entrée/sortie = (4005 / Jours_Calendaires_Mois) * Jours_Presence_Calendaires.

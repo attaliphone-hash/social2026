@@ -40,8 +40,9 @@ class SocialRuleEngine:
 
         query_words = self._tokenize(query)
         
-        # 1. LE SOCLE : Récupération systématique des constantes vitales
-        vital_ids = ["SMIC_2026", "PASS_2026", "MG_2026"]
+        # 1. LE SOCLE : Récupération systématique des constantes vitales et des PROTOCOLES
+        # Ajout de PROTOCOLE_CALCUL_SOCIAL pour garantir le calcul par tranches (1/4 - 1/3)
+        vital_ids = ["SMIC_2026", "PASS_2026", "MG_2026", "PROTOCOLE_CALCUL_SOCIAL"]
         vital_rules = [r for r in self.rules if r.get("id") in vital_ids]
 
         # 2. RECHERCHE PAR MOTS-CLÉS
@@ -74,6 +75,7 @@ class SocialRuleEngine:
         results.sort(key=lambda x: x[0], reverse=True)
         matched_rules = [r for _, r in results[:top_k]]
 
+        # Retourne les règles vitales (Maths/Plafonds) + les règles spécifiques trouvées
         return vital_rules + matched_rules
 
     def format_certified_facts(self, matched_rules):
@@ -99,7 +101,6 @@ class SocialRuleEngine:
                 return r.get("derniere_maj")
         return "Janvier 2026"
 
-    # --- NOUVELLE MÉTHODE POUR LA V68 (CRITIQUE) ---
     def get_rule_value(self, rule_id: str, value_key: str):
         """
         Extrait une valeur numérique précise du YAML pour l'injection dans le Prompt.
