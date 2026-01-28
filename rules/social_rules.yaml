@@ -112,10 +112,10 @@
 - id: SBI_2026
   keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie"]
   valeurs:
-    montant: 645.50
+    montant: 646.52
   derniere_maj: "Janvier 2026"
-  source: "Art. R162-2 du Code des procédures civiles d'exécution"
-  text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 645,50 €."
+  source: "Décret n° 2025-XXXX (RSA 2026)"
+  text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 646,52 €."
 
 # -------------------------------------------------------------------------
 # 4. RÉDUCTION GÉNÉRALE (RGDU)
