@@ -15,11 +15,11 @@ class IAService:
                 pc = Pinecone(api_key=self.config.pinecone_api_key)
                 index_name = "expert-social"
                 
-                # --- CORRECTION ICI (Ligne 20) : Retrait du préfixe "models/" ---
+
                 embeddings = GoogleGenerativeAIEmbeddings(
-                    model="text-embedding-004", 
-                    google_api_key=self.config.google_api_key
-                )
+    model="models/gemini-embedding-001",  # ✅ CORRECT
+    google_api_key=self.config.google_api_key
+)
                 
                 # Connexion au VectorStore LangChain
                 self.vectorstore = PineconeVectorStore(
