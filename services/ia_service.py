@@ -16,10 +16,7 @@ class IAService:
                 index_name = "expert-social"
                 
 
-                embeddings = GoogleGenerativeAIEmbeddings(
-    model="text-embedding-004", 
-    google_api_key=self.config.google_api_key
-)
+                embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
                 
                 # Connexion au VectorStore LangChain
                 self.vectorstore = PineconeVectorStore(
