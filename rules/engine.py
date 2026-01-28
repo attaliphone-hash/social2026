@@ -34,15 +34,24 @@ class SocialRuleEngine:
         words = [w.strip("'") for w in text.split() if w.strip("'")]
         return words
 
-    def match_rules(self, query: str, top_k: int = 5, min_score: int = 2):
+    def match_rules(self, query: str, top_k: int = 7, min_score: int = 1):
+        # MODIF 1 : top_k passé à 7 pour avoir plus de contexte
+        # MODIF 2 : min_score passé à 1 (CRITIQUE pour ne rien rater)
+        
         if not query:
             return []
 
         query_words = self._tokenize(query)
         
-        # 1. LE SOCLE : Récupération systématique des constantes vitales et des PROTOCOLES
-        # Ajout de PROTOCOLE_CALCUL_SOCIAL pour garantir le calcul par tranches (1/4 - 1/3)
-        vital_ids = ["SMIC_2026", "PASS_2026", "MG_2026", "PROTOCOLE_CALCUL_SOCIAL"]
+        # 1. LE SOCLE : Récupération systématique des constantes vitales
+        # Ajout de CSG_CRDS pour garantir les calculs Brut > Net
+        vital_ids = [
+            "SMIC_2026", 
+            "PASS_2026", 
+            "MG_2026", 
+            "PROTOCOLE_CALCUL_SOCIAL",
+            "CSG_CRDS_2026" 
+        ]
         vital_rules = [r for r in self.rules if r.get("id") in vital_ids]
 
         # 2. RECHERCHE PAR MOTS-CLÉS
@@ -63,11 +72,11 @@ class SocialRuleEngine:
                 if w in rule_kw_set:
                     score += 1
 
-            # Bonus pour les requêtes courtes (détection d'intention)
-            if len(query_words) <= 3:
+            # Bonus pour les requêtes courtes (détection d'intention forte)
+            if len(query_words) <= 4: # J'ai élargi un peu la notion de "courte"
                 for kw in rule_keywords:
-                    if kw in query.lower():
-                        score += 2
+                    if kw in query.lower(): # Matching partiel accepté pour les mots courts
+                        score += 1
 
             if score >= min_score:
                 results.append((score, rule))
@@ -75,7 +84,7 @@ class SocialRuleEngine:
         results.sort(key=lambda x: x[0], reverse=True)
         matched_rules = [r for _, r in results[:top_k]]
 
-        # Retourne les règles vitales (Maths/Plafonds) + les règles spécifiques trouvées
+        # Retourne les règles vitales + les règles spécifiques trouvées
         return vital_rules + matched_rules
 
     def format_certified_facts(self, matched_rules):
@@ -83,7 +92,15 @@ class SocialRuleEngine:
             return ""
 
         lines = []
+        # On utilise un set pour éviter les doublons si une règle vitale est aussi matchée par mot-clé
+        seen_ids = set()
+        
         for r in matched_rules:
+            r_id = r.get("id")
+            if r_id in seen_ids:
+                continue
+            seen_ids.add(r_id)
+            
             text = (r.get("text") or "").strip()
             src = (r.get("source") or "Règle Officielle").strip()
             if text:
@@ -95,7 +112,6 @@ class SocialRuleEngine:
         """Récupère la date de dernière mise à jour définie dans le YAML."""
         if not self.rules:
             return "Janvier 2026"
-        # On regarde la première règle qui a une date, ou par défaut Janvier 2026
         for r in self.rules:
             if r.get("derniere_maj"):
                 return r.get("derniere_maj")
@@ -103,8 +119,7 @@ class SocialRuleEngine:
 
     def get_rule_value(self, rule_id: str, value_key: str):
         """
-        Extrait une valeur numérique précise du YAML pour l'injection dans le Prompt.
-        Ex: get_rule_value("SBI_2026", "montant") -> 645.50
+        Extrait une valeur numérique précise du YAML.
         """
         for rule in self.rules:
             if rule.get("id") == rule_id:

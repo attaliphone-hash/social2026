@@ -60,7 +60,7 @@
     limite_mensuelle_1j_semaine: 11.20
   derniere_maj: "Janvier 2026"
   source: "BOSS - Frais professionnels (Barème URSSAF 2026)"
-  text: "L'indemnité forfaitaire de télétravail exonérée est de 2,80 € par jour télétravaillé. En cas d'allocation forfaitaire mensuelle, la limite est de 11,20 € par jour de télétravail hebdomadaire (ex: 22,40 € pour 2 jours, 33,60 € pour 3 jours, etc.)."
+  text: "RÈGLE IMPÉRATIVE 2026 : L'indemnité exonérée est de 2,80 € par jour. Pour l'allocation mensuelle, la limite est de 11,20 € MULTIPLIÉ par le nombre de jours de télétravail par semaine. EXEMPLES OFFICIELS : 1 jour = 11,20 €. 2 jours = 22,40 €. 3 jours = 33,60 €. 4 jours = 44,80 €."
 
 - id: AVN_VEHICULE_ELEC_2026
   keywords: ["vehicule", "véhicule", "electrique", "électrique", "abattement", "taux", "avantage", "nature"]
@@ -190,7 +190,7 @@
     3. TEMPS : Conversion décimale obligatoire (Minutes / 60). Jamais de format 1h30 pour les calculs.
     4. PLAFOND SS : Proratisation entrée/sortie = (4005 / Jours_Calendaires_Mois) * Jours_Presence_Calendaires.
 
-    # -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # 8. TAUX & CONSTANTES UNIVERSELS (MANQUANTS DANS LA V1)
 # -------------------------------------------------------------------------
 - id: CSG_CRDS_2026
