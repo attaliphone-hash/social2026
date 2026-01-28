@@ -127,8 +127,8 @@
     T_plus_50: 0.4021
     smic_annuel: 21876.36
   derniere_maj: "Janvier 2026"
-  source: "Art. L241-13 du Code de la sécurité sociale"
-  text: "RÈGLE RGDU 2026 : T = 0,3981 (moins de 50 salariés) et T = 0,4021 (50 salariés et plus). Au niveau du SMIC, l'exonération patronale est totale."
+  source: "Art. L241-13 du Code de la sécurité sociale (Réforme 2026)"
+  text: "RÈGLE RGDU 2026 : Le dispositif est étendu jusqu'à 3 SMIC annuels (contre 1,6 avant). T = 0,3981 (moins de 50 salariés) et T = 0,4021 (50 salariés et plus). La formule de calcul est désormais polynomiale."
 
 # -------------------------------------------------------------------------
 # 5. PRESTATIONS SÉCU (IJSS) & INDEMNITÉS RUPTURE (CERTIFIÉ EXACT)
@@ -172,6 +172,19 @@
   derniere_maj: "Janvier 2026"
   source: "Art. 231 du Code général des impôts (Barème 2026)"
   text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% sur la part de salaire annuel comprise entre 8 985 € et 17 936 €. 13,60% au-delà de 17 936 €."
+
+# -------------------------------------------------------------------------
+# 6 BIS. EXONÉRATIONS CIBLÉES 2026
+# -------------------------------------------------------------------------
+- id: EXONERATION_JEI_2026
+  keywords: ["jei", "jeune", "entreprise", "innovante", "recherche", "développement", "r&d"]
+  valeurs:
+    plafond_etablissement_pass: 5
+    plafond_etablissement_euro: 240300
+    plafond_salarie_smic: 4.5
+  derniere_maj: "Janvier 2026"
+  source: "Loi de Finances 2026 / BOSS"
+  text: "RÈGLE JEI 2026 : L'exonération patronale est plafonnée à 5 PASS par établissement et par an (soit 240 300 €). Elle s'applique aux salariés R&D rémunérés moins de 4,5 SMIC."
 
 # -------------------------------------------------------------------------
 # 7. PROTOCOLES DE CALCUL UNIVERSELS (ZÉRO ERREUR)
