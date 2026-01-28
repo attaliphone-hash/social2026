@@ -131,23 +131,24 @@
   text: "RÈGLE RGDU 2026 : T = 0,3981 (moins de 50 salariés) et T = 0,4021 (50 salariés et plus). Au niveau du SMIC, l'exonération patronale est totale."
 
 # -------------------------------------------------------------------------
-# 5. PRESTATIONS SÉCU (IJSS) & INDEMNITÉS RUPTURE (NOUVEAU)
+# 5. PRESTATIONS SÉCU (IJSS) & INDEMNITÉS RUPTURE (CERTIFIÉ EXACT)
 # -------------------------------------------------------------------------
 - id: IJSS_MALADIE_2026
   keywords: ["ijss", "maladie", "arret", "indemnite", "journaliere", "cpam", "plafond"]
   valeurs:
-    plafond_journalier: 54.69
+    plafond_journalier_brut: 53.94
   derniere_maj: "Janvier 2026"
-  source: "Art. R323-4 du Code de la sécurité sociale"
-  text: "L'IJSS Maladie maximale est de 54,69 € bruts par jour en 2026 (Calculée sur la base de 1,8 SMIC)."
+  source: "Art. R323-4 CSS (Calcul sur base SMIC 2026)"
+  text: "L'IJSS Maladie maximale est de 53,94 € bruts par jour en 2026 (plafond calculé sur 1,8 fois le SMIC en vigueur)."
 
 - id: IJSS_MATERNITE_2026
   keywords: ["ijss", "maternite", "maternité", "plafond", "grossesse"]
   valeurs:
-    plafond_journalier: 105.33
+    plafond_journalier_brut: 131.67
+    plafond_journalier_net_estime: 104.02
   derniere_maj: "Janvier 2026"
-  source: "Art. R331-5 du Code de la sécurité sociale"
-  text: "L'IJSS Maternité maximale est de 105,33 € par jour en 2026 (Calculée sur le Plafond Mensuel SS de 4 005 €)."
+  source: "Art. R331-5 CSS (Calcul sur base PASS 2026)"
+  text: "L'IJSS Maternité journalière maximale est de 131,67 € bruts (calculée sur le Plafond Mensuel de la Sécurité Sociale de 4 005 €)."
 
 - id: EXONERATION_RUPTURE_2026
   keywords: ["rupture", "licenciement", "conventionnelle", "indemnité", "exoneration", "plafond", "pass"]
@@ -188,3 +189,25 @@
     2. HEURES SUPPLÉMENTAIRES : Majoration de 25% (heures 36 à 43) puis 50% (dès la 44ème heure).
     3. TEMPS : Conversion décimale obligatoire (Minutes / 60). Jamais de format 1h30 pour les calculs.
     4. PLAFOND SS : Proratisation entrée/sortie = (4005 / Jours_Calendaires_Mois) * Jours_Presence_Calendaires.
+
+    # -------------------------------------------------------------------------
+# 8. TAUX & CONSTANTES UNIVERSELS (MANQUANTS DANS LA V1)
+# -------------------------------------------------------------------------
+- id: CSG_CRDS_2026
+  keywords: ["csg", "crds", "taux", "salaire", "abattement", "non_deductible"]
+  valeurs:
+    taux_global: 9.70
+    part_deductible: 6.80
+    part_non_deductible: 2.90
+    abattement_assiette: 1.75
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale"
+  text: "Les revenus d'activité sont soumis à la CSG/CRDS au taux global de 9,70% sur 98,25% du salaire brut (après abattement de 1,75%)."
+
+- id: TRANSPORT_2026
+  keywords: ["transport", "navigo", "abonnement", "prise", "charge", "employeur", "50%"]
+  valeurs:
+    taux_obligatoire: 50
+  derniere_maj: "Janvier 2026"
+  source: "Art. L3261-2 du Code du travail"
+  text: "L'employeur a l'obligation de prendre en charge 50% du prix des titres d'abonnements souscrits par les salariés pour leurs déplacements domicile-travail."
