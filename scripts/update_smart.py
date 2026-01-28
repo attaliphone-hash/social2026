@@ -16,10 +16,7 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 index = pc.Index(INDEX_NAME)
 
 # --- CORRECTION ICI (Ligne 15) : Retrait du préfixe "models/" ---
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001",  # ✅ NOUVEAU
-    google_api_key=os.getenv("GOOGLE_API_KEY")
-)
+embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
 
 def update_dynamic_docs():
     print("\n" + "="*60)

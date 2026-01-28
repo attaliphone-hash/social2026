@@ -17,7 +17,7 @@ class IAService:
                 
 
                 embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001",  # ✅ CORRECT
+    model="text-embedding-004", 
     google_api_key=self.config.google_api_key
 )
                 
