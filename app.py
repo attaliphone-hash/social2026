@@ -230,12 +230,10 @@ if user_input:
                 sources_seen.append(pretty_name)
             context_str += f"[SOURCE: {pretty_name}]\n{d.page_content}\n\n"
 
-        # Préparation des valeurs dynamiques pour le prompt
-        sbi_val = f"{engine.get_rule_value('SBI_2026', 'montant') or 645.50:,.2f} €".replace(",", "X").replace(".", ",").replace("X", " ")
-        pass_val = f"{(engine.get_rule_value('PASS_2026', 'annuel') or 48060)*2:,.2f} €".replace(",", "X").replace(".", ",").replace("X", " ")
 
-        # --- LE CERVEAU V80 (PROMPT ARMOR / ANTI-LAXISME) ---
-template = """
+
+# --- LE CERVEAU V80 (PROMPT ARMOR / ANTI-LAXISME) ---
+        template = """
 Tu es l'Expert Social Pro 2026.
 
 💎 RÈGLES DE FORME ÉLITE (CRITIQUE) :
@@ -336,8 +334,7 @@ Document Utilisateur :
 QUESTION : {question}
 """
 
-        
-       # --- PRÉPARATION DES SOURCES ---
+        # --- PRÉPARATION DES SOURCES ---
         if facts and not sources_seen:
             display_sources = "Données officielles 2026"
         elif sources_seen:
@@ -356,10 +353,7 @@ QUESTION : {question}
                 "question": user_input, 
                 "sources_list": display_sources, 
                 "certified_facts": facts,
-                "user_doc_section": f"Document Utilisateur : {user_doc_content}" if user_doc_content else "",
-                "date_maj": engine.get_yaml_update_date(),
-                "sbi_val": sbi_val,      
-                "pass_2_val": pass_val 
+                "user_doc_section": f"Document Utilisateur : {user_doc_content}" if user_doc_content else ""
             }):
                 full_response += chunk
                 box.markdown(full_response + "▌", unsafe_allow_html=True)
