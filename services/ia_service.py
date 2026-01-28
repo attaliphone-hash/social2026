@@ -15,15 +15,19 @@ class IAService:
                 pc = Pinecone(api_key=self.config.pinecone_api_key)
                 index_name = "expert-social"
                 
-
-                embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+                # --- CORRECTION 2026 : Passage au nouveau modèle standard gemini-embedding-001 ---
+                # Ce modèle génère 3072 dimensions par défaut.
+                embeddings = GoogleGenerativeAIEmbeddings(
+                    model="models/gemini-embedding-001", 
+                    google_api_key=self.config.google_api_key
+                )
                 
                 # Connexion au VectorStore LangChain
                 self.vectorstore = PineconeVectorStore(
                     index_name=index_name,
                     embedding=embeddings
                 )
-                print("✅ Pinecone connecté avec succès.")
+                print("✅ Pinecone connecté avec succès (Modèle 001 - 3072d).")
             except Exception as e:
                 print(f"❌ Erreur critique Pinecone : {e}")
 

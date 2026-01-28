@@ -15,8 +15,8 @@ INDEX_NAME = "expert-social"
 pc = Pinecone(api_key=PINECONE_API_KEY)
 index = pc.Index(INDEX_NAME)
 
-# --- CORRECTION ICI (Ligne 15) : Retrait du préfixe "models/" ---
-embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+# Utilisation du nouveau modèle stable 2026
+embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
 def update_dynamic_docs():
     print("\n" + "="*60)
