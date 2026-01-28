@@ -334,6 +334,14 @@ QUESTION : {question}
 """
 
         
+       # --- PRÉPARATION DES SOURCES ---
+        if facts and not sources_seen:
+            display_sources = "Données officielles 2026"
+        elif sources_seen:
+            display_sources = ", ".join(sources_seen)
+        else:
+            display_sources = "Documentation officielle 2026"
+
         # Exécution de la chaîne IA
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | ia.get_llm() | StrOutputParser()
@@ -343,7 +351,7 @@ QUESTION : {question}
             for chunk in chain.stream({
                 "context": context_str, 
                 "question": user_input, 
-                "sources_list": ", ".join(sources_seen) if sources_seen else "Référentiel interne", 
+                "sources_list": display_sources, 
                 "certified_facts": facts,
                 "user_doc_section": f"Document Utilisateur : {user_doc_content}" if user_doc_content else "",
                 "date_maj": engine.get_yaml_update_date(),
