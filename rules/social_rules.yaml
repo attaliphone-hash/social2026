@@ -110,11 +110,9 @@
   text: "Une aide exceptionnelle de 6 000 € est versée aux employeurs pour la première année d'exécution des contrats d'apprentissage conclus en 2026." 
 
 - id: SBI_2026
-  keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie"]
-  valeurs:
-    montant: 646.52
+  # ...
   derniere_maj: "Janvier 2026"
-  source: "Décret n° 2025-XXXX (RSA 2026)"
+  # source: SUPPRIMÉE (L'IA va chercher dans Pinecone)
   text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 646,52 €."
 
 # -------------------------------------------------------------------------
