@@ -21,7 +21,7 @@
     horaire: 12.02
     mensuel_35h: 1823.03
   derniere_maj: "Janvier 2026"
-  source: "Décret n° 2025-XXXX de revalorisation du SMIC"
+  # source: SUPPRIMÉE (L'IA cherchera le décret exact dans Pinecone)
   text: "Au 1er janvier 2026, le SMIC horaire est de 12,02 €, soit 1 823,03 € mensuel pour 35h."
 
 - id: MG_2026
@@ -29,7 +29,7 @@
   valeurs:
     montant: 4.25
   derniere_maj: "Janvier 2026"
-  source: "Décret n° 2025-XXXX (Valeur du Minimum Garanti)"
+  # source: SUPPRIMÉE (L'IA cherchera le décret exact dans Pinecone)
   text: "Le Minimum Garanti (MG) est fixé à 4,25 € pour 2026."
 
 # -------------------------------------------------------------------------
@@ -110,7 +110,9 @@
   text: "Une aide exceptionnelle de 6 000 € est versée aux employeurs pour la première année d'exécution des contrats d'apprentissage conclus en 2026." 
 
 - id: SBI_2026
-  # ...
+  keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie"]
+  valeurs:
+    montant: 646.52
   derniere_maj: "Janvier 2026"
   # source: SUPPRIMÉE (L'IA va chercher dans Pinecone)
   text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 646,52 €."
