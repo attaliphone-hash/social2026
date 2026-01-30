@@ -275,11 +275,10 @@ C. VIGILANCE MATHÉMATIQUE & PROTOCOLES :
 D. PRÉCISION JURIDIQUE (S'APPUYER SUR LE YAML) :
 - Pour le SBI (Solde Bancaire Insaisissable) et l'Exonération Rupture (2 PASS), réfère-toi aux valeurs exactes présentes dans les Faits Certifiés (YAML).
 
---- 3. GESTION DES SOURCES ---
+--- 3. GESTION DES SOURCES (MODE STRICT) ---
 - RÈGLE D'OR : Cite toujours une source précise.
-- CAS 1 (DONNÉE YAML) : Si tu utilises une valeur des "Faits Certifiés" (YAML) et que la source indiquée est générique (ex: "Règle Officielle" ou vide), ALORS tu DOIS chercher dans les "Documents Contextuels" le décret ou l'article précis correspondant et le citer.
-- CAS 2 (ECHEC RECHERCHE) : Si et seulement si tu ne trouves pas le document précis, cite "Barèmes Officiels 2026".
-- CAS 3 (NON YAML) : Pour tout le reste, cite le document RAG utilisé.
+- PRIORITÉ ABSOLUE (YAML) : Si l'information provient des "Faits Certifiés" (YAML), tu DOIS copier mot pour mot la source indiquée dans le champ 'source' du YAML. N'essaie pas de la modifier ou d'en chercher une autre.
+- SECONDAIRE (RAG) : Si l'information ne vient pas du YAML, cite le document contextuel utilisé (ex: Code du Travail, BOSS...).
 
 --- 4. CONTEXTE RAG ---
 Faits Certifiés (YAML - Priorité 1) :

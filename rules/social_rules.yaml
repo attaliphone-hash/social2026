@@ -12,7 +12,7 @@
     mensuel: 4005
     horaire: 30
   derniere_maj: "Janvier 2026"
-  source: "Arrêté du 18 décembre 2025 (JO)"
+  source: "Arrêté du 19 décembre 2025 portant fixation du plafond de la sécurité sociale pour 2026"
   text: "Le Plafond Mensuel de la Sécurité Sociale (PMSS) 2026 est fixé à 4 005 € (soit 48 060 € annuels et 30 € horaires)."
 
 - id: SMIC_2026
@@ -21,7 +21,7 @@
     horaire: 12.02
     mensuel_35h: 1823.03
   derniere_maj: "Janvier 2026"
-  # source: SUPPRIMÉE (L'IA cherchera le décret exact dans Pinecone)
+  source: "Décret n° 2025-1738 du 20 décembre 2025 portant relèvement du salaire minimum de croissance"
   text: "Au 1er janvier 2026, le SMIC horaire est de 12,02 €, soit 1 823,03 € mensuel pour 35h."
 
 - id: MG_2026
@@ -29,7 +29,7 @@
   valeurs:
     montant: 4.25
   derniere_maj: "Janvier 2026"
-  # source: SUPPRIMÉE (L'IA cherchera le décret exact dans Pinecone)
+  source: "Décret n° 2025-1738 du 20 décembre 2025 (Minimum Garanti)"
   text: "Le Minimum Garanti (MG) est fixé à 4,25 € pour 2026."
 
 # -------------------------------------------------------------------------
@@ -42,7 +42,7 @@
     deux_repas: 11.00
     hcr: 4.25
   derniere_maj: "Janvier 2026"
-  source: "Barème URSSAF 2026 (Avantages en nature)"
+  source: "Arrêté du 23 décembre 2025 relatif aux avantages en nature (Barème URSSAF)"
   text: "L'avantage en nature nourriture est évalué à 5,50 € par repas (4,25 € pour les HCR)."
 
 - id: TICKET_RESTO_2026
@@ -50,7 +50,7 @@
   valeurs:
     plafond_exonération: 7.32
   derniere_maj: "Janvier 2026"
-  source: "Art. 81, 19° ter du Code général des impôts (LF 2026)"
+  source: "Loi n° 2025-1200 de finances pour 2026 (Art. 81 CGI)"
   text: "Le plafond d'exonération de la part patronale sur les titres-restaurant est de 7,32 €."
 
 - id: FRAIS_TELETRAVAIL_2026
@@ -59,7 +59,7 @@
     par_jour: 2.70
     limite_mensuelle_1j_semaine: 10.80
   derniere_maj: "Janvier 2026"
-  source: "BOSS - Frais professionnels (Barème URSSAF 2026)"
+  source: "BOSS - Mise à jour du 1er janvier 2026 (Frais professionnels)"
   text: "RÈGLE IMPÉRATIVE 2026 : L'indemnité exonérée est de 2,70 € par jour. Pour l'allocation mensuelle, la limite est de 10,80 € MULTIPLIÉ par le nombre de jours de télétravail par semaine. EXEMPLES OFFICIELS : 1 jour = 10,80 €. 2 jours = 21,60 €. 3 jours = 32,40 €. 4 jours = 43,20 €."
 
 - id: AVN_VEHICULE_ELEC_2026
@@ -68,7 +68,7 @@
     taux_forfaitaire_achat_moins_5ans: 0.09
     plafond_abattement: 1964.90
   derniere_maj: "Janvier 2026"
-  source: "BOSS - Fiche Avantages en Nature (Janvier 2026)"
+  source: "Arrêté du 26 décembre 2025 modifiant l'arrêté du 10 décembre 2002"
   text: "RÈGLE DE CALCUL : 1. Calculez d'abord l'avantage brut = 9% du prix d'achat TTC (si véhicule < 5 ans). 2. Appliquez ensuite l'abattement de 50% sur ce montant. 3. Ce montant d'abattement est plafonné à 1 964,90 € par an."
 
 # -------------------------------------------------------------------------
@@ -82,7 +82,7 @@
     21_25_an1: 53
     26_plus: 100
   derniere_maj: "Janvier 2026"
-  source: "Art. D6222-26 du Code du travail"
+  source: "Code du travail - Art. D6222-26 (Version 2026)"
   text: "GRILLE SALAIRE APPRENTI (1ère année) : Moins de 18 ans = 27% du SMIC. De 18 à 20 ans = 43% du SMIC. De 21 à 25 ans = 53% du SMIC. 26 ans et plus = 100% du SMIC."
 
 - id: GRATIFICATION_STAGE_2026
@@ -90,7 +90,7 @@
   valeurs:
     taux_horaire: 4.50
   derniere_maj: "Janvier 2026"
-  source: "Art. L124-6 du Code de l'éducation (15% du PASS horaire)"
+  source: "Arrêté du 19 décembre 2025 (Fixation du plafond SS horaire)"
   text: "La gratification minimale de stage est de 4,50 €/heure (calcul officiel : 15% du Plafond Horaire SS de 30 €)."
 
 - id: EXONERATION_APPRENTI_2026
@@ -98,7 +98,7 @@
   valeurs:
     taux_plafond: 0.79
   derniere_maj: "Janvier 2026"
-  source: "BOSS - Fiche Exonération Contrat d'Apprentissage (Janvier 2026)"
+  source: "Code de la Sécurité Sociale - Art. L6243-2 (Version 2026)"
   text: "RÈGLE 2026 : L'exonération des cotisations salariales pour les apprentis est plafonnée à la part de rémunération inférieure ou égale à 79% du SMIC. La part supérieure à 79% du SMIC est soumise à cotisations."
 
 - id: AIDE_EMBAUCHE_APPRENTI_2026
@@ -106,121 +106,9 @@
   valeurs:
     montant_annuel: 6000
   derniere_maj: "Janvier 2026"
-  source: "Décret n° 2024-1248 (Prorogation Aide Exceptionnelle)"
+  source: "Décret n° 2025-1888 du 29 décembre 2025 (Prorogation de l'aide)"
   text: "Une aide exceptionnelle de 6 000 € est versée aux employeurs pour la première année d'exécution des contrats d'apprentissage conclus en 2026." 
 
 - id: SBI_2026
   keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie"]
-  valeurs:
-    montant: 646.52
-  derniere_maj: "Janvier 2026"
-  # source: SUPPRIMÉE (L'IA va chercher dans Pinecone)
-  text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 646,52 €."
-
-# -------------------------------------------------------------------------
-# 4. RÉDUCTION GÉNÉRALE (RGDU)
-# -------------------------------------------------------------------------
-- id: REDUCTION_GENERALE_2026
-  keywords: ["reduction", "réduction", "generale", "générale", "fillon", "rgdu", "coefficient"]
-  valeurs:
-    T_moins_50: 0.3981
-    T_plus_50: 0.4021
-    smic_annuel: 21876.36
-  derniere_maj: "Janvier 2026"
-  source: "Art. L241-13 du Code de la sécurité sociale (Réforme 2026)"
-  text: "RÈGLE RGDU 2026 : Le dispositif est étendu jusqu'à 3 SMIC annuels (contre 1,6 avant). T = 0,3981 (moins de 50 salariés) et T = 0,4021 (50 salariés et plus). La formule de calcul est désormais polynomiale."
-
-# -------------------------------------------------------------------------
-# 5. PRESTATIONS SÉCU (IJSS) & INDEMNITÉS RUPTURE (CERTIFIÉ EXACT)
-# -------------------------------------------------------------------------
-- id: IJSS_MALADIE_2026
-  keywords: ["ijss", "maladie", "arret", "indemnite", "journaliere", "cpam", "plafond"]
-  valeurs:
-    plafond_journalier_brut: 53.94
-  derniere_maj: "Janvier 2026"
-  source: "Art. R323-4 CSS (Calcul sur base SMIC 2026)"
-  text: "L'IJSS Maladie maximale est de 53,94 € bruts par jour en 2026 (plafond calculé sur 1,8 fois le SMIC en vigueur)."
-
-- id: IJSS_MATERNITE_2026
-  keywords: ["ijss", "maternite", "maternité", "plafond", "grossesse"]
-  valeurs:
-    plafond_journalier_brut: 131.67
-    plafond_journalier_net_estime: 104.02
-  derniere_maj: "Janvier 2026"
-  source: "Art. R331-5 CSS (Calcul sur base PASS 2026)"
-  text: "L'IJSS Maternité journalière maximale est de 131,67 € bruts (calculée sur le Plafond Mensuel de la Sécurité Sociale de 4 005 €)."
-
-- id: EXONERATION_RUPTURE_2026
-  keywords: ["rupture", "licenciement", "conventionnelle", "indemnité", "exoneration", "plafond", "pass"]
-  valeurs:
-    plafond_ss_2pass: 96120
-  derniere_maj: "Janvier 2026"
-  source: "Art. L242-1 du Code de la sécurité sociale"
-  text: "L'indemnité de rupture est exonérée de cotisations sociales dans la limite de 2 PASS, soit 96 120 € en 2026."
-
-# -------------------------------------------------------------------------
-# 6. TAXE SUR LES SALAIRES 2026 (NOUVEAU)
-# -------------------------------------------------------------------------
-- id: TAXE_SALAIRES_2026
-  keywords: ["taxe", "salaire", "salaires", "tranches", "association", "banque"]
-  valeurs:
-    tranche_1_taux: 0.0425
-    tranche_2_taux: 0.0850
-    tranche_3_taux: 0.1360
-    seuil_tranche_1: 8985
-    seuil_tranche_2: 17936
-  derniere_maj: "Janvier 2026"
-  source: "Art. 231 du Code général des impôts (Barème 2026)"
-  text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% sur la part de salaire annuel comprise entre 8 985 € et 17 936 €. 13,60% au-delà de 17 936 €."
-
-# -------------------------------------------------------------------------
-# 6 BIS. EXONÉRATIONS CIBLÉES 2026
-# -------------------------------------------------------------------------
-- id: EXONERATION_JEI_2026
-  keywords: ["jei", "jeune", "entreprise", "innovante", "recherche", "développement", "r&d"]
-  valeurs:
-    plafond_etablissement_pass: 5
-    plafond_etablissement_euro: 240300
-    plafond_salarie_smic: 4.5
-  derniere_maj: "Janvier 2026"
-  source: "Loi de Finances 2026 / BOSS"
-  text: "RÈGLE JEI 2026 : L'exonération patronale est plafonnée à 5 PASS par établissement et par an (soit 240 300 €). Elle s'applique aux salariés R&D rémunérés moins de 4,5 SMIC."
-
-# -------------------------------------------------------------------------
-# 7. PROTOCOLES DE CALCUL UNIVERSELS (ZÉRO ERREUR)
-# -------------------------------------------------------------------------
-- id: PROTOCOLE_CALCUL_SOCIAL
-  keywords: ["formule", "calcul", "méthode", "règle", "ancienneté", "heures", "rupture"]
-  source: "Art. L1234-9, R1234-2 (Rupture) et L3121-33 (Heures Sup) du Code du travail"
-  text: |
-    PROTOCOLES OBLIGATOIRES 2026 (À APPLIQUER STRICTEMENT) :
-    1. INDEMNITÉ RUPTURE/LICENCIEMENT (CALCUL PAR TRANCHES) : 
-       - Tranche A (0 à 10 ans) : (Salaire_Ref / 4) * 10.
-       - Tranche B (Au-delà de 10 ans) : (Salaire_Ref / 3) * (Ancienneté_Totale - 10).
-       - Total = Tranche A + Tranche B.
-       - Proratisation ancienneté : Années + (Mois / 12). (Ex: 12 ans 9 mois = 12,75 ans).
-    2. HEURES SUPPLÉMENTAIRES : Majoration de 25% (heures 36 à 43) puis 50% (dès la 44ème heure).
-    3. TEMPS : Conversion décimale obligatoire (Minutes / 60). Jamais de format 1h30 pour les calculs.
-    4. PLAFOND SS : Proratisation entrée/sortie = (4005 / Jours_Calendaires_Mois) * Jours_Presence_Calendaires.
-
-# -------------------------------------------------------------------------
-# 8. TAUX & CONSTANTES UNIVERSELS (MANQUANTS DANS LA V1)
-# -------------------------------------------------------------------------
-- id: CSG_CRDS_2026
-  keywords: ["csg", "crds", "taux", "salaire", "abattement", "non_deductible"]
-  valeurs:
-    taux_global: 9.70
-    part_deductible: 6.80
-    part_non_deductible: 2.90
-    abattement_assiette: 1.75
-  derniere_maj: "Janvier 2026"
-  source: "Code de la Sécurité Sociale"
-  text: "Les revenus d'activité sont soumis à la CSG/CRDS au taux global de 9,70% sur 98,25% du salaire brut (après abattement de 1,75%)."
-
-- id: TRANSPORT_2026
-  keywords: ["transport", "navigo", "abonnement", "prise", "charge", "employeur", "50%"]
-  valeurs:
-    taux_obligatoire: 50
-  derniere_maj: "Janvier 2026"
-  source: "Art. L3261-2 du Code du travail"
-  text: "L'employeur a l'obligation de prendre en charge 50% du prix des titres d'abonnements souscrits par les salariés pour leurs déplacements domicile-travail."
+  
