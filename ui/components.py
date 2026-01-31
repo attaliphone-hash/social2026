@@ -98,7 +98,7 @@ class UIComponents:
                 <h3 style="color: #1565c0; margin: 0; font-size: 16px;">Mensuel</h3>
                 <div style="margin-top: 5px; margin-bottom: 5px;">
                     <span style="color: #0d47a1; font-size: 20px; font-weight: bold;">35 €</span> 
-                    <span style="font-size:12px; color:#555;">HT / MOIS</span>
+                    <span style="font-size:12px; color:#555;">NET / MOIS</span>
                 </div>
                 <p style="color: #444; font-size: 11px; margin: 0; line-height: 1.2;">Sans engagement</p>
             </div>
@@ -112,7 +112,7 @@ class UIComponents:
                 <h3 style="color: #2e7d32; margin: 0; font-size: 16px;">Annuel</h3>
                 <div style="margin-top: 5px; margin-bottom: 5px;">
                     <span style="color: #1b5e20; font-size: 20px; font-weight: bold;">350 €</span> 
-                    <span style="font-size:12px; color:#555;">HT / AN</span>
+                    <span style="font-size:12px; color:#555;">NET / AN</span>
                 </div>
                 <p style="color: #444; font-size: 11px; margin: 0; line-height: 1.2;">✅ 2 mois offerts</p>
             </div>
