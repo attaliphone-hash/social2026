@@ -1,5 +1,5 @@
 # ==============================================================================
-# RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ (ULTIMATE)
+# RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ (ULTIMATE V2)
 # ==============================================================================
 
 # -------------------------------------------------------------------------
@@ -136,15 +136,16 @@
   text: "RÈGLE RGDU 2026 : Le dispositif est étendu jusqu'à 3 SMIC annuels (contre 1,6 avant). T = 0,3981 (moins de 50 salariés) et T = 0,4021 (50 salariés et plus). La formule de calcul est désormais polynomiale."
 
 # -------------------------------------------------------------------------
-# 5. PRESTATIONS SÉCU (IJSS) & INDEMNITÉS RUPTURE (CERTIFIÉ EXACT)
+# 5. PRESTATIONS SÉCU (IJSS) & INDEMNITÉS RUPTURE
 # -------------------------------------------------------------------------
 - id: IJSS_MALADIE_2026
-  keywords: ["ijss", "maladie", "arret", "indemnite", "journaliere", "cpam", "plafond"]
+  keywords: ["ijss", "maladie", "arret", "indemnite", "journaliere", "cpam", "plafond", "50%"]
   valeurs:
     plafond_journalier_brut: 53.94
+    taux_remuneration: 50
   derniere_maj: "Janvier 2026"
   source: "Code de la Sécurité Sociale - Art. R323-4 (Calcul SMIC 2026)"
-  text: "L'IJSS Maladie maximale est de 53,94 € bruts par jour en 2026 (plafond calculé sur 1,8 fois le SMIC en vigueur)."
+  text: "RÈGLE : L'IJSS Maladie est égale à 50% du Salaire Journalier de Base (moyenne 3 derniers mois). Elle est plafonnée à 53,94 € bruts par jour en 2026 (correspondant à un salaire mensuel de 1,8 SMIC)."
 
 - id: IJSS_MATERNITE_2026
   keywords: ["ijss", "maternite", "maternité", "plafond", "grossesse"]
@@ -175,7 +176,7 @@
 # 6. TAXE SUR LES SALAIRES 2026
 # -------------------------------------------------------------------------
 - id: TAXE_SALAIRES_2026
-  keywords: ["taxe", "salaire", "salaires", "tranches", "association", "banque"]
+  keywords: ["taxe", "salaire", "salaires", "tranches", "association", "banque", "decote"]
   valeurs:
     tranche_1_taux: 0.0425
     tranche_2_taux: 0.0850
@@ -184,7 +185,7 @@
     seuil_tranche_2: 17936
   derniere_maj: "Janvier 2026"
   source: "Code général des impôts - Article 231 (Barème 2026)"
-  text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% sur la part de salaire annuel comprise entre 8 985 € et 17 936 €. 13,60% au-delà de 17 936 €."
+  text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% sur la part de salaire annuel comprise entre 8 985 € et 17 936 €. 13,60% au-delà de 17 936 €. IMPORTANT : Une décote s'applique si la taxe annuelle est inférieure à 2 040 €. Une franchise totale s'applique si la taxe est inférieure à 1 200 €."
 
 # -------------------------------------------------------------------------
 # 6 BIS. EXONÉRATIONS CIBLÉES 2026
@@ -212,7 +213,7 @@
        - Tranche B (Au-delà de 10 ans) : (Salaire_Ref / 3) * (Ancienneté_Totale - 10).
        - Total = Tranche A + Tranche B.
        - Proratisation ancienneté : Années + (Mois / 12). (Ex: 12 ans 9 mois = 12,75 ans).
-    2. HEURES SUPPLÉMENTAIRES : Majoration de 25% (heures 36 à 43) puis 50% (dès la 44ème heure).
+    2. HEURES SUPPLÉMENTAIRES : Majoration de 25% (heures 36 à 43) puis 50% (dès la 44ème heure). EXONÉRATION : Les HS sont exonérées d'impôt sur le revenu (limite 7500€/an) et bénéficient d'une réduction de cotisations salariales (11,31%).
     3. TEMPS : Conversion décimale obligatoire (Minutes / 60). Jamais de format 1h30 pour les calculs.
     4. PLAFOND SS : Proratisation entrée/sortie = (4005 / Jours_Calendaires_Mois) * Jours_Presence_Calendaires.
 
@@ -231,12 +232,14 @@
   text: "Les revenus d'activité sont soumis à la CSG/CRDS au taux global de 9,70% sur 98,25% du salaire brut (après abattement de 1,75%)."
 
 - id: TRANSPORT_2026
-  keywords: ["transport", "navigo", "abonnement", "prise", "charge", "employeur", "50%"]
+  keywords: ["transport", "navigo", "abonnement", "fmd", "mobilité", "durable", "velo", "covoiturage"]
   valeurs:
-    taux_obligatoire: 50
+    taux_obligatoire_abonnements: 50
+    plafond_fmd_seul: 700
+    plafond_fmd_cumul: 800
   derniere_maj: "Janvier 2026"
-  source: "Code du travail - Art. L3261-2"
-  text: "L'employeur a l'obligation de prendre en charge 50% du prix des titres d'abonnements souscrits par les salariés pour leurs déplacements domicile-travail."
+  source: "Loi de Finances 2026 (Forfait Mobilité Durable)"
+  text: "1. ABONNEMENTS : Prise en charge obligatoire de 50%. 2. FORFAIT MOBILITÉ DURABLE (FMD) : Exonéré jusqu'à 700 €/an (ou 800 € en cas de cumul avec un abonnement transport)."
 
 # -------------------------------------------------------------------------
 # 9. TAUX DE COTISATIONS STANDARDS (URSSAF & RETRAITE 2026)
@@ -275,6 +278,12 @@
   derniere_maj: "Janvier 2026"
   source: "Barèmes URSSAF & AGIRC-ARRCO 2026 (Taux de droit commun)"
   text: "TAUX STANDARDS 2026 : Maladie employeur = 7% (si salaire < 2,5 SMIC) sinon 13%. Famille = 3,45% (si salaire < 3,5 SMIC) sinon 5,25%. Retraite Complémentaire T1 = 7,87% (Répartition 60/40). Retraite T2 = 21,59%."
+
+- id: REGIME_FRAIS_SANTE_2026
+  keywords: ["mutuelle", "prevoyance", "sante", "part", "patronale", "imposable", "csg"]
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale & CGI 2026"
+  text: "RÉGIME SOCIAL & FISCAL : La part patronale de Mutuelle/Prévoyance est : 1. Soumise à CSG/CRDS (sans abattement). 2. Soumise au Forfait Social (8% si >11 salariés). 3. Imposable pour le salarié (à ajouter au Net Imposable)."
 
 # -------------------------------------------------------------------------
 # 10. ÉPARGNE SALARIALE 2026
