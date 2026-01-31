@@ -44,13 +44,14 @@ class SocialRuleEngine:
         query_words = self._tokenize(query)
         
         # 1. LE SOCLE : Récupération systématique des constantes vitales
-        # Ajout de CSG_CRDS pour garantir les calculs Brut > Net
+        # Ajout de CSG_CRDS et TAUX_COTISATIONS pour garantir les calculs Brut > Net et Coût Employeur
         vital_ids = [
             "SMIC_2026", 
             "PASS_2026", 
             "MG_2026", 
             "PROTOCOLE_CALCUL_SOCIAL",
-            "CSG_CRDS_2026" 
+            "CSG_CRDS_2026",
+            "TAUX_COTISATIONS_2026" # <--- AJOUT CRITIQUE POUR LES SIMULATIONS
         ]
         vital_rules = [r for r in self.rules if r.get("id") in vital_ids]
 
