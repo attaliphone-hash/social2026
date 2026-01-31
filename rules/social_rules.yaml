@@ -74,6 +74,7 @@
     2. Si allocation forfaitaire mensuelle : La limite d'exonération est STRICTEMENT de 10,80 € multiplié par le nombre de jours de télétravail par semaine.
     ⛔ INTERDICTION DE CALCUL : Ne jamais utiliser de moyenne (type 4,33 semaines). Appliquez strictement le forfait.
     EXEMPLES OFFICIELS : 1 jour/semaine = 10,80 €/mois. 2 jours = 21,60 €. 3 jours = 32,40 €. 4 jours = 43,20 €.
+
 - id: AVN_VEHICULE_ELEC_2026
   keywords: ["vehicule", "véhicule", "electrique", "électrique", "abattement", "taux", "avantage", "nature"]
   valeurs:
@@ -229,7 +230,7 @@
   source: "Code du travail - Art. L3261-2"
   text: "L'employeur a l'obligation de prendre en charge 50% du prix des titres d'abonnements souscrits par les salariés pour leurs déplacements domicile-travail."
 
-  # -------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # 9. TAUX DE COTISATIONS STANDARDS (URSSAF & RETRAITE 2026)
 # -------------------------------------------------------------------------
 - id: TAUX_COTISATIONS_2026
@@ -266,3 +267,69 @@
   derniere_maj: "Janvier 2026"
   source: "Barèmes URSSAF & AGIRC-ARRCO 2026 (Taux de droit commun)"
   text: "TAUX STANDARDS 2026 : Maladie employeur = 7% (si salaire < 2,5 SMIC) sinon 13%. Famille = 3,45% (si salaire < 3,5 SMIC) sinon 5,25%. Retraite Complémentaire T1 = 7,87% (Répartition 60/40). Retraite T2 = 21,59%."
+
+# -------------------------------------------------------------------------
+# 10. ÉPARGNE SALARIALE 2026
+# -------------------------------------------------------------------------
+- id: EPARGNE_SALARIALE_2026
+  keywords: ["pee", "perco", "participation", "interessement", "abondement", "plafond"]
+  valeurs:
+    plafond_pee_percent_salaire: 25
+    plafond_abondement_pee_euro: 3709.44
+    plafond_abondement_perco_euro: 7418.88
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. R3332-8 et D3332-8"
+  text: "PLAFONDS 2026 : L'abondement PEE est plafonné à 8% du PASS (3 709,44 €) et celui du PERCO à 16% du PASS (7 418,88 €). Le versement volontaire du salarié est limité à 25% de sa rémunération annuelle brute."
+
+# -------------------------------------------------------------------------
+# 11. CDD (PRÉCARITÉ & CONGÉS PAYÉS)
+# -------------------------------------------------------------------------
+- id: INDEMNITE_CDD_2026
+  keywords: ["cdd", "precarite", "précarité", "fin", "contrat", "court", "prime"]
+  valeurs:
+    taux_precarite: 10
+    taux_cp: 10
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. L1243-8"
+  text: "RÈGLE CDD : Une indemnité de fin de contrat (précarité) de 10% de la rémunération brute totale est due, sauf cas d'exclusion (usage, saisonnier, CDI à la suite). Une indemnité de congés payés de 10% s'ajoute ensuite sur le total (Salaire + Précarité)."
+
+# -------------------------------------------------------------------------
+# 12. FRAIS KILOMÉTRIQUES & REPAS 2026
+# -------------------------------------------------------------------------
+- id: FRAIS_REPAS_URSSAF_2026
+  keywords: ["repas", "panier", "frais", "deplacement", "chantier", "restauration"]
+  valeurs:
+    repas_sur_lieu_travail: 7.30
+    repas_hors_locaux: 20.70
+    repas_restaurant: 20.70
+  derniere_maj: "Janvier 2026"
+  source: "Barème URSSAF 2026 (Limites d'exonération)"
+  text: "LIMITES EXONÉRATION 2026 : Repas sur le lieu de travail (panier) = 7,30 €. Repas hors locaux (déplacement) = 20,70 €. Repas au restaurant (déplacement) = 20,70 €."
+
+- id: BAREME_KILOMETRIQUE_2026_REF
+  keywords: ["kilometrique", "kilométrique", "ik", "voiture", "frais", "route"]
+  valeurs:
+    d_5cv_coeff: 0.636
+  derniere_maj: "Janvier 2026"
+  source: "Arrêté du 27 janvier 2026 (Barème Fiscal)"
+  text: "Le barème kilométrique 2026 dépend de la puissance fiscale. Pour une 5 CV (standard) : Jusqu'à 5000 km = d x 0,636. De 5001 à 20000 km = (d x 0,357) + 1395. Au-delà = d x 0,420."
+
+# -------------------------------------------------------------------------
+# 13. JOURS FÉRIÉS 2026
+# -------------------------------------------------------------------------
+- id: JOURS_FERIES_2026
+  keywords: ["ferie", "férié", "calendrier", "pont", "travaillé"]
+  source: "Code du travail - Art. L3133-1"
+  text: |
+    CALENDRIER 2026 :
+    - 1er janvier (Jeudi)
+    - Lundi de Pâques (6 avril)
+    - 1er mai (Vendredi - Fête du Travail)
+    - 8 mai (Vendredi - Victoire 1945)
+    - Ascension (Jeudi 14 mai)
+    - Lundi de Pentecôte (25 mai)
+    - 14 juillet (Mardi - Fête Nationale)
+    - 15 août (Samedi - Assomption)
+    - 1er novembre (Dimanche - Toussaint)
+    - 11 novembre (Mercredi - Armistice)
+    - 25 décembre (Vendredi - Noël)
