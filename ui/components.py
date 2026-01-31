@@ -8,7 +8,7 @@ class UIComponents:
         """Affiche le Titre et le Sous-titre (Alignement Gauche comme Capture 1)"""
         st.markdown("""
             <h1 style='text-align: left; color: #253E92; margin-top: 10px;'>
-                EXPERT SOCIAL PRO — VOTRE COPILOTE RH & PAIE EN 2026.
+                SOCIAL EXPERT FRANCE — VOTRE COPILOTE RH & PAIE EN 2026.
             </h1>
             <h2 style='text-align: left; text-transform: none !important; color: #253E92; font-family: "Open Sans", sans-serif; font-size: 20px; font-weight: 600; margin-bottom: 20px; line-height: 1.5;'>
                 Des règles officielles. Des calculs sans erreur. Des décisions que vous pouvez défendre.

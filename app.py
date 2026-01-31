@@ -88,7 +88,7 @@ def check_password():
     ui.render_top_arguments()
     ui.render_footer()
 
-    st.markdown("<h1 style='text-align: left; color: #253E92;'>EXPERT SOCIAL PRO — VOTRE COPILOTE RH & PAIE EN 2026.</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: left; color: #253E92;'>SOCIAL EXPERT FRANCE — VOTRE COPILOTE RH & PAIE EN 2026.</h1>", unsafe_allow_html=True)
     st.markdown("<h2 style='text-align: left; color: #253E92;'>Des règles officielles. Des calculs sans erreur. Des décisions que vous pouvez défendre.</h2>", unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -150,7 +150,7 @@ with col_act2:
         st.rerun()
 
 # 5. TITRE ESPACE ABONNÉS
-st.markdown("<h1 style='color:#253E92; margin-top:10px;'>EXPERT SOCIAL PRO ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#253E92; margin-top:10px;'>SOCIAL EXPERT FRANCE ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
 
 # 6. ANALYSE DU DOCUMENT UPLOADÉ
 user_doc_content = ""
