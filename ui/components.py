@@ -84,33 +84,37 @@ class UIComponents:
         </div>
         """, unsafe_allow_html=True)
 
-    # --- 3. LES ABONNEMENTS (LIENS STRIPE ACTIFS) ---
+    # --- 3. LES ABONNEMENTS (COMPACT & HAUTEUR RÉDUITE) ---
     @staticmethod
     def render_subscription_cards():
-        """Affiche les cartes de prix - Version compacte alignée gauche"""
-        # MODIFICATION : On utilise des ratios [1, 1, 2]
-        # Cela signifie : 25% largeur, 25% largeur, 50% vide (pour aligner à gauche)
+        """Affiche les cartes de prix - Version Ultra Compacte (Hauteur mini)"""
+        # Toujours le ratio [1, 1, 2] pour l'alignement gauche
         col1, col2, col_vide = st.columns([1, 1, 2], gap="small")
 
         with col1:
-            # J'ai réduit le padding à 15px et ajusté légèrement les font-size
+            # J'ai passé le padding à 10px et mis margin:0 partout
             st.markdown("""
-            <div style="background-color: #e3f2fd; padding: 15px; border-radius: 10px; border: 1px solid #90caf9; height: 100%;">
-                <h3 style="color: #1565c0; margin-top:0; font-size: 18px;">Mensuel</h3>
-                <h2 style="color: #0d47a1; font-size: 22px;">35 € <span style="font-size:14px; color:#555;">HT / MOIS</span></h2>
-                <p style="color: #333; font-size: 13px; margin-top: 5px;">Sans engagement</p>
-                <p style="color: #666; font-size: 12px;">Accès complet Expert Pro 2026</p>
+            <div style="background-color: #e3f2fd; padding: 10px 15px; border-radius: 8px; border: 1px solid #90caf9;">
+                <h3 style="color: #1565c0; margin: 0; font-size: 16px;">Mensuel</h3>
+                <div style="margin-top: 5px; margin-bottom: 5px;">
+                    <span style="color: #0d47a1; font-size: 20px; font-weight: bold;">35 €</span> 
+                    <span style="font-size:12px; color:#555;">HT / MOIS</span>
+                </div>
+                <p style="color: #444; font-size: 11px; margin: 0; line-height: 1.2;">Sans engagement</p>
             </div>
             """, unsafe_allow_html=True)
+            # Le bouton Streamlit ajoute sa propre hauteur qu'on ne peut pas réduire facilement
             st.link_button("Je m'abonne (35€)", "https://buy.stripe.com/6oUeVf4U0enk1g07Q77AI01", use_container_width=True)
 
         with col2:
             st.markdown("""
-            <div style="background-color: #e8f5e9; padding: 15px; border-radius: 10px; border: 1px solid #a5d6a7; height: 100%;">
-                <h3 style="color: #2e7d32; margin-top:0; font-size: 18px;">Annuel</h3>
-                <h2 style="color: #1b5e20; font-size: 22px;">350 € <span style="font-size:14px; color:#555;">HT / AN</span></h2>
-                <p style="color: #333; font-size: 13px; margin-top: 5px;">2 mois offerts</p>
-                <p style="color: #666; font-size: 12px;">✅ Rentabilité immédiate</p>
+            <div style="background-color: #e8f5e9; padding: 10px 15px; border-radius: 8px; border: 1px solid #a5d6a7;">
+                <h3 style="color: #2e7d32; margin: 0; font-size: 16px;">Annuel</h3>
+                <div style="margin-top: 5px; margin-bottom: 5px;">
+                    <span style="color: #1b5e20; font-size: 20px; font-weight: bold;">350 €</span> 
+                    <span style="font-size:12px; color:#555;">HT / AN</span>
+                </div>
+                <p style="color: #444; font-size: 11px; margin: 0; line-height: 1.2;">✅ 2 mois offerts</p>
             </div>
             """, unsafe_allow_html=True)
             st.link_button("Je m'abonne (350€)", "https://buy.stripe.com/8x25kFgCIgvscYI2vN7AI00", use_container_width=True)
