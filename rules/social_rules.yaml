@@ -333,3 +333,56 @@
     - 1er novembre (Dimanche - Toussaint)
     - 11 novembre (Mercredi - Armistice)
     - 25 décembre (Vendredi - Noël)
+
+# -------------------------------------------------------------------------
+# 14. COMPLÉMENTS PRIORITAIRES (FINALE)
+# -------------------------------------------------------------------------
+- id: CHEQUES_CADEAUX_2026
+  keywords: ["cheque", "chèque", "cadeau", "bon", "achat", "noel", "plafond", "urssaf"]
+  valeurs:
+    plafond_par_evenement: 200.25
+  derniere_maj: "Janvier 2026"
+  source: "Instruction URSSAF - Plafond 5% PMSS 2026"
+  text: "Le plafond d'exonération pour les chèques-cadeaux est de 5% du Plafond Mensuel de la Sécurité Sociale, soit 200,25 € par événement et par salarié en 2026."
+
+- id: TAXES_FORMATION_APPRENTISSAGE_2026
+  keywords: ["formation", "apprentissage", "taxe", "contribution", "fp", "cufpa"]
+  valeurs:
+    taux_formation_moins_11: 0.55
+    taux_formation_11_et_plus: 1.00
+    taux_taxe_apprentissage: 0.68
+    taux_cdd_cpf: 1.00
+  derniere_maj: "Janvier 2026"
+  source: "URSSAF - Contributions Formation & Apprentissage 2026"
+  text: "Contribution Formation : 0,55% (entreprises < 11 salariés) ou 1,00% (>= 11 salariés). Taxe d'apprentissage : 0,68% de la masse salariale (0,44% en Alsace-Moselle). Contribution CPF-CDD : 1%."
+
+- id: FORFAIT_SOCIAL_2026
+  keywords: ["forfait", "social", "taux", "epargne", "abondement", "prets"]
+  valeurs:
+    taux_standard: 20
+    taux_reduit_perco: 16
+    taux_prevoyance_plus_11: 8
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale - Art. L137-15"
+  text: "Le Forfait Social est généralement de 20% (sur intéressement/participation/abondement PEE). Taux réduit à 16% sur certains versements PERCO (gestion pilotée). Taux de 8% sur les contributions prévoyance/mutuelle pour les entreprises > 11 salariés."
+
+- id: VERSEMENT_MOBILITE_2026
+  keywords: ["versement", "mobilite", "transport", "taxe", "vm", "commune"]
+  valeurs:
+    taux_min: 0.00
+    taux_max: 2.95
+  derniere_maj: "Janvier 2026"
+  source: "URSSAF - Taux par commune"
+  text: "Le Versement Mobilité (VM) dépend de la zone géographique (commune). Le taux varie de 0% à 2,95% (Paris/IdF). Cette contribution est due par les employeurs de 11 salariés et plus."
+
+- id: DUREE_TRAVAIL_LEGAL_2026
+  keywords: ["duree", "legale", "heures", "mensuel", "hebdo", "limite"]
+  valeurs:
+    mensuel_legal: 151.67
+    hebdo_legal: 35
+    max_journalier: 10
+    max_hebdo_absolu: 48
+    max_hebdo_moyen_12sem: 44
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail - Durées Légales"
+  text: "CONSTANTES TEMPS : Temps plein mensuel = 151,67 heures. Max jour = 10h. Max hebdo absolu = 48h. Max hebdo moyen (sur 12 semaines) = 44h."
