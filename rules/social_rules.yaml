@@ -163,6 +163,14 @@
   source: "Bulletin Officiel de la Sécurité Sociale (BOSS) - Janvier 2026"
   text: "L'indemnité de rupture est exonérée de cotisations sociales dans la limite de 2 PASS, soit 96 120 € en 2026."
 
+- id: FORFAIT_RUPTURE_2026
+  keywords: ["forfait", "social", "rupture", "conventionnelle", "contribution", "patronale", "40%", "taxe"]
+  valeurs:
+    taux_2026: 40
+  derniere_maj: "Janvier 2026"
+  source: "Loi de Financement de la Sécurité Sociale 2026 (Art. L.137-12 CSS)"
+  text: "RÈGLE CRITIQUE 2026 : L'indemnité de rupture conventionnelle est soumise à une contribution patronale spécifique de 40% (au lieu de 30% précédemment). Cette contribution s'applique sur la part de l'indemnité exonérée de cotisations sociales."
+
 # -------------------------------------------------------------------------
 # 6. TAXE SUR LES SALAIRES 2026
 # -------------------------------------------------------------------------
