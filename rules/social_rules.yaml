@@ -1,5 +1,8 @@
 # ==============================================================================
-# RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ (ULTIMATE V2)
+# RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ (ULTIMATE V2.1)
+# VERSION : 2.1 (GOLD MASTER)
+# DATE DE MISE À JOUR : 31/01/2026
+# STATUS : PRODUCTION READY
 # ==============================================================================
 
 # -------------------------------------------------------------------------
@@ -403,3 +406,36 @@
   derniere_maj: "Janvier 2026"
   source: "Code du Travail - Durées Légales"
   text: "CONSTANTES TEMPS : Temps plein mensuel = 151,67 heures. Max jour = 10h. Max hebdo absolu = 48h. Max hebdo moyen (sur 12 semaines) = 44h."
+
+# -------------------------------------------------------------------------
+# 15. CONGÉS & ABSENCES (NOUVEAU - V2.1)
+# -------------------------------------------------------------------------
+- id: CONGES_PAYES_ACQUISITION_2026
+  keywords: ["conges", "payes", "cp", "acquisition", "jours", "ouvrables", "ouvrés"]
+  valeurs:
+    jours_ouvrables_mois: 2.5
+    jours_ouvrables_an: 30
+    jours_ouvres_mois: 2.08
+    jours_ouvres_an: 25
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail - Art. L3141-3"
+  text: "ACQUISITION LÉGALE : Le salarié acquiert 2,5 jours ouvrables par mois de travail effectif (soit 30 jours/an). Par équivalence : 2,08 jours ouvrés (25 jours/an)."
+
+- id: CONGES_PAYES_VALORISATION_2026
+  keywords: ["conges", "indemnite", "calcul", "dixieme", "maintien"]
+  source: "Code du Travail - Art. L3141-24"
+  text: "RÈGLE DU DIXIÈME VS MAINTIEN : L'indemnité de congés payés est égale au montant le plus favorable entre : 1. Le 1/10ème de la rémunération brute totale perçue pendant la période de référence. 2. Le maintien de salaire (salaire qui aurait été perçu si le salarié avait travaillé)."
+
+# -------------------------------------------------------------------------
+# 16. PRÉAVIS LÉGAUX (NOUVEAU - V2.1)
+# -------------------------------------------------------------------------
+- id: DUREES_PREAVIS_LEGAL_2026
+  keywords: ["preavis", "préavis", "licenciement", "demission", "duree", "anciennete"]
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail - Art. L1234-1"
+  text: |
+    MINIMUM LÉGAL (HORS CCN) :
+    - Ancienneté < 6 mois : Durée fixée par la loi, la CCN ou les usages.
+    - Ancienneté 6 mois à 2 ans : 1 mois.
+    - Ancienneté > 2 ans : 2 mois.
+    ⚠️ IMPORTANT : La Convention Collective (CCN) est souvent plus favorable (ex: 3 mois pour les Cadres). Toujours vérifier la CCN.
