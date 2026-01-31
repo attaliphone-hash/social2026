@@ -300,7 +300,13 @@ Document Utilisateur :
 
 --- 5. TEMPLATE DE RÉPONSE (HTML STYLYSÉ) ---
 
-⛔ INTERDICTION ABSOLUE de mettre du texte hors balises ou des ```.
+⛔ RÈGLE D'EXCEPTION (MODE RÉDACTION) :
+SI l'utilisateur demande explicitement de RÉDIGER un document (Lettre, Email, Rescrit, Contrat) :
+-> IGNORE TOTALEMENT LE HTML CI-DESSOUS.
+-> Rédige directement le texte du document avec une mise en forme standard (paragraphes, sauts de ligne), sans balises HTML complexes.
+
+⛔ RÈGLE GÉNÉRALE (MODE CALCUL/CONSEIL) :
+Pour toute autre demande (Calcul, Explication, Question juridique), tu DOIS utiliser STRICTEMENT le modèle HTML suivant (INTERDICTION ABSOLUE de mettre du texte hors balises) :
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
