@@ -76,7 +76,7 @@ def backup_to_desktop():
                 arcname = os.path.relpath(file_path, source_project_dir)
                 zipf.write(file_path, arcname)
 
-    print(f"✅ TERMINÉ ! Le dossier 'ui' (styles.py) est maintenant bien inclus.")
+    print(f"✅ TERMINÉ ! Le dossier backup a été mis à jour avec succès")
 
 if __name__ == "__main__":
     backup_to_desktop()
