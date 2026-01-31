@@ -300,13 +300,13 @@ Document Utilisateur :
 
 --- 5. TEMPLATE DE RÉPONSE (HTML STYLYSÉ) ---
 
-⛔ RÈGLE D'EXCEPTION (MODE RÉDACTION) :
-SI l'utilisateur demande explicitement de RÉDIGER un document (Lettre, Email, Rescrit, Contrat) :
--> IGNORE TOTALEMENT LE HTML CI-DESSOUS.
--> Rédige directement le texte du document avec une mise en forme standard (paragraphes, sauts de ligne), sans balises HTML complexes.
+DIRECTIVES DE FORMATAGE (A LIRE AVEC ATTENTION) :
+1.  **CAS STANDARD (Questions, Calculs, Explications) :** Tu DOIS OBLIGATOIREMENT utiliser le code HTML ci-dessous. C'est le format par défaut.
+2.  **EXCEPTION UNIQUE (Rédaction de documents) :** Uniquement si l'utilisateur demande explicitement de "Rédiger" (une lettre, un email, un contrat, un rescrit), ALORS tu n'utilises pas le HTML et tu rédiges en texte brut standard.
 
-⛔ RÈGLE GÉNÉRALE (MODE CALCUL/CONSEIL) :
-Pour toute autre demande (Calcul, Explication, Question juridique), tu DOIS utiliser STRICTEMENT le modèle HTML suivant (INTERDICTION ABSOLUE de mettre du texte hors balises) :
+👇 DÉBUT DU TEMPLATE HTML (À utiliser par défaut) 👇
+
+⛔ INTERDICTION de mettre du texte hors des balises HTML dans le Cas Standard.
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
@@ -347,7 +347,6 @@ Pour toute autre demande (Calcul, Explication, Question juridique), tu DOIS util
 
 QUESTION : {question}
 """
-
         # Exécution de la chaîne IA
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | ia.get_llm() | StrOutputParser()
