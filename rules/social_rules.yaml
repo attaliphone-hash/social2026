@@ -32,6 +32,14 @@
   source: "Décret n° 2025-1738 du 20 décembre 2025 (Minimum Garanti)"
   text: "Le Minimum Garanti (MG) est fixé à 4,25 € pour 2026."
 
+- id: SBI_2026
+  keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie"]
+  valeurs:
+    montant: 646.52
+  derniere_maj: "Janvier 2026"
+  source: "Décret n° 2025-452 du 28 avril 2025 (Revalorisation RSA)"
+  text: "Le Solde Bancaire Insaisissable (SBI) est fixé à 646,52 € (Montant forfaitaire du RSA pour une personne seule)."
+
 # -------------------------------------------------------------------------
 # 2. AVANTAGES EN NATURE & FRAIS
 # -------------------------------------------------------------------------
@@ -109,6 +117,148 @@
   source: "Décret n° 2025-1888 du 29 décembre 2025 (Prorogation de l'aide)"
   text: "Une aide exceptionnelle de 6 000 € est versée aux employeurs pour la première année d'exécution des contrats d'apprentissage conclus en 2026." 
 
-- id: SBI_2026
-  keywords: ["sbi", "solde", "bancaire", "insaisissable", "saisie"]
-  
+# -------------------------------------------------------------------------
+# 4. RÉDUCTION GÉNÉRALE (RGDU)
+# -------------------------------------------------------------------------
+- id: REDUCTION_GENERALE_2026
+  keywords: ["reduction", "réduction", "generale", "générale", "fillon", "rgdu", "coefficient"]
+  valeurs:
+    T_moins_50: 0.3981
+    T_plus_50: 0.4021
+    smic_annuel: 21876.36
+  derniere_maj: "Janvier 2026"
+  source: "Décret n° 2025-1895 du 30 décembre 2025 relatif à la réduction générale"
+  text: "RÈGLE RGDU 2026 : Le dispositif est étendu jusqu'à 3 SMIC annuels (contre 1,6 avant). T = 0,3981 (moins de 50 salariés) et T = 0,4021 (50 salariés et plus). La formule de calcul est désormais polynomiale."
+
+# -------------------------------------------------------------------------
+# 5. PRESTATIONS SÉCU (IJSS) & INDEMNITÉS RUPTURE (CERTIFIÉ EXACT)
+# -------------------------------------------------------------------------
+- id: IJSS_MALADIE_2026
+  keywords: ["ijss", "maladie", "arret", "indemnite", "journaliere", "cpam", "plafond"]
+  valeurs:
+    plafond_journalier_brut: 53.94
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale - Art. R323-4 (Calcul SMIC 2026)"
+  text: "L'IJSS Maladie maximale est de 53,94 € bruts par jour en 2026 (plafond calculé sur 1,8 fois le SMIC en vigueur)."
+
+- id: IJSS_MATERNITE_2026
+  keywords: ["ijss", "maternite", "maternité", "plafond", "grossesse"]
+  valeurs:
+    plafond_journalier_brut: 131.67
+    plafond_journalier_net_estime: 104.02
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale - Art. R331-5 (Calcul PASS 2026)"
+  text: "L'IJSS Maternité journalière maximale est de 131,67 € bruts (calculée sur le Plafond Mensuel de la Sécurité Sociale de 4 005 €)."
+
+- id: EXONERATION_RUPTURE_2026
+  keywords: ["rupture", "licenciement", "conventionnelle", "indemnité", "exoneration", "plafond", "pass"]
+  valeurs:
+    plafond_ss_2pass: 96120
+  derniere_maj: "Janvier 2026"
+  source: "Bulletin Officiel de la Sécurité Sociale (BOSS) - Janvier 2026"
+  text: "L'indemnité de rupture est exonérée de cotisations sociales dans la limite de 2 PASS, soit 96 120 € en 2026."
+
+# -------------------------------------------------------------------------
+# 6. TAXE SUR LES SALAIRES 2026
+# -------------------------------------------------------------------------
+- id: TAXE_SALAIRES_2026
+  keywords: ["taxe", "salaire", "salaires", "tranches", "association", "banque"]
+  valeurs:
+    tranche_1_taux: 0.0425
+    tranche_2_taux: 0.0850
+    tranche_3_taux: 0.1360
+    seuil_tranche_1: 8985
+    seuil_tranche_2: 17936
+  derniere_maj: "Janvier 2026"
+  source: "Code général des impôts - Article 231 (Barème 2026)"
+  text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% sur la part de salaire annuel comprise entre 8 985 € et 17 936 €. 13,60% au-delà de 17 936 €."
+
+# -------------------------------------------------------------------------
+# 6 BIS. EXONÉRATIONS CIBLÉES 2026
+# -------------------------------------------------------------------------
+- id: EXONERATION_JEI_2026
+  keywords: ["jei", "jeune", "entreprise", "innovante", "recherche", "développement", "r&d"]
+  valeurs:
+    plafond_etablissement_pass: 5
+    plafond_etablissement_euro: 240300
+    plafond_salarie_smic: 4.5
+  derniere_maj: "Janvier 2026"
+  source: "Loi n° 2025-1200 de finances pour 2026 (Dispositif JEI)"
+  text: "RÈGLE JEI 2026 : L'exonération patronale est plafonnée à 5 PASS par établissement et par an (soit 240 300 €). Elle s'applique aux salariés R&D rémunérés moins de 4,5 SMIC."
+
+# -------------------------------------------------------------------------
+# 7. PROTOCOLES DE CALCUL UNIVERSELS (ZÉRO ERREUR)
+# -------------------------------------------------------------------------
+- id: PROTOCOLE_CALCUL_SOCIAL
+  keywords: ["formule", "calcul", "méthode", "règle", "ancienneté", "heures", "rupture"]
+  source: "Code du travail - Art. L1234-9 et R1234-2"
+  text: |
+    PROTOCOLES OBLIGATOIRES 2026 (À APPLIQUER STRICTEMENT) :
+    1. INDEMNITÉ RUPTURE/LICENCIEMENT (CALCUL PAR TRANCHES) : 
+       - Tranche A (0 à 10 ans) : (Salaire_Ref / 4) * 10.
+       - Tranche B (Au-delà de 10 ans) : (Salaire_Ref / 3) * (Ancienneté_Totale - 10).
+       - Total = Tranche A + Tranche B.
+       - Proratisation ancienneté : Années + (Mois / 12). (Ex: 12 ans 9 mois = 12,75 ans).
+    2. HEURES SUPPLÉMENTAIRES : Majoration de 25% (heures 36 à 43) puis 50% (dès la 44ème heure).
+    3. TEMPS : Conversion décimale obligatoire (Minutes / 60). Jamais de format 1h30 pour les calculs.
+    4. PLAFOND SS : Proratisation entrée/sortie = (4005 / Jours_Calendaires_Mois) * Jours_Presence_Calendaires.
+
+# -------------------------------------------------------------------------
+# 8. TAUX & CONSTANTES UNIVERSELS (MANQUANTS DANS LA V1)
+# -------------------------------------------------------------------------
+- id: CSG_CRDS_2026
+  keywords: ["csg", "crds", "taux", "salaire", "abattement", "non_deductible"]
+  valeurs:
+    taux_global: 9.70
+    part_deductible: 6.80
+    part_non_deductible: 2.90
+    abattement_assiette: 1.75
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale - Art. L136-8"
+  text: "Les revenus d'activité sont soumis à la CSG/CRDS au taux global de 9,70% sur 98,25% du salaire brut (après abattement de 1,75%)."
+
+- id: TRANSPORT_2026
+  keywords: ["transport", "navigo", "abonnement", "prise", "charge", "employeur", "50%"]
+  valeurs:
+    taux_obligatoire: 50
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. L3261-2"
+  text: "L'employeur a l'obligation de prendre en charge 50% du prix des titres d'abonnements souscrits par les salariés pour leurs déplacements domicile-travail."
+
+  # -------------------------------------------------------------------------
+# 9. TAUX DE COTISATIONS STANDARDS (URSSAF & RETRAITE 2026)
+# -------------------------------------------------------------------------
+- id: TAUX_COTISATIONS_2026
+  keywords: ["taux", "cotisation", "urssaf", "retraite", "agirc", "arrco", "chomage", "maladie", "vieillesse"]
+  valeurs:
+    # --- PART SALARIALE (Retenue sur salaire) ---
+    sal_vieillesse_plaf: 6.90
+    sal_vieillesse_deplaf: 0.40
+    sal_chomage: 0.00
+    sal_retraite_comp_T1: 3.15
+    sal_retraite_comp_T2: 8.64
+    sal_ceg_T1: 0.86
+    sal_ceg_T2: 1.08
+    sal_apec: 0.024
+
+    # --- PART PATRONALE (Coût employeur) ---
+    pat_maladie_base: 13.00
+    pat_maladie_reduit: 7.00
+    pat_vieillesse_plaf: 8.55
+    pat_vieillesse_deplaf: 2.02
+    pat_famille_base: 5.25
+    pat_famille_reduit: 3.45
+    pat_chomage: 4.05
+    pat_ags: 0.20
+    pat_retraite_comp_T1: 4.72
+    pat_retraite_comp_T2: 12.95
+    pat_ceg_T1: 1.29
+    pat_ceg_T2: 1.62
+    pat_apec: 0.036
+    
+    # --- SEUILS D'ÉLIGIBILITÉ TAUX RÉDUITS (En SMIC) ---
+    seuil_maladie_reduite: 2.5
+    seuil_famille_reduite: 3.5
+  derniere_maj: "Janvier 2026"
+  source: "Barèmes URSSAF & AGIRC-ARRCO 2026 (Taux de droit commun)"
+  text: "TAUX STANDARDS 2026 : Maladie employeur = 7% (si salaire < 2,5 SMIC) sinon 13%. Famille = 3,45% (si salaire < 3,5 SMIC) sinon 5,25%. Retraite Complémentaire T1 = 7,87% (Répartition 60/40). Retraite T2 = 21,59%."

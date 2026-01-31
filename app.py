@@ -242,16 +242,18 @@ Tu es l'Expert Social Pro 2026.
 3. Affiche systématiquement 2 décimales pour tous les montants en Euros.
 4. Pas de Markdown pour les titres (utilise uniquement <h4 style="...">).
 
---- 1. RÈGLES DE PRIORITÉ & INTELLIGENCE (DISCIPLINE SÉLECTIVE) ---
+---- 1. RÈGLES DE PRIORITÉ & INTELLIGENCE (LOGIQUE DE CASCADE) ---
 
 A. POUR LES DONNÉES CHIFFRÉES (Taux, Seuils, Montants) :
-- **RÈGLE ABSOLUE :** Les "Faits Certifiés" (YAML) fournis ci-dessous sont la SEULE vérité.
-- **INTERDICTION :** N'utilise JAMAIS ta mémoire pour générer un montant 2026 (ex: SMIC, Plafond SS, Taux) s'il n'est pas dans le YAML. Trouve la valeur dans le bloc YAML contextuel.
+- **RÈGLE DE PRIORITÉ 1 (YAML) :** Vérifie D'ABORD les "Faits Certifiés" (YAML) ci-dessous.
+  > SI la donnée s'y trouve : C'est la vérité absolue. Utilise ce montant et la source indiquée dans le YAML. Ne cherche pas ailleurs.
+- **RÈGLE DE PRIORITÉ 2 (DOCUMENTS) :** Si la donnée n'est PAS dans le YAML, cherche-la EXCLUSIVEMENT dans les "Documents Contextuels" fournis (PDF, REF, DOC).
+- **INTERDICTION STRICTE (ANTI-HALLUCINATION) :** Il est strictement interdit d'utiliser ta "connaissance générale" ou ta "mémoire d'entraînement" pour inventer un chiffre 2026 s'il ne figure NI dans le YAML, NI dans les documents fournis. Si tu ne trouves la donnée nulle part, réponds "Donnée non disponible dans la documentation".
 
 B. POUR LE RAISONNEMENT JURIDIQUE (Droit du travail) :
-- **PRIORITÉ :** Utilise les documents contextuels (RAG) pour l'analyse.
+- **PRIORITÉ :** Utilise les documents contextuels (RAG) pour l'analyse, les conditions d'attribution et les jurisprudences.
 - **AUTORISATION :** Si les documents ne couvrent pas un point de droit général, utilise tes connaissances juridiques internes (Code du travail).
-- **MENTION :** Si tu utilises tes connaissances internes, précise : "Selon les principes généraux du droit du travail".
+- **MENTION :** Si tu utilises tes connaissances internes pour combler un vide juridique, précise : "Selon les principes généraux du droit du travail".
 
 --- 2. LOGIQUE MÉTIER & MATHÉMATIQUE ---
 
@@ -326,7 +328,7 @@ Document Utilisateur :
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
-    <strong>Sources utilisées :</strong> {sources_list}<br>
+    <strong>Sources utilisées :</strong> [Lister ici précisément les sources (Décrets, Codes, etc.) selon la méthode définie en Section 3]<br>
     <em>Données certifiées conformes aux barèmes 2026.</em><br>
     <span style="font-style: italic; color: #626267;">Vérifiez toujours votre Convention Collective.</span>
 </div>
@@ -334,24 +336,16 @@ Document Utilisateur :
 QUESTION : {question}
 """
 
-        # --- PRÉPARATION DES SOURCES ---
-        if facts and not sources_seen:
-            display_sources = "Données officielles 2026"
-        elif sources_seen:
-            display_sources = ", ".join(sources_seen)
-        else:
-            display_sources = "Documentation officielle 2026"
-
         # Exécution de la chaîne IA
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | ia.get_llm() | StrOutputParser()
         
         full_response = ""
         try:
+            # Note : "sources_list" a été supprimé ci-dessous
             for chunk in chain.stream({
                 "context": context_str, 
                 "question": user_input, 
-                "sources_list": display_sources, 
                 "certified_facts": facts,
                 "user_doc_section": f"Document Utilisateur : {user_doc_content}" if user_doc_content else ""
             }):
