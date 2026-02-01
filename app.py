@@ -162,29 +162,7 @@ if uploaded_file:
         if user_doc_content:
             st.toast(f"📎 {uploaded_file.name} analysé avec succès", icon="✅")
 
-# 7. ONBOARDING (EXEMPLES)
-if not st.session_state.messages:
-    st.markdown("<br>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3, gap="large")
-    with c1:
-        st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Apprentissage 2026</div>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?\"</div>", unsafe_allow_html=True)
-        if st.button("Tester ce cas", key="btn_start_1", use_container_width=True):
-            st.session_state.pending_prompt = "Je veux embaucher un apprenti de 22 ans payé au SMIC. Quel est le coût exact et les exonérations en 2026 ?"
-            st.rerun()
-    with c2:
-        st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Licenciement</div>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté ayant un salaire de référence de 4500€.\"</div>", unsafe_allow_html=True)
-        if st.button("Tester ce cas", key="btn_start_2", use_container_width=True):
-            st.session_state.pending_prompt = "Calcule l'indemnité de licenciement pour un cadre avec 12 ans et 5 mois d'ancienneté ayant un salaire de référence de 4500€."
-            st.rerun()
-    with c3:
-        st.markdown("<div style='text-align: center; font-size: 12px;font-weight: bold; color: #2c3e50; margin-bottom: 5px;'>Exemple Avantage Auto</div>", unsafe_allow_html=True)
-        st.markdown("<div style='text-align: center; font-size: 11px; color: #666; font-style: italic; min-height: 45px;'>\"Comment calculer l'avantage voiture électrique en 2026 ?\"</div>", unsafe_allow_html=True)
-        if st.button("Tester ce cas", key="btn_start_3", use_container_width=True):
-            st.session_state.pending_prompt = "Comment calculer l'avantage en nature pour une voiture électrique de société en 2026 ?"
-            st.rerun()
-    st.markdown("---")
+
 
 # 8. AFFICHAGE DES MESSAGES
 for msg in st.session_state.messages:
