@@ -5,11 +5,11 @@ from supabase import create_client, Client
 class AuthManager:
     """
     Gère l'authentification des utilisateurs.
-    Centralise la logique de connexion (Admin, Promo, Abonnés Supabase).
+    Logique : Admin (RSS) vs Codes Promo (Pas RSS) vs Abonnés Supabase.
     """
     
     def __init__(self):
-        # CORRECTION : Utilisation de l'instanciation simple conforme au backup
+        # Récupération de la config
         self.config = Config()
         
         # Initialisation du client Supabase uniquement si les clés existent
@@ -27,20 +27,33 @@ class AuthManager:
         Tente de connecter l'utilisateur.
         Retourne un dictionnaire user_info si succès, None sinon.
         """
-        # 1. TEST : EST-CE UN ADMIN ?
-        if email_or_code == "ADMIN" or password == self.config.admin_password:
-            if password == self.config.admin_password or email_or_code == self.config.admin_password:
-                return {"email": "ADMINISTRATEUR", "role": "ADMINISTRATEUR"}
+        
+        # --- 1. TEST : EST-CE UN ADMIN ? (ACCÈS TOTAL + RSS) ---
+        # Vérifie si le mot de passe correspond à celui dans secrets.toml OU si c'est le code Admin
+        if email_or_code == self.config.admin_password or password == self.config.admin_password:
+            return {
+                "email": "ADMINISTRATEUR", 
+                "role": "ADMIN", # <--- C'est ce rôle qui débloque le RSS dans app.py
+                "name": "Administrateur"
+            }
 
-        # 2. TEST : EST-CE UN CODE PROMO (Utilisateur App) ?
-        if email_or_code == self.config.app_password or password == self.config.app_password:
-             return {"email": "Utilisateur Promo", "role": "PROMO"}
+        # --- 2. TEST : CODE PROMO "SEPT À HUIT" (PAS DE RSS) ---
+        if email_or_code == "SocialPro2026SeptHuit" or password == "SocialPro2026SeptHuit":
+             return {
+                 "email": "Invité Sept à Huit", 
+                 "role": "TRIAL", # <--- Pas de RSS
+                 "name": "Invité Découverte"
+             }
 
-        # 3. TEST : EST-CE UN MEMBRE ANDRH ?
-        if email_or_code == self.config.code_promo_andrh or password == self.config.code_promo_andrh:
-             return {"email": "Membre ANDRH (Invité)", "role": "ANDRH"}
+        # --- 3. TEST : CODE "ANDRH VIP" (PAS DE RSS) ---
+        if email_or_code == "ANDRH_2026_VIP" or password == "ANDRH_2026_VIP":
+             return {
+                 "email": "Membre ANDRH", 
+                 "role": "TRIAL", # <--- Pas de RSS
+                 "name": "Invité RH"
+             }
 
-        # 4. TEST : EST-CE UN ABONNÉ (SUPABASE) ?
+        # --- 4. TEST : ABONNÉ SUPABASE (EMAIL / MOT DE PASSE) ---
         if self.supabase and "@" in str(email_or_code) and password:
             try:
                 res = self.supabase.auth.sign_in_with_password({
@@ -48,7 +61,12 @@ class AuthManager:
                     "password": password
                 })
                 if res.user:
-                    return {"email": res.user.email, "role": "SUBSCRIBER"}
+                    # L'abonné a le rôle 'SUBSCRIBER', donc il ne voit pas le RSS Admin (sauf si vous changez la règle)
+                    return {
+                        "email": res.user.email, 
+                        "role": "SUBSCRIBER", 
+                        "name": "Abonné"
+                    }
             except Exception as e:
                 print(f"Refus connexion Supabase: {e}")
                 return None
@@ -57,8 +75,9 @@ class AuthManager:
 
     def logout(self):
         """Déconnecte l'utilisateur proprement"""
-        st.session_state.authenticated = False
-        st.session_state.user_info = None
+        if "user_info" in st.session_state:
+            del st.session_state.user_info
+        
         if self.supabase:
             try:
                 self.supabase.auth.sign_out()

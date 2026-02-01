@@ -79,43 +79,48 @@ def clean_source_name(filename, category="AUTRE"):
     return filename.replace('_', ' ')
 
 # ==============================================================================
-# 3. PAGE DE LOGIN
+# 3. PAGE DE LOGIN (CORRIGÉE)
 # ==============================================================================
 def check_password():
+    """Gère l'affichage du login et la vérification des droits"""
+    # Si l'utilisateur est déjà identifié, on passe
     if st.session_state.user_info:
         return True
 
+    # Affichage de la page de garde (Logo, Titres...)
     ui.render_top_arguments()
     ui.render_footer()
 
     st.markdown("<h1 style='text-align: left; color: #253E92;'>SOCIAL EXPERT FRANCE — VOTRE COPILOTE RH & PAIE EN 2026.</h1>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: left; color: #253E92;'>Des règles officielles. Des calculs sans erreur. Des décisions que vous pouvez défendre.</h2>", unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    t1, t2 = st.tabs(["🔐 Je suis abonné", "J'ai un code découverte"])
     
+    # Onglets Connexion
+    t1, t2 = st.tabs(["🔐 Je suis abonné", "🎫 J'ai un code découverte"])
+    
+    # Onglet 1 : Abonnés Email/Mdp
     with t1:
         email = st.text_input("Email", key="login_email")
         pwd = st.text_input("Mot de passe", type="password", key="login_pwd")
         if st.button("Connexion", use_container_width=True, type="primary"):
             user = auth.login(email, pwd)
             if user:
-                st.session_state.user_info = user
+                st.session_state.user_info = user # On stocke le dictionnaire complet
                 st.rerun()
             else:
                 st.error("Identifiants incorrects.")
         
+        # Section Abonnement
         st.markdown("---")
         st.subheader("PAS ENCORE ABONNÉ ?")
-        st.write("Débloquez l'accès illimité et le mode Expert Social 2026.")
         ui.render_subscription_cards()
 
+    # Onglet 2 : Code Découverte (C'est ici que SeptHuit et ANDRH sont gérés)
     with t2:
         code = st.text_input("Code", type="password", key="login_code")
         if st.button("Valider", use_container_width=True):
-            user = auth.login(code, code)
+            # On passe le code comme 'username' ET 'password' à la méthode login
+            user = auth.login(code, code) 
             if user:
-                st.session_state.user_info = user
+                st.session_state.user_info = user # On stocke le résultat (ex: Role TRIAL)
                 st.rerun()
             else:
                 st.error("Code erroné.")
