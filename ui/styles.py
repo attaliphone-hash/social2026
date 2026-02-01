@@ -9,7 +9,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Capsule, etc.)"""
+    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Capsule Orange, etc.)"""
     st.markdown("""
 <style>
 /* --- IMPORT DES POLICES --- */
@@ -110,7 +110,7 @@ button[kind="tertiary"] {
 }
 .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
 
-/* --- 💬 BARRE DE CHAT AMÉLIORÉE (STYLE CAPSULE) --- */
+/* --- 💬 BARRE DE CHAT AMÉLIORÉE V2 (STYLE CAPSULE ORANGE) --- */
 
 /* 1. La Zone Globale (La Capsule) */
 div[data-testid="stChatInput"] {
@@ -123,34 +123,41 @@ div[data-testid="stChatInput"] {
     transition: all 0.3s ease;
 }
 
-/* 2. Focus : Quand on clique dedans (L'effet "Active") */
+/* 2. Focus : Quand on clique dedans (L'effet "Active" en ORANGE) */
 div[data-testid="stChatInput"]:focus-within {
-    border-color: #253E92 !important; /* Bleu Social Expert */
-    box-shadow: 0 4px 15px rgba(37, 62, 146, 0.3) !important; /* Ombre bleutée */
+    border-color: #eda146 !important; /* Orange demandé */
+    box-shadow: 0 4px 15px rgba(237, 161, 70, 0.3) !important; /* Ombre orangée */
 }
 
 /* 3. Le Champ de texte lui-même */
 div[data-testid="stChatInput"] textarea {
-    background-color: transparent !important; /* Fond transparent pour profiter de la capsule */
-    color: #333 !important;
-    font-size: 16px !important; /* Taille lisible sur mobile */
+    background-color: transparent !important;
+    color: #333 !important; /* Couleur du texte tapé (foncé) */
+    font-size: 16px !important;
 }
 
-/* 4. LE BOUTON "ENVOYER" (Bouton Bleu Rond) */
+/* 🆕 NOUVEAU : Cible le texte "fantôme" (Placeholder) pour le rendre pâle */
+div[data-testid="stChatInput"] textarea::placeholder {
+    color: #a0a0a0 !important; /* Gris pâle */
+    opacity: 1 !important; /* Nécessaire pour certains navigateurs */
+}
+
+/* 4. LE BOUTON "ENVOYER" (Bouton Orange Rond) */
 div[data-testid="stChatInput"] button {
-    background-color: #253E92 !important; /* Fond Bleu */
+    background-color: #eda146 !important; /* Fond Orange */
     color: white !important; /* Icône Blanche */
     border-radius: 50% !important; /* Rond parfait */
     width: 35px !important;
     height: 35px !important;
     border: none !important;
+    outline: none !important; /* 🆕 Supprime le liseré carré au focus */
     margin-right: 5px !important;
     transition: background-color 0.2s;
 }
 
-/* Hover du bouton */
+/* Hover du bouton (Orange un peu plus foncé) */
 div[data-testid="stChatInput"] button:hover {
-    background-color: #1a2b6d !important; /* Bleu plus foncé au survol */
+    background-color: #c98636 !important;
 }
 
 /* Couleur de l'icône SVG dans le bouton */
@@ -162,7 +169,7 @@ div[data-testid="stChatInput"] button svg {
 </style>
 """, unsafe_allow_html=True)
 
-    # Gestion de l'image de fond (Vérification si le fichier existe)
+    # Gestion de l'image de fond
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
