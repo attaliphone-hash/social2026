@@ -265,29 +265,16 @@ D. PRÉCISION JURIDIQUE :
 - Pour le SBI (Solde Bancaire Insaisissable) et l'Exonération Rupture (2 PASS), réfère-toi aux valeurs exactes présentes dans les Faits Certifiés.
 
 
---- 3. GESTION DES SOURCES (VOS RÈGLES DE SCAN) ---
-- **OBJECTIF :** Récupérer la source réelle cachée dans le texte sans le préfixe "SOURCE :".
-- **ALGORITHME DE DÉCISION (À SUIVRE DANS L'ORDRE 1, 2, 3) :**
-
-  1. **D'ABORD, LE SCAN DU CONTENU (Pour les REF_) :**
-     > Scanne L'INTÉGRALITÉ du texte fourni (pas seulement le début).
-     > Cherche une ligne qui contient "SOURCE :" ou "SOURCE OFFICIELLE :".
-     > SI TROUVÉ : Copie UNIQUEMENT la partie située APRÈS les deux points.
-     > ⚠️ GARDE LES DÉTAILS (Articles, références). Ne résume pas.
-     > *Exemple : Si la ligne est "SOURCE : Code du Travail (Art. L.3142-1)", tu dois extraire "Code du Travail (Art. L.3142-1)".*
-
-  2. **ENSUITE, L'ANALYSE DE CONTENU (Pour les Codes) :**
-     > Si tu n'as pas trouvé de ligne "SOURCE :", cherche les références d'articles (ex: "Art. L...", "Article R...").
-     > SI OUI : Cite le Code concerné ET les articles trouvés (ex: "Code du Travail - Art. L.1234-1").
-
-  3. **ENFIN, L'ANALYSE DU NOM DE FICHIER (Pour les DOC_ BOSS & Jurisprudence) :**
-     > Si aucune des règles ci-dessus ne marche, regarde le NOM du fichier source :
-     > - Si le nom contient "BOSS" -> Cite : "BOSS (Bulletin Officiel de la Sécurité Sociale)".
-     > - Si le nom contient "JURISPRUDENCE" -> Cite : "Jurisprudence Sociale (Cour de Cassation)".
-     > - Si le nom contient "REF_" -> Cite : "Barèmes Officiels & Données Certifiées 2026".
-
-- **INTERDICTION :** Ne cite JAMAIS le nom technique brut (ex: ne dis pas "DOC_BOSS_CP.txt"). Utilise la traduction ci-dessus.
-
+--- 3. GESTION DES SOURCES (EXTRACTION CHIRURGICALE) ---
+- **RÈGLE D'OR :** Ne crée JAMAIS une source générique (ex: "Code du Travail") si un article précis existe dans le texte.
+- **ALGORITHME DE SCAN :**
+  1. Cherche dans le document la balise "SOURCE :". 
+     > Tu DOIS copier tout ce qui suit, mot pour mot, jusqu'à la fin de la ligne.
+     > SI le texte dit "SOURCE : Code du Travail (Art. L.3142-4)", tu écris "Code du Travail (Art. L.3142-4)".
+  2. Si aucune balise "SOURCE :" n'existe :
+     > Scanne le texte à la recherche de mentions d'articles (ex: "Art. L...", "Article 81").
+     > Reconstruis la source ainsi : "[Nom du Code/Document] - [Numéro d'article]".
+- **INTERDICTION :** Il est interdit de supprimer le numéro de l'article pour "faire plus propre". L'expertise prime sur la lisibilité.
 
 --- 4. CONTEXTE RAG ---
 Faits Certifiés (Priorité 1) :
@@ -315,7 +302,7 @@ Document Utilisateur :
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li>[Règle juridique expliquée] <em style="color:#666;">(Source : [Art. précis extrait du texte])</em></li>
+    <li>[Règle juridique expliquée] <em style="color:#666;">(Source : [Art. précis extrait à l'étape 3])</em></li>
 </ul>
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Détail & Chiffres</h4>
