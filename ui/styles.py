@@ -9,7 +9,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Style Carré Orange)"""
+    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Style Carré Orange V6)"""
     st.markdown("""
 <style>
 /* --- IMPORT DES POLICES --- */
@@ -110,90 +110,82 @@ button[kind="tertiary"] {
 }
 .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
 
-/* --- 💬 BARRE DE CHAT V5 (STYLE PRO & CARRÉ) --- */
+/* --- 💬 BARRE DE CHAT V6 (FORCE BRUTE) --- */
 
-/* 1. Le Conteneur Global (Rectangle aux bords adoucis) */
-div[data-testid="stChatInput"] {
-    border-radius: 10px !important; /* Arrondi léger (style field carré) */
-    border: 1px solid #d0d0d0 !important;
-    background-color: white !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
-    padding: 5px !important;
-    margin-bottom: 20px !important;
+/* 1. CIBLAGE DU WRAPPER INTERNE (C'est lui qui porte la bordure) */
+div[data-testid="stChatInput"] > div {
+    border-radius: 12px !important;
+    border: 2px solid #e0e0e0 !important; /* Bordure GRISE par défaut */
+    background-color: white !important; /* Fond BLANC forcé */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     align-items: center !important;
+    padding-right: 5px !important;
 }
 
-/* 2. Focus : Quand on clique dedans (Bordure ORANGE bien visible) */
-div[data-testid="stChatInput"]:focus-within {
-    border: 2px solid #eda146 !important; /* 2px pour être sûr qu'on la voit */
-    box-shadow: 0 4px 10px rgba(237, 161, 70, 0.15) !important;
+/* 2. FOCUS SUR LE WRAPPER (La bordure devient ORANGE) */
+div[data-testid="stChatInput"] > div:focus-within {
+    border-color: #eda146 !important; /* ORANGE au focus */
+    box-shadow: 0 4px 12px rgba(237, 161, 70, 0.2) !important;
 }
 
-/* 3. Le Champ de texte */
+/* 3. LE CHAMP TEXTE (Transparent pour laisser voir le blanc derrière) */
 div[data-testid="stChatInput"] textarea {
     background-color: transparent !important;
     color: #333 !important;
     font-size: 16px !important;
-    padding: 10px !important; /* Espace interne */
+    padding: 10px !important;
+    border: none !important; /* Pas de bordure interne */
 }
 
-/* Placeholder PÂLE */
+/* Placeholder pâle */
 div[data-testid="stChatInput"] textarea::placeholder {
     color: #d0d0d0 !important;
     opacity: 1 !important;
 }
 
-/* 4. LE BOUTON (CARRÉ ORANGE TYPE APPLI) */
+/* 4. LE BOUTON CARRÉ ORANGE */
 div[data-testid="stChatInput"] button {
-    background-color: #eda146 !important;
+    background-color: #eda146 !important; /* ORANGE */
     color: white !important;
-    border-radius: 8px !important; /* Le Squircle parfait */
+    border-radius: 8px !important; /* Carré arrondi */
     width: 38px !important;
     height: 38px !important;
     border: none !important;
     outline: none !important;
-    margin-right: 2px !important;
-    
-    /* Centrage absolu du contenu */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    margin-left: 5px !important;
 }
 
-/* Suppression focus parasite */
-div[data-testid="stChatInput"] button:focus, 
+/* Suppression des effets parasites au clic */
+div[data-testid="stChatInput"] button:focus,
 div[data-testid="stChatInput"] button:active {
     background-color: #eda146 !important;
-    box-shadow: none !important;
+    color: white !important;
+    border: none !important;
     outline: none !important;
+    box-shadow: none !important;
 }
 
-/* Hover */
-div[data-testid="stChatInput"] button:hover {
-    background-color: #d68b35 !important;
-}
-
-/* 5. LA FLÈCHE (Vraie flèche Unicode propre) */
-
-/* A. On cache le SVG par défaut */
+/* 5. REMPLACEMENT ICÔNE PAR FLÈCHE */
 div[data-testid="stChatInput"] button svg {
     display: none !important;
 }
 
-/* B. On affiche la flèche */
 div[data-testid="stChatInput"] button::after {
     content: "↑" !important;
     color: white !important;
-    font-size: 22px !important; /* Taille ajustée pour ne pas être rognée */
-    font-weight: 500 !important;
+    font-size: 20px !important;
+    font-weight: bold !important;
     line-height: 1 !important;
-    padding-bottom: 2px !important; /* Petit ajustement optique */
+    padding-bottom: 2px !important;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-    # Gestion de l'image de fond (Syntaxe corrigée)
+    # Gestion de l'image de fond
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f"""
