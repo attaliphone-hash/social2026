@@ -9,7 +9,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Style Capture User)"""
+    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Style Carré Orange)"""
     st.markdown("""
 <style>
 /* --- IMPORT DES POLICES --- */
@@ -110,22 +110,22 @@ button[kind="tertiary"] {
 }
 .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
 
-/* --- 💬 BARRE DE CHAT V4 (CONFORME CAPTURE USER) --- */
+/* --- 💬 BARRE DE CHAT V5 (STYLE PRO & CARRÉ) --- */
 
-/* 1. La Zone Globale (La Capsule) */
+/* 1. Le Conteneur Global (Rectangle aux bords adoucis) */
 div[data-testid="stChatInput"] {
-    border-radius: 12px !important; /* Arrondi léger comme sur la capture */
-    border: 1px solid #E0E0E0 !important;
+    border-radius: 10px !important; /* Arrondi léger (style field carré) */
+    border: 1px solid #d0d0d0 !important;
     background-color: white !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
-    padding: 3px !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+    padding: 5px !important;
     margin-bottom: 20px !important;
     align-items: center !important;
 }
 
-/* 2. Focus : Quand on clique dedans (Bordure ORANGE fine) */
+/* 2. Focus : Quand on clique dedans (Bordure ORANGE bien visible) */
 div[data-testid="stChatInput"]:focus-within {
-    border-color: #eda146 !important;
+    border: 2px solid #eda146 !important; /* 2px pour être sûr qu'on la voit */
     box-shadow: 0 4px 10px rgba(237, 161, 70, 0.15) !important;
 }
 
@@ -133,67 +133,67 @@ div[data-testid="stChatInput"]:focus-within {
 div[data-testid="stChatInput"] textarea {
     background-color: transparent !important;
     color: #333 !important;
-    font-size: 15px !important;
-    padding-left: 10px !important;
+    font-size: 16px !important;
+    padding: 10px !important; /* Espace interne */
 }
 
-/* Placeholder TRES PÂLE (Demande utilisateur) */
+/* Placeholder PÂLE */
 div[data-testid="stChatInput"] textarea::placeholder {
-    color: #d0d0d0 !important; /* Gris très clair */
+    color: #d0d0d0 !important;
     opacity: 1 !important;
 }
 
-/* 4. LE BOUTON (CARRÉ ARRONDIS ORANGE) */
+/* 4. LE BOUTON (CARRÉ ORANGE TYPE APPLI) */
 div[data-testid="stChatInput"] button {
-    background-color: #eda146 !important; /* Orange User */
+    background-color: #eda146 !important;
     color: white !important;
-    border-radius: 8px !important; /* Le "Squircle" de la capture */
-    width: 32px !important;
-    height: 32px !important;
+    border-radius: 8px !important; /* Le Squircle parfait */
+    width: 38px !important;
+    height: 38px !important;
     border: none !important;
     outline: none !important;
-    box-shadow: none !important; /* Supprime le liseré carré moche */
-    margin-right: 0px !important;
+    margin-right: 2px !important;
+    
+    /* Centrage absolu du contenu */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
 
-/* Suppression FORCEE des bordures focus natives */
+/* Suppression focus parasite */
 div[data-testid="stChatInput"] button:focus, 
 div[data-testid="stChatInput"] button:active {
+    background-color: #eda146 !important;
     box-shadow: none !important;
     outline: none !important;
-    border: none !important;
-    background-color: #eda146 !important;
 }
 
-/* 5. L'ICÔNE : ON REMPLACE LE SVG PAR UNE VRAIE FLÈCHE */
+/* Hover */
+div[data-testid="stChatInput"] button:hover {
+    background-color: #d68b35 !important;
+}
 
-/* Étape A : On cache l'icône par défaut (souvent un avion) */
+/* 5. LA FLÈCHE (Vraie flèche Unicode propre) */
+
+/* A. On cache le SVG par défaut */
 div[data-testid="stChatInput"] button svg {
     display: none !important;
 }
 
-/* Étape B : On injecte une flèche simple via CSS */
+/* B. On affiche la flèche */
 div[data-testid="stChatInput"] button::after {
-    content: "↑" !important; /* Caractère flèche simple */
+    content: "↑" !important;
     color: white !important;
-    font-size: 18px !important;
-    font-weight: bold !important;
+    font-size: 22px !important; /* Taille ajustée pour ne pas être rognée */
+    font-weight: 500 !important;
     line-height: 1 !important;
-    margin-bottom: 2px !important; /* Ajustement centrage vertical */
-}
-
-/* Hover du bouton */
-div[data-testid="stChatInput"] button:hover {
-    background-color: #d68b35 !important;
+    padding-bottom: 2px !important; /* Petit ajustement optique */
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-    # Gestion de l'image de fond (Correction de la syntaxe f-string triple quotes)
+    # Gestion de l'image de fond (Syntaxe corrigée)
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f"""
