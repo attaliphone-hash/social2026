@@ -315,7 +315,7 @@ Document Utilisateur :
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li>[Règle juridique expliquée clairement. Si nécessaire, intègre la référence (ex: "Selon l'art. L...") au début de la phrase, mais jamais à la fin.]</li>
+    <li>[Règle juridique expliquée] <em style="color:#666;">(Source : [Art. précis extrait du texte])</em></li>
 </ul>
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Détail & Chiffres</h4>
