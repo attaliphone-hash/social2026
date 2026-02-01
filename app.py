@@ -167,8 +167,6 @@ if uploaded_file:
         if user_doc_content:
             st.toast(f"📎 {uploaded_file.name} analysé avec succès", icon="✅")
 
-
-
 # 8. AFFICHAGE DES MESSAGES
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
@@ -199,7 +197,7 @@ if user_input:
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         box = st.empty()
         
-        # Moteur de règles : Extraction des faits (Correction : Utilisation de l'input brut pour le matching)
+        # Moteur de règles : Extraction des faits
         matched = engine.match_rules(user_input)
         facts = engine.format_certified_facts(matched)
 
@@ -215,10 +213,8 @@ if user_input:
                 sources_seen.append(pretty_name)
             context_str += f"[SOURCE: {pretty_name}]\n{d.page_content}\n\n"
 
-
-
-# --- LE CERVEAU V87 (NETTOYAGE SOURCE + SCAN GLOBAL + HTML PRO) ---
-template = """
+        # --- LE CERVEAU V87 (NETTOYAGE SOURCE + SCAN GLOBAL + HTML PRO) ---
+        template = """
 Tu es l'Expert Social Pro 2026.
 
 💎 RÈGLES DE FORME & VOCABULAIRE (CRITIQUE) :
@@ -358,7 +354,6 @@ QUESTION : {question}
         
         full_response = ""
         try:
-            # Note : "sources_list" a été supprimé ci-dessous comme validé
             for chunk in chain.stream({
                 "context": context_str, 
                 "question": user_input, 
