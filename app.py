@@ -134,8 +134,10 @@ ui.render_top_arguments()
 # 2. FOOTER
 ui.render_footer()
 
-# 3. VEILLE JURIDIQUE
-show_legal_watch_bar()
+# 3. VEILLE JURIDIQUE (RESTREINT AUX ADMINS)
+# Seul l'utilisateur avec le rôle 'ADMIN' doit voir les flux RSS
+if st.session_state.user_info.get("role") == "ADMIN":
+    show_legal_watch_bar()
 
 # 4. ACTIONS (UPLOAD / NOUVELLE SESSION)
 col_act1, col_act2, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
