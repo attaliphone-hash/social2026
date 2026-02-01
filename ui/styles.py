@@ -9,7 +9,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    """Applique le CSS global (Baskerville, Boutons Rouges, etc.)"""
+    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Capsule, etc.)"""
     st.markdown("""
 <style>
 /* --- IMPORT DES POLICES --- */
@@ -103,12 +103,62 @@ button[kind="tertiary"] {
     border: none !important;
 }
 
-/* --- RESPONSIVE & CHAT --- */
+/* --- RESPONSIVE & MESSAGES --- */
 @media (max-width: 768px) {
     [data-testid="column"] { margin-bottom: -15px !important; }
     div[data-testid="stVerticalBlock"] > div { gap: 0.5rem !important; }
 }
 .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
+
+/* --- 💬 BARRE DE CHAT AMÉLIORÉE (STYLE CAPSULE) --- */
+
+/* 1. La Zone Globale (La Capsule) */
+div[data-testid="stChatInput"] {
+    border-radius: 25px !important;
+    border: 2px solid #E0E0E0 !important; /* Bordure grise par défaut */
+    background-color: white !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; /* Ombre portée (Relief) */
+    padding: 5px !important;
+    margin-bottom: 20px !important; /* Décolle du bas de l'écran */
+    transition: all 0.3s ease;
+}
+
+/* 2. Focus : Quand on clique dedans (L'effet "Active") */
+div[data-testid="stChatInput"]:focus-within {
+    border-color: #253E92 !important; /* Bleu Social Expert */
+    box-shadow: 0 4px 15px rgba(37, 62, 146, 0.3) !important; /* Ombre bleutée */
+}
+
+/* 3. Le Champ de texte lui-même */
+div[data-testid="stChatInput"] textarea {
+    background-color: transparent !important; /* Fond transparent pour profiter de la capsule */
+    color: #333 !important;
+    font-size: 16px !important; /* Taille lisible sur mobile */
+}
+
+/* 4. LE BOUTON "ENVOYER" (Bouton Bleu Rond) */
+div[data-testid="stChatInput"] button {
+    background-color: #253E92 !important; /* Fond Bleu */
+    color: white !important; /* Icône Blanche */
+    border-radius: 50% !important; /* Rond parfait */
+    width: 35px !important;
+    height: 35px !important;
+    border: none !important;
+    margin-right: 5px !important;
+    transition: background-color 0.2s;
+}
+
+/* Hover du bouton */
+div[data-testid="stChatInput"] button:hover {
+    background-color: #1a2b6d !important; /* Bleu plus foncé au survol */
+}
+
+/* Couleur de l'icône SVG dans le bouton */
+div[data-testid="stChatInput"] button svg {
+    fill: white !important;
+    stroke: white !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
