@@ -193,7 +193,25 @@ div[data-testid="stChatInput"] button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-    # Gestion de l'image de fond
+    # Gestion de l'image de fond (Correction de la syntaxe f-string triple quotes)
     bg_data = get_base64('background.webp')
     if bg_data:
-        st.markdown(f'<style>.stApp {{ background-image: url("data:image/
+        st.markdown(f"""
+            <style>
+            .stApp {{
+                background-image: url("data:image/webp;base64,{bg_data}");
+                background-size: cover;
+                background-attachment: fixed;
+            }}
+            </style>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <style>
+            .stApp {
+                background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png");
+                background-size: cover;
+                background-color: #f0f2f6;
+            }
+            </style>
+        """, unsafe_allow_html=True)
