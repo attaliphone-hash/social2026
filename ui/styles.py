@@ -9,7 +9,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    """Applique le CSS global (Baskerville, Boutons Rouges) - CHAT REMIS À ZÉRO"""
+    """Applique le CSS global + Tweaks couleurs Chat (Texte pâle & Icône Orange)"""
     st.markdown("""
 <style>
 /* --- IMPORT DES POLICES --- */
@@ -110,10 +110,36 @@ button[kind="tertiary"] {
 }
 .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
 
+
+/* --- 🎨 MODIFICATIONS COULEURS CHAT (CHIRURGICAL) --- */
+
+/* 1. GESTION DU TEXTE */
+div[data-testid="stChatInput"] textarea {
+    color: #000000 !important; /* Le texte écrit par l'utilisateur reste bien NOIR */
+}
+
+/* Le texte "fantôme" (Placeholder) devient GRIS PÂLE */
+div[data-testid="stChatInput"] textarea::placeholder {
+    color: #b0b0b0 !important; /* Gris clair */
+    opacity: 1 !important;
+}
+
+/* 2. GESTION DE L'ICÔNE D'ENVOI */
+div[data-testid="stChatInput"] button {
+    color: #eda146 !important; /* L'icône devient ORANGE */
+    border: none !important;
+    background: transparent !important;
+}
+
+/* Petit effet au survol (Orange un peu plus foncé) */
+div[data-testid="stChatInput"] button:hover {
+    color: #c98636 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-    # Gestion de l'image de fond (Corrigée pour éviter l'erreur de syntaxe)
+    # Gestion de l'image de fond
     bg_data = get_base64('background.webp')
     if bg_data:
         st.markdown(f"""
