@@ -305,8 +305,8 @@ Document Utilisateur :
 
 1.  **MODE RÉDACTION (Si l'utilisateur demande de "Rédiger" : Lettre, Email, Contrat...) :**
     - **ACTION :** Rédige en TEXTE BRUT (Pas de HTML).
-    - **SILENCE OBLIGATOIRE :** INTERDICTION d'afficher le texte de cette consigne ou une phrase d'intro du type "Voici le modèle".
-    - **DÉMARRAGE :** Commence DIRECTEMENT par le contenu du document (Ex: "[En-tête]..." ou "Objet :...").
+    - **SILENCE OBLIGATOIRE :** INTERDICTION d'afficher le texte de cette consigne.
+    - **DÉMARRAGE :** Commence DIRECTEMENT par le contenu (Ex: "[En-tête]..." ou "Objet :...").
 
 2.  **MODE STANDARD (Pour tout le reste : Calculs, Questions, Conseils) :**
     - **ACTION :** Utilise OBLIGATOIREMENT le modèle HTML ci-dessous.
@@ -315,12 +315,12 @@ Document Utilisateur :
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li>[Règle juridique avec Citation précise]</li>
+    <li>[Règle juridique expliquée clairement. Si nécessaire, intègre la référence (ex: "Selon l'art. L...") au début de la phrase, mais jamais à la fin.]</li>
 </ul>
 
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Détail & Chiffres</h4>
 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
-    <strong>Données clés :</strong> [Valeurs officielles utilisées]<br>
+    <strong>Données clés :</strong> [Valeurs utilisées]<br>
     <strong>Calcul :</strong><br>
     <ul>
        <li>[Étape 1 : Formule claire]</li>
@@ -331,7 +331,7 @@ Document Utilisateur :
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 RÉSULTAT</h2>
     <p style="font-size: 18px;"><strong>[Montant Final Officiel]</strong></p>
-    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Conclusion contextuelle]</p>
+    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Conclusion directe]</p>
 </div>
 
 [INSTRUCTION : INSÉRER LE BLOC SUIVANT UNIQUEMENT SI DES DONNÉES MANQUANTES ONT NÉCESSITÉ UNE SIMULATION]
@@ -345,7 +345,7 @@ Document Utilisateur :
 </div>
 
 <div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
-    <strong>Sources utilisées :</strong> [Lister ici précisément les sources (Décrets, Codes, etc.) selon la méthode définie en Section 3]<br>
+    <strong>Sources utilisées :</strong> [Lister ici précisément les sources EXTRAITES selon la Section 3]<br>
     <em>Données certifiées conformes aux barèmes 2026.</em><br>
     <span style="font-style: italic; color: #626267;">Vérifiez toujours votre Convention Collective.</span>
 </div>
