@@ -9,7 +9,7 @@ def get_base64(bin_file):
     return ""
 
 def apply_pro_design():
-    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Capsule Orange, etc.)"""
+    """Applique le CSS global (Baskerville, Boutons Rouges, Chat Style Capture User)"""
     st.markdown("""
 <style>
 /* --- IMPORT DES POLICES --- */
@@ -110,60 +110,84 @@ button[kind="tertiary"] {
 }
 .stChatMessage { background-color: rgba(255,255,255,0.95); border-radius: 15px; border: 1px solid #e0e0e0; }
 
-/* --- 💬 BARRE DE CHAT AMÉLIORÉE V2 (STYLE CAPSULE ORANGE) --- */
+/* --- 💬 BARRE DE CHAT V4 (CONFORME CAPTURE USER) --- */
 
 /* 1. La Zone Globale (La Capsule) */
 div[data-testid="stChatInput"] {
-    border-radius: 25px !important;
-    border: 2px solid #E0E0E0 !important; /* Bordure grise par défaut */
+    border-radius: 12px !important; /* Arrondi léger comme sur la capture */
+    border: 1px solid #E0E0E0 !important;
     background-color: white !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; /* Ombre portée (Relief) */
-    padding: 5px !important;
-    margin-bottom: 20px !important; /* Décolle du bas de l'écran */
-    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
+    padding: 3px !important;
+    margin-bottom: 20px !important;
+    align-items: center !important;
 }
 
-/* 2. Focus : Quand on clique dedans (L'effet "Active" en ORANGE) */
+/* 2. Focus : Quand on clique dedans (Bordure ORANGE fine) */
 div[data-testid="stChatInput"]:focus-within {
-    border-color: #eda146 !important; /* Orange demandé */
-    box-shadow: 0 4px 15px rgba(237, 161, 70, 0.3) !important; /* Ombre orangée */
+    border-color: #eda146 !important;
+    box-shadow: 0 4px 10px rgba(237, 161, 70, 0.15) !important;
 }
 
-/* 3. Le Champ de texte lui-même */
+/* 3. Le Champ de texte */
 div[data-testid="stChatInput"] textarea {
     background-color: transparent !important;
-    color: #333 !important; /* Couleur du texte tapé (foncé) */
-    font-size: 16px !important;
+    color: #333 !important;
+    font-size: 15px !important;
+    padding-left: 10px !important;
 }
 
-/* 🆕 NOUVEAU : Cible le texte "fantôme" (Placeholder) pour le rendre pâle */
+/* Placeholder TRES PÂLE (Demande utilisateur) */
 div[data-testid="stChatInput"] textarea::placeholder {
-    color: #a0a0a0 !important; /* Gris pâle */
-    opacity: 1 !important; /* Nécessaire pour certains navigateurs */
+    color: #d0d0d0 !important; /* Gris très clair */
+    opacity: 1 !important;
 }
 
-/* 4. LE BOUTON "ENVOYER" (Bouton Orange Rond) */
+/* 4. LE BOUTON (CARRÉ ARRONDIS ORANGE) */
 div[data-testid="stChatInput"] button {
-    background-color: #eda146 !important; /* Fond Orange */
-    color: white !important; /* Icône Blanche */
-    border-radius: 50% !important; /* Rond parfait */
-    width: 35px !important;
-    height: 35px !important;
+    background-color: #eda146 !important; /* Orange User */
+    color: white !important;
+    border-radius: 8px !important; /* Le "Squircle" de la capture */
+    width: 32px !important;
+    height: 32px !important;
     border: none !important;
-    outline: none !important; /* 🆕 Supprime le liseré carré au focus */
-    margin-right: 5px !important;
-    transition: background-color 0.2s;
+    outline: none !important;
+    box-shadow: none !important; /* Supprime le liseré carré moche */
+    margin-right: 0px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
-/* Hover du bouton (Orange un peu plus foncé) */
-div[data-testid="stChatInput"] button:hover {
-    background-color: #c98636 !important;
+/* Suppression FORCEE des bordures focus natives */
+div[data-testid="stChatInput"] button:focus, 
+div[data-testid="stChatInput"] button:active {
+    box-shadow: none !important;
+    outline: none !important;
+    border: none !important;
+    background-color: #eda146 !important;
 }
 
-/* Couleur de l'icône SVG dans le bouton */
+/* 5. L'ICÔNE : ON REMPLACE LE SVG PAR UNE VRAIE FLÈCHE */
+
+/* Étape A : On cache l'icône par défaut (souvent un avion) */
 div[data-testid="stChatInput"] button svg {
-    fill: white !important;
-    stroke: white !important;
+    display: none !important;
+}
+
+/* Étape B : On injecte une flèche simple via CSS */
+div[data-testid="stChatInput"] button::after {
+    content: "↑" !important; /* Caractère flèche simple */
+    color: white !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    margin-bottom: 2px !important; /* Ajustement centrage vertical */
+}
+
+/* Hover du bouton */
+div[data-testid="stChatInput"] button:hover {
+    background-color: #d68b35 !important;
 }
 
 </style>
@@ -172,6 +196,4 @@ div[data-testid="stChatInput"] button svg {
     # Gestion de l'image de fond
     bg_data = get_base64('background.webp')
     if bg_data:
-        st.markdown(f'<style>.stApp {{ background-image: url("data:image/webp;base64,{bg_data}"); background-size: cover; background-attachment: fixed; }}</style>', unsafe_allow_html=True)
-    else:
-        st.markdown("""<style>.stApp { background-image: url("https://www.transparenttextures.com/patterns/legal-pad.png"); background-size: cover; background-color: #f0f2f6; }</style>""", unsafe_allow_html=True)
+        st.markdown(f'<style>.stApp {{ background-image: url("data:image/
