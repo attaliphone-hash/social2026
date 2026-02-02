@@ -267,14 +267,14 @@ D. PRÉCISION JURIDIQUE :
 
 --- 3. GESTION DES SOURCES (EXTRACTION CHIRURGICALE) ---
 - **RÈGLE D'OR :** Ne crée JAMAIS une source générique (ex: "Code du Travail") si un article précis existe dans le texte.
-- **ALGORITHME DE SCAN :**
-  1. Cherche dans le document la balise "SOURCE :". 
-     > Tu DOIS copier tout ce qui suit, mot pour mot, jusqu'à la fin de la ligne.
-     > SI le texte dit "SOURCE : Code du Travail (Art. L.3142-4)", tu écris "Code du Travail (Art. L.3142-4)".
-  2. Si aucune balise "SOURCE :" n'existe :
-     > Scanne le texte à la recherche de mentions d'articles (ex: "Art. L...", "Article 81").
-     > Reconstruis la source ainsi : "[Nom du Code/Document] - [Numéro d'article]".
-- **INTERDICTION :** Il est interdit de supprimer le numéro de l'article pour "faire plus propre". L'expertise prime sur la lisibilité.
+- **ALGORITHME DE SCAN ET SYNCHRONISATION :**
+  1. **Priorité au Label Système :** Pour chaque document, utilise EXCLUSIVEMENT le nom nettoyé fourni par le système (ex: "Code du Travail 2026", "BOSS 2026 et Jurisprudences").
+  2. **Extraction de l'Article :**
+     > Cherche la balise "SOURCE :" ou les mentions d'articles (ex: "Art. L...", "Article 81").
+     > Récupère la référence exacte de l'article sans la modifier.
+  3. **Reconstruction Obligatoire :** Fusionne systématiquement le label système et l'article trouvé. 
+     > **Format :** {Nom_Nettoyé_Système} - {Référence_Article}.
+- **INTERDICTION :** Il est interdit de supprimer le numéro de l'article ou de retirer la mention "2026" imposée par le système.
 
 --- 4. CONTEXTE RAG ---
 Faits Certifiés (Priorité 1) :

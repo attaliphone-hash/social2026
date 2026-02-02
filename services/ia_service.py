@@ -47,11 +47,21 @@ class IAService:
         try:
             # Recherche de similarité
             docs = self.vectorstore.similarity_search(query, k=k)
+            
+            # --- AJOUT DU PONT DE COHÉRENCE ---
+            # On applique le label propre (ex: Code du Travail 2026) dès la sortie de base
+            from app import clean_source_name
+            for doc in docs:
+                raw_path = doc.metadata.get('source', 'AUTRE')
+                category = doc.metadata.get('category', 'AUTRE')
+                # On crée une nouvelle clé 'clean_name' que le prompt utilisera
+                doc.metadata['clean_name'] = clean_source_name(raw_path, category)
+            # ----------------------------------
+            
             return docs
         except Exception as e:
             print(f"Erreur recherche Pinecone: {e}")
             return []
-
     def get_llm(self):
         """Retourne l'instance du LLM pour LangChain"""
         return self.llm
