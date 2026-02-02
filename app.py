@@ -273,9 +273,9 @@ D. PRÉCISION JURIDIQUE :
      > Cherche la balise "SOURCE :" ou les mentions d'articles (ex: "Art. L...", "Article 81").
      > Récupère la référence exacte de l'article sans la modifier.
   3. **Reconstruction Obligatoire :** Fusionne systématiquement le label système et l'article trouvé. 
-     > **Format :** {Nom_Nettoyé_Système} - {Référence_Article}.
+     > **Format :** {{Nom_Nettoyé_Système}} - {{Référence_Article}}.
+     > *Exemple : "Code du Travail 2026 - Art. L.3142-4"*.
 - **INTERDICTION :** Il est interdit de supprimer le numéro de l'article ou de retirer la mention "2026" imposée par le système.
-
 --- 4. CONTEXTE RAG ---
 Faits Certifiés (Priorité 1) :
 {certified_facts}
