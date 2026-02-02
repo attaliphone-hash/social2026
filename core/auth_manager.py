@@ -21,25 +21,23 @@ class AuthManager:
         """
 
         # --- CAS 1 : ONGLET "J'AI UN CODE DÉCOUVERTE" (Code seul) ---
-        # Ici, email_or_code contient le CODE. password est vide.
-        
-        # 1. Test du Code "SocialPro..." (APP_PASSWORD dans votre .env)
-        if email_or_code == os.getenv("APP_PASSWORD"):
-             return {
-                 "email": "Invité Découverte", 
-                 "role": "TRIAL", # 🔒 PAS DE RSS, PAS DE DEBUG
-                 "name": "Invité Découverte",
-                 "id": "guest_sp"
-             }
+        # Ici, email_or_code contient le CODE saisi par l'utilisateur.
+        code_saisi = str(email_or_code).strip()
 
-        # 2. Test du Code "ANDRH..." (CODE_PROMO_ANDRH dans votre .env)
-        if email_or_code == os.getenv("CODE_PROMO_ANDRH"):
-             return {
-                 "email": "Invité RH", 
-                 "role": "TRIAL", # 🔒 PAS DE RSS, PAS DE DEBUG
-                 "name": "Invité RH",
-                 "id": "guest_andrh"
-             }
+        # On récupère la liste unique que vous avez créée sur Google Run
+        raw_promo_codes = os.getenv("PROMO_CODES", "")
+        valid_codes = [c.strip() for c in raw_promo_codes.split(",") if c.strip()]
+
+        if code_saisi in valid_codes:
+            # On garde votre logique de noms personnalisés selon le contenu du code
+            display_name = "Invité RH" if "ANDRH" in code_saisi else "Invité Découverte"
+            
+            return {
+                "email": f"Code: {code_saisi}", 
+                "role": "TRIAL", 
+                "name": display_name,
+                "id": f"guest_{code_saisi}"
+            }
 
         # --- CAS 2 : ONGLET "JE SUIS ABONNÉ" (Email + Mot de passe) ---
         
