@@ -2,6 +2,7 @@ import streamlit as st
 import time
 import os
 import re
+import datetime  # ✅ Ajouté pour le marquage temporel des exports PDF
 from dotenv import load_dotenv
 
 # Charge les variables d'environnement
@@ -14,6 +15,7 @@ from core.subscription_manager import SubscriptionManager
 from services.ia_service import IAService
 from services.document_service import DocumentService
 from services.quota_service import QuotaService
+from services.export_service import ExportService  # ✅ Ajouté : Service d'exportation PDF
 from services.legal_watch import show_legal_watch_bar
 from ui.styles import apply_pro_design
 from ui.components import UIComponents
@@ -47,6 +49,8 @@ if "services_ready" not in st.session_state:
     st.session_state.auth_manager = AuthManager()
     st.session_state.sub_manager = SubscriptionManager()
     st.session_state.ia_service = IAService()
+    # ✅ AJOUT : Initialisation du service d'exportation PDF
+    st.session_state.export_service = ExportService() 
     # On initialise ici sous le nom 'doc_service'
     st.session_state.doc_service = DocumentService()
     st.session_state.quota_service = QuotaService()
@@ -278,6 +282,19 @@ QUESTION : {question}
             box.markdown(full_response, unsafe_allow_html=True)
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             
+            # ✅ AJOUT DU BOUTON D'EXPORT PDF (Position UX optimale après génération)
+            try:
+                pdf_data = st.session_state.export_service.generate_pdf(user_input, full_response)
+                st.download_button(
+                    label="📥 Télécharger le compte-rendu (PDF)",
+                    data=pdf_data,
+                    file_name=f"Consultation_Sociale_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    mime="application/pdf",
+                    key=f"dl_{len(st.session_state.messages)}"
+                )
+            except Exception as pdf_err:
+                logger.error(f"Erreur Export PDF : {pdf_err}")
+                
         except Exception as e:
             logger.error(f"Erreur Génération : {e}")
             box.error(f"Une erreur est survenue lors de la génération de la réponse : {e}")
