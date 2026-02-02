@@ -4,6 +4,7 @@ from email.utils import parsedate_to_datetime
 from datetime import datetime, timezone
 import re
 import streamlit as st
+from utils.helpers import logger  # ✅ Ajout : Import du logger centralisé
 
 def get_headers():
     return {
@@ -16,7 +17,9 @@ def parse_rss_date(date_str):
         dt = parsedate_to_datetime(date_str)
         if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
         return dt
-    except: return datetime.now(timezone.utc)
+    except Exception as e: 
+        logger.warning(f"Veille : Erreur parsing date '{date_str}' : {e}")
+        return datetime.now(timezone.utc)
 
 def format_feed_alert(source_name, title, link, pub_date, color_bg_alert="#f8d7da", color_text_alert="#721c24", color_bg_ok="#d4edda", color_text_ok="#155724"):
     days = (datetime.now(timezone.utc) - pub_date).days
@@ -31,7 +34,8 @@ def get_robust_link(item, default_url):
     try:
         link = item.find('link')
         if link and link.text.strip(): return link.text.strip()
-    except: pass
+    except Exception as e:
+        logger.debug(f"Veille : Impossible d'extraire le lien RSS : {e}")
     return default_url
 
 # --- BOSS ---
@@ -41,16 +45,18 @@ def get_boss_status_html():
     try:
         response = requests.get(rss_url, headers=get_headers(), timeout=5)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response.content, 'xml') # 'xml' est plus robuste pour RSS
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
                 link = get_robust_link(item, target_url)
-                date_tag = item.find('pubdate') or item.find('pubDate')
+                date_tag = item.find('pubDate') or item.find('pubdate')
                 pub_date = parse_rss_date(date_tag.text) if date_tag else datetime.now(timezone.utc)
                 return format_feed_alert("BOSS", title, link, pub_date)
-    except: pass
-    return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux indisponible</div>"
+    except Exception as e:
+        logger.warning(f"Veille BOSS : Échec de récupération du flux - {e}")
+    
+    return f"<div style='background-color:#f8f9fa; color:#555; padding:10px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; font-size:13px;'>ℹ️ <strong>Veille BOSS</strong> : Flux temporairement indisponible</div>"
 
 # --- SERVICE PUBLIC ---
 def get_service_public_status():
@@ -59,15 +65,16 @@ def get_service_public_status():
     try:
         response = requests.get(rss_url, headers=get_headers(), timeout=5)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response.content, 'xml')
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
                 link = get_robust_link(item, target_url)
-                date_tag = item.find('pubdate') or item.find('pubDate')
+                date_tag = item.find('pubDate') or item.find('pubdate')
                 pub_date = parse_rss_date(date_tag.text) if date_tag else datetime.now(timezone.utc)
                 return format_feed_alert("Service-Public", title, link, pub_date, color_bg_ok="#d1ecf1", color_text_ok="#0c5460")
-    except: pass
+    except Exception as e:
+        logger.warning(f"Veille Service-Public : Échec flux - {e}")
     return ""
 
 # --- NET ENTREPRISES ---
@@ -77,15 +84,16 @@ def get_net_entreprises_status():
     try:
         response = requests.get(rss_url, headers=get_headers(), timeout=5)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response.content, 'xml')
             item = soup.find('item')
             if item:
                 title = item.find('title').text.strip()
                 link = get_robust_link(item, target_url)
-                date_tag = item.find('pubdate') or item.find('pubDate')
+                date_tag = item.find('pubDate') or item.find('pubdate')
                 pub_date = parse_rss_date(date_tag.text) if date_tag else datetime.now(timezone.utc)
                 return format_feed_alert("Net-Entreprises", title, link, pub_date, color_bg_ok="#fff3cd", color_text_ok="#856404")
-    except: pass
+    except Exception as e:
+        logger.warning(f"Veille Net-Entreprises : Échec flux - {e}")
     return ""
 
 def show_legal_watch_bar():

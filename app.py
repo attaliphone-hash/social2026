@@ -2,6 +2,10 @@ import streamlit as st
 import time
 import os
 import re
+from dotenv import load_dotenv
+
+# Charge les variables d'environnement
+load_dotenv()
 
 # --- IMPORTS ARCHITECTURE V2 ---
 from core.config import Config
@@ -13,6 +17,9 @@ from services.quota_service import QuotaService
 from services.legal_watch import show_legal_watch_bar
 from ui.styles import apply_pro_design
 from ui.components import UIComponents
+
+# ✅ Correction Audit : Import centralisé (Suppression de la duplication)
+from utils.helpers import clean_source_name, logger
 
 # --- IMPORTS MOTEUR & IA ---
 from rules.engine import SocialRuleEngine
@@ -35,6 +42,7 @@ if "query_count" not in st.session_state: st.session_state.query_count = 0
 if "user_info" not in st.session_state: st.session_state.user_info = None
 
 if "services_ready" not in st.session_state:
+    # ✅ Note : L'ordre d'initialisation suit la recommandation B de l'audit
     st.session_state.config = Config() 
     st.session_state.auth_manager = AuthManager()
     st.session_state.sub_manager = SubscriptionManager()
@@ -49,28 +57,16 @@ apply_pro_design()
 auth = st.session_state.auth_manager
 sub = st.session_state.sub_manager
 ia = st.session_state.ia_service
-docs_srv = st.session_state.doc_service
+docs_srv = st.session_state.document_service # Ajusté selon le nom de classe standard
 quota = st.session_state.quota_service
 engine = st.session_state.rule_engine
 ui = UIComponents()
 
 # ==============================================================================
-# 2. NETTOYAGE DES SOURCES (Helper)
+# 2. NETTOYAGE DES SOURCES (Désormais géré par utils/helpers.py)
 # ==============================================================================
-def clean_source_name(filename, category="AUTRE"):
-    """Transforme les noms techniques en noms lisibles pour l'utilisateur"""
-    filename = os.path.basename(filename).replace('.pdf', '').replace('.txt', '')
-    
-    if "Code_Travail" in filename or "Code Travail" in filename:
-        return "Code du Travail 2026"
-    elif "Code_Secu" in filename or "Code Secu" in filename:
-        return "Code de la Sécurité Sociale 2026"
-    elif category == "REF" or filename.startswith("REF_"):
-        return "Barèmes Officiels 2026"
-    elif category == "DOC" or filename.startswith("DOC_"):
-        return "BOSS 2026 et Jurisprudences"
-    
-    return filename.replace('_', ' ')
+# ✅ Correction Audit : La fonction locale clean_source_name a été supprimée.
+# Elle est maintenant importée de utils.helpers pour garantir une source unique.
 
 # ==============================================================================
 # 3. PAGE DE LOGIN
@@ -104,7 +100,7 @@ def check_password():
     with t2:
         code = st.text_input("Code", type="password", key="login_code")
         if st.button("Valider", use_container_width=True):
-            user = auth.login(code, code) 
+            user = auth.login(code, None) # password=None pour le mode code
             if user:
                 st.session_state.user_info = user
                 st.rerun()
@@ -175,33 +171,29 @@ if user_input:
         matched = engine.match_rules(user_input)
         facts = engine.format_certified_facts(matched)
 
-        # ✅ 1. RECHERCHE (Ton code validé)
-        # Utilisation des métadonnées déjà nettoyées par ia_service.py
+        # ✅ 1. RECHERCHE
         docs = ia.search_documents(user_input, k=6)
         context_str = ""
         sources_seen = []
         
         for d in docs:
-            # Récupération du label système propre déjà traité par le moteur
+            # Récupération du label système propre déjà traité par helpers.py
             pretty_name = d.metadata.get('clean_name', 'Source Inconnue')
             
             if pretty_name not in sources_seen:
                 sources_seen.append(pretty_name)
             
-            # Formatage explicite pour la Section 3 du prompt
             context_str += f"DOCUMENT : {pretty_name}\n{d.page_content}\n\n"
 
-        # ✅ 2. LE MOUCHARD ADMIN (INVISIBLE POUR LES AUTRES)
-        # Seul l'ADMIN peut voir ce qu'il se passe dans Pinecone
+        # ✅ 2. LE MOUCHARD ADMIN (DEBUG)
         if st.session_state.user_info.get("role") == "ADMIN":
             with st.expander("🕵️‍♂️ MODE ADMIN : VOIR LE CERVEAU (DEBUG)", expanded=False):
                 if not docs:
-                    st.error("❌ PINECONE RENVOIE 0 DOCUMENT ! (Base vide ?)")
+                    st.error("❌ PINECONE RENVOIE 0 DOCUMENT !")
                 else:
                     st.success(f"✅ {len(docs)} documents injectés dans le contexte.")
                     for i, d in enumerate(docs):
                         st.markdown(f"**📄 Doc {i+1} :** `{d.metadata.get('clean_name')}`")
-                        # On affiche seulement les 200 premiers caractères pour ne pas surcharger
                         st.caption(f"📝 Extrait : {d.page_content[:200]}...")
         
         # ==============================================================================
@@ -265,6 +257,7 @@ Documents Contextuels (Priorité 2) :
 QUESTION : {question}
 """
         prompt = ChatPromptTemplate.from_template(template)
+        # ✅ Utilisation systématique de gemini-2.0-flash
         chain = prompt | ia.get_llm() | StrOutputParser()
         
         full_response = ""
@@ -282,4 +275,5 @@ QUESTION : {question}
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             
         except Exception as e:
+            logger.error(f"Erreur Génération : {e}")
             box.error(f"Une erreur est survenue lors de la génération de la réponse : {e}")
