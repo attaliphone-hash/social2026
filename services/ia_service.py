@@ -9,7 +9,7 @@ class IAService:
         # Initialisation des clés et modèles
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
         self.pinecone_api_key = os.getenv("PINECONE_API_KEY")
-        self.index_name = "socialpro-index" # Nom de votre index Pinecone
+        self.index_name = "expert-social"
         
         if not self.google_api_key or not self.pinecone_api_key:
             logger.error("IAService: Clés API manquantes (Google ou Pinecone)")
