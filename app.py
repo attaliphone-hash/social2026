@@ -191,17 +191,18 @@ if user_input:
             # Formatage explicite pour la Section 3 du prompt
             context_str += f"DOCUMENT : {pretty_name}\n{d.page_content}\n\n"
 
-        # ✅ 2. LE MOUCHARD (Diagnostic technique immédiat)
-        # Ce bloc t'affichera la vérité crue sur l'état de ta base Pinecone
-        with st.expander("🔎 VOIR LE CERVEAU (DEBUG - A supprimer plus tard)", expanded=True):
-            if not docs:
-                st.error("❌ PINECONE EST VIDE ! (0 document trouvé)")
-                st.write("👉 Cause probable : Le script 'rebuild_base.py' n'a pas été lancé avec le modèle 3072d.")
-            else:
-                st.success(f"✅ Pinecone a trouvé {len(docs)} documents pertinents.")
-                for i, d in enumerate(docs):
-                    st.markdown(f"**📄 Doc {i+1} :** `{d.metadata.get('clean_name')}`")
-                    st.caption(f"📝 Extrait : {d.page_content[:150]}...")
+        # ✅ 2. LE MOUCHARD ADMIN (INVISIBLE POUR LES AUTRES)
+        # Seul l'ADMIN peut voir ce qu'il se passe dans Pinecone
+        if st.session_state.user_info.get("role") == "ADMIN":
+            with st.expander("🕵️‍♂️ MODE ADMIN : VOIR LE CERVEAU (DEBUG)", expanded=False):
+                if not docs:
+                    st.error("❌ PINECONE RENVOIE 0 DOCUMENT ! (Base vide ?)")
+                else:
+                    st.success(f"✅ {len(docs)} documents injectés dans le contexte.")
+                    for i, d in enumerate(docs):
+                        st.markdown(f"**📄 Doc {i+1} :** `{d.metadata.get('clean_name')}`")
+                        # On affiche seulement les 200 premiers caractères pour ne pas surcharger
+                        st.caption(f"📝 Extrait : {d.page_content[:200]}...")
         
         # ==============================================================================
 
