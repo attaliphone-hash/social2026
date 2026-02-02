@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 from dotenv import load_dotenv
+from utils.helpers import logger  # ✅ Ajout : Utilisation du logger centralisé
 
 # Charge les variables pour lire votre .env actuel
 load_dotenv()
@@ -9,8 +10,11 @@ class AuthManager:
     def __init__(self):
         # On récupère Supabase via la config si dispo
         self.supabase = None
-        if hasattr(st.session_state, 'config'):
+        # ✅ Correction Audit A : Utilisation de 'in' au lieu de 'hasattr'
+        if 'config' in st.session_state:
             self.supabase = st.session_state.config.get_supabase_client()
+        else:
+            logger.warning("AuthManager: L'objet Config n'est pas encore dans session_state")
             
         if "user_info" not in st.session_state:
             st.session_state.user_info = None
@@ -66,15 +70,18 @@ class AuthManager:
                         "name": "Abonné",
                         "id": res.user.id
                     }
-            except Exception:
+            except Exception as e:
+                logger.error(f"AuthManager: Erreur de connexion Supabase : {e}")
                 return None # Erreur (mauvais mot de passe ou email)
         
         return None
 
     def logout(self):
+        """Déconnexion avec traçabilité des erreurs (Audit Point 4)"""
         if self.supabase:
             try:
                 self.supabase.auth.sign_out()
-            except: pass
+            except Exception as e:
+                logger.warning(f"AuthManager: Erreur lors de la déconnexion Supabase : {e}")
         st.session_state.user_info = None
         st.rerun()
