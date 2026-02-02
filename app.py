@@ -35,23 +35,17 @@ if "query_count" not in st.session_state: st.session_state.query_count = 0
 if "user_info" not in st.session_state: st.session_state.user_info = None
 
 if "services_ready" not in st.session_state:
-    # 1. ON CRÉE LA CONFIG EN PREMIER (Crucial pour les autres services)
     st.session_state.config = Config() 
-    
-    # 2. PUIS ON LANCE LES MANAGERS
     st.session_state.auth_manager = AuthManager()
     st.session_state.sub_manager = SubscriptionManager()
     st.session_state.ia_service = IAService()
     st.session_state.doc_service = DocumentService()
     st.session_state.quota_service = QuotaService()
     st.session_state.rule_engine = SocialRuleEngine()
-    
     st.session_state.services_ready = True
 
-# Application du design
 apply_pro_design()
 
-# Raccourcis pour lisibilité
 auth = st.session_state.auth_manager
 sub = st.session_state.sub_manager
 ia = st.session_state.ia_service
@@ -79,48 +73,40 @@ def clean_source_name(filename, category="AUTRE"):
     return filename.replace('_', ' ')
 
 # ==============================================================================
-# 3. PAGE DE LOGIN (CORRIGÉE)
+# 3. PAGE DE LOGIN
 # ==============================================================================
 def check_password():
-    """Gère l'affichage du login et la vérification des droits"""
-    # Si l'utilisateur est déjà identifié, on passe
     if st.session_state.user_info:
         return True
 
-    # Affichage de la page de garde (Logo, Titres...)
     ui.render_top_arguments()
     ui.render_footer()
 
     st.markdown("<h1 style='text-align: left; color: #253E92;'>SOCIAL EXPERT FRANCE — VOTRE COPILOTE RH & PAIE EN 2026.</h1>", unsafe_allow_html=True)
     
-    # Onglets Connexion
     t1, t2 = st.tabs(["🔐 Je suis abonné", "🎫 J'ai un code découverte"])
     
-    # Onglet 1 : Abonnés Email/Mdp
     with t1:
         email = st.text_input("Email", key="login_email")
         pwd = st.text_input("Mot de passe", type="password", key="login_pwd")
         if st.button("Connexion", use_container_width=True, type="primary"):
             user = auth.login(email, pwd)
             if user:
-                st.session_state.user_info = user # On stocke le dictionnaire complet
+                st.session_state.user_info = user
                 st.rerun()
             else:
                 st.error("Identifiants incorrects.")
         
-        # Section Abonnement
         st.markdown("---")
         st.subheader("PAS ENCORE ABONNÉ ?")
         ui.render_subscription_cards()
 
-    # Onglet 2 : Code Découverte (C'est ici que SeptHuit et ANDRH sont gérés)
     with t2:
         code = st.text_input("Code", type="password", key="login_code")
         if st.button("Valider", use_container_width=True):
-            # On passe le code comme 'username' ET 'password' à la méthode login
             user = auth.login(code, code) 
             if user:
-                st.session_state.user_info = user # On stocke le résultat (ex: Role TRIAL)
+                st.session_state.user_info = user
                 st.rerun()
             else:
                 st.error("Code erroné.")
@@ -133,18 +119,12 @@ if not check_password():
 # 4. DASHBOARD (ESPACE ABONNÉS)
 # ==============================================================================
 
-# 1. ARGUMENTS
 ui.render_top_arguments()
-
-# 2. FOOTER
 ui.render_footer()
 
-# 3. VEILLE JURIDIQUE (RESTREINT AUX ADMINS)
-# Seul l'utilisateur avec le rôle 'ADMIN' doit voir les flux RSS
 if st.session_state.user_info.get("role") == "ADMIN":
     show_legal_watch_bar()
 
-# 4. ACTIONS (UPLOAD / NOUVELLE SESSION)
 col_act1, col_act2, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
 with col_act1:
     st.markdown('<div class="fake-upload-btn">Charger un document</div>', unsafe_allow_html=True)
@@ -156,10 +136,8 @@ with col_act2:
         st.session_state.uploader_key += 1
         st.rerun()
 
-# 5. TITRE ESPACE ABONNÉS
 st.markdown("<h1 style='color:#253E92; margin-top:10px;'>SOCIAL EXPERT FRANCE ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
 
-# 6. ANALYSE DU DOCUMENT UPLOADÉ
 user_doc_content = ""
 if uploaded_file:
     with st.spinner("Analyse du document en cours..."):
@@ -167,21 +145,18 @@ if uploaded_file:
         if user_doc_content:
             st.toast(f"📎 {uploaded_file.name} analysé avec succès", icon="✅")
 
-# 8. AFFICHAGE DES MESSAGES
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)
 
-# 9. GESTION DE LA SAISIE
 user_input = None
 if "pending_prompt" in st.session_state:
     user_input = st.session_state.pending_prompt
     del st.session_state.pending_prompt
 else:
-    user_input = st.chat_input("Posez une question, chargez un document (bouton plus haut) ou demandez une rédaction (ex: Rescrit, contrat...)")
+    user_input = st.chat_input("Posez une question, chargez un document ou demandez une rédaction")
 
 if user_input:
-    # Quota check
     role = st.session_state.user_info.get("role", "GUEST")
     if not quota.check_quota(role):
         st.warning("🛑 Limite de requêtes atteinte.")
@@ -197,23 +172,21 @@ if user_input:
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         box = st.empty()
         
-        # Moteur de règles : Extraction des faits
         matched = engine.match_rules(user_input)
         facts = engine.format_certified_facts(matched)
 
-        # RAG : Recherche de documents
+        # ✅ CORRECTION : Utilisation des métadonnées déjà nettoyées par ia_service.py
         docs = ia.search_documents(user_input, k=6)
         context_str = ""
         sources_seen = []
         for d in docs:
-            raw_name = d.metadata.get('source', 'Inconnu')
-            cat = d.metadata.get('category', 'AUTRE')
-            pretty_name = clean_source_name(raw_name, cat)
+            # Récupération du label système propre déjà traité par le moteur
+            pretty_name = d.metadata.get('clean_name', 'Source Inconnue')
             if pretty_name not in sources_seen:
                 sources_seen.append(pretty_name)
-            context_str += f"[SOURCE: {pretty_name}]\n{d.page_content}\n\n"
+            # Formatage explicite pour la Section 3 du prompt
+            context_str += f"DOCUMENT : {pretty_name}\n{d.page_content}\n\n"
 
-        # --- LE CERVEAU V81 (RESTITUTION DU BACKUP : VERSION STABLE) ---
         template = """
 Tu es l'Expert Social Pro 2026.
 
@@ -221,61 +194,24 @@ Tu es l'Expert Social Pro 2026.
 1. Génère du **HTML BRUT** sans balises de code.
 2. ⚠️ FORMATAGE MONÉTAIRE FR : Utilise TOUJOURS la virgule pour les décimales et un espace pour les milliers (ex: 1 950,00 €).
 3. Affiche systématiquement 2 décimales pour tous les montants en Euros.
-4. Pas de Markdown pour les titres (utilise uniquement <h4 style="...">).
-5. ⛔ SILENCE TECHNIQUE (TRADUCTION OBLIGATOIRE) :
-   - Ton interlocuteur est un DRH, pas un développeur.
-   - INTERDICTION FORMELLE d'utiliser les mots : "YAML", "Faits Certifiés", "Protocole", "Json", "RAG", "Base de données", "Prompt", "Variable".
-   - TRADUCTION IMMÉDIATE :
-     > Si tu lis 'PROTOCOLE_CALCUL_SOCIAL' -> Écris : "Conformément aux règles de calcul du droit du travail".
-     > Si tu utilises une valeur du YAML, ne dis JAMAIS "Selon le YAML". Dis : "Selon les barèmes officiels 2026" ou cite la source juridique associée (Décret, Loi).
-     > Si tu manques d'info, ne dis pas "Absent du YAML", dis "Information non précisée dans les documents légaux".
+4. Pas de Markdown pour les titres.
+5. ⛔ SILENCE TECHNIQUE OBLIGATOIRE.
 
----- 1. RÈGLES DE PRIORITÉ & INTELLIGENCE (LOGIQUE DE CASCADE) ---
-
-A. POUR LES DONNÉES CHIFFRÉES (Taux, Seuils, Montants) :
-- **RÈGLE DE PRIORITÉ 1 (BARÈMES OFFICIELS) :** Vérifie D'ABORD les "Faits Certifiés" (YAML) ci-dessous.
-  > SI la donnée s'y trouve : C'est la vérité absolue. Utilise ce montant et la source indiquée.
-- **RÈGLE DE PRIORITÉ 2 (DOCUMENTS) :** Si la donnée n'est PAS dans les faits certifiés, cherche-la EXCLUSIVEMENT dans les "Documents Contextuels" fournis (PDF, REF, DOC).
-- **INTERDICTION STRICTE (ANTI-HALLUCINATION) :** Il est strictement interdit d'utiliser ta "connaissance générale" pour inventer un chiffre 2026 s'il ne figure NI dans les faits certifiés, NI dans les documents fournis. Si tu ne trouves la donnée nulle part, réponds "Donnée non disponible dans la documentation officielle".
-
-B. POUR LE RAISONNEMENT JURIDIQUE (Droit du travail) :
-- **PRIORITÉ :** Utilise les documents contextuels (RAG) pour l'analyse, les conditions d'attribution et les jurisprudences.
-- **AUTORISATION :** Si les documents ne couvrent pas un point de droit général, utilise tes connaissances juridiques internes (Code du travail).
-- **MENTION :** Si tu utilises tes connaissances internes pour combler un vide juridique, précise : "Selon les principes généraux du droit du travail".
+---- 1. RÈGLES DE PRIORITÉ (LOGIQUE DE CASCADE) ---
+A. DONNÉES CHIFFRÉES : Priorité 1 aux Faits Certifiés (YAML).
+B. RAISONNEMENT JURIDIQUE : Priorité 2 aux Documents Contextuels (RAG).
 
 --- 2. LOGIQUE MÉTIER & MATHÉMATIQUE ---
-
-A. CALCUL DU COÛT EMPLOYEUR (Règle d'Or) :
-- Formule : (Salaire Brut + Cotisations Patronales) - Aides de l'État.
-- INTERDICTION ABSOLUE de soustraire une aide directement du Salaire Brut.
-- Apprentissage : Intégrer l'Aide Unique (valeur certifiée) en déduction finale.
-
-B. GESTION DES DONNÉES MANQUANTES :
-- Si une donnée critique manque (ex: taux précis) :
-  1. ⛔ INTERDICTION STRICTE : Ne simule AUCUN chiffre dans la section "Détail & Chiffres".
-  2. DANS LA ZONE DE SIMULATION (Bloc Beige uniquement) : Fais ton calcul avec un taux hypothétique en le mentionnant explicitement.
-
-C. VIGILANCE MATHÉMATIQUE & PROTOCOLES :
-- PROTOCOLES DE CALCUL : Applique STRICTEMENT les méthodes de calcul définies dans les Faits Certifiés (ex: calcul indemnité rupture par tranches).
-- INDEMNITÉ RUPTURE : Applique les paliers légaux (1/4 de mois <10 ans, 1/3 >10 ans).
-- TEMPS DE TRAVAIL : Conversion décimale obligatoire (Minutes / 60).
-- IJSS SÉCU : Diviseur 91,25 (sauf règle contraire explicite).
-
-D. PRÉCISION JURIDIQUE :
-- Pour le SBI (Solde Bancaire Insaisissable) et l'Exonération Rupture (2 PASS), réfère-toi aux valeurs exactes présentes dans les Faits Certifiés.
-
+Calcul strict selon les protocoles certifiés.
 
 --- 3. GESTION DES SOURCES (EXTRACTION CHIRURGICALE) ---
-- **RÈGLE D'OR :** Ne crée JAMAIS une source générique (ex: "Code du Travail") si un article précis existe dans le texte.
+- **RÈGLE D'OR :** Ne crée JAMAIS une source générique si un article précis existe.
 - **ALGORITHME DE SCAN ET SYNCHRONISATION :**
-  1. **Priorité au Label Système :** Pour chaque document, utilise EXCLUSIVEMENT le nom nettoyé fourni par le système (ex: "Code du Travail 2026", "BOSS 2026 et Jurisprudences").
-  2. **Extraction de l'Article :**
-     > Cherche la balise "SOURCE :" ou les mentions d'articles (ex: "Art. L...", "Article 81").
-     > Récupère la référence exacte de l'article sans la modifier.
-  3. **Reconstruction Obligatoire :** Fusionne systématiquement le label système et l'article trouvé. 
-     > **Format :** {{Nom_Nettoyé_Système}} - {{Référence_Article}}.
-     > *Exemple : "Code du Travail 2026 - Art. L.3142-4"*.
-- **INTERDICTION :** Il est interdit de supprimer le numéro de l'article ou de retirer la mention "2026" imposée par le système.
+  1. **Priorité au Label Système :** Pour chaque document, utilise EXCLUSIVEMENT le nom nettoyé fourni après 'DOCUMENT :'.
+  2. **Extraction de l'Article :** Cherche 'SOURCE :' ou 'Art. L...'.
+  3. **Reconstruction Obligatoire :** {{Nom_Nettoyé_Système}} - {{Référence_Article}}.
+- **INTERDICTION :** Ne retire JAMAIS la mention '2026'.
+
 --- 4. CONTEXTE RAG ---
 Faits Certifiés (Priorité 1) :
 {certified_facts}
@@ -283,63 +219,32 @@ Faits Certifiés (Priorité 1) :
 Documents Contextuels (Priorité 2) :
 {context}
 
-Document Utilisateur :
 {user_doc_section}
 
 --- 5. TEMPLATE DE RÉPONSE (HTML STYLYSÉ) ---
+[Mode Rédaction : Texte Brut / Mode Standard : HTML]
 
-🔔 DIRECTIVES DE FORMATAGE (INTELLIGENCE ADAPTATIVE) :
-
-1.  **MODE RÉDACTION (Si l'utilisateur demande de "Rédiger" : Lettre, Email, Contrat...) :**
-    - **ACTION :** Rédige en TEXTE BRUT (Pas de HTML).
-    - **SILENCE OBLIGATOIRE :** INTERDICTION d'afficher le texte de cette consigne.
-    - **DÉMARRAGE :** Commence DIRECTEMENT par le contenu (Ex: "[En-tête]..." ou "Objet :...").
-
-2.  **MODE STANDARD (Pour tout le reste : Calculs, Questions, Conseils) :**
-    - **ACTION :** Utilise OBLIGATOIREMENT le modèle HTML ci-dessous.
-
-👇 DÉBUT DU TEMPLATE HTML (Uniquement pour le Mode Standard) 👇
-
+👇 DÉBUT DU TEMPLATE HTML 👇
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
 <ul>
-    <li>[Règle juridique expliquée] <em style="color:#666;">(Source : [Art. précis extrait à l'étape 3])</em></li>
+    <li>[Règle juridique] <em style="color:#666;">(Source : [Art. extrait à l'étape 3])</em></li>
 </ul>
-
 <h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Détail & Chiffres</h4>
-<div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border: 1px solid #eee;">
-    <strong>Données clés :</strong> [Valeurs utilisées]<br>
-    <strong>Calcul :</strong><br>
-    <ul>
-       <li>[Étape 1 : Formule claire]</li>
-       <li>[Étape 2 : Application numérique stricte]</li>
-    </ul>
+<div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
+    <strong>Données clés :</strong> [Valeurs]<br>
+    <strong>Calcul :</strong> [Étapes]
 </div>
-
 <div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
     <h2 style="color: #024c6f; margin-top: 0;">🎯 RÉSULTAT</h2>
-    <p style="font-size: 18px;"><strong>[Montant Final Officiel]</strong></p>
-    <p style="font-size: 14px; margin-top: 5px; color: #444;">[Conclusion directe]</p>
+    <p style="font-size: 18px;"><strong>[Montant]</strong></p>
 </div>
-
-[INSTRUCTION : INSÉRER LE BLOC SUIVANT UNIQUEMENT SI DES DONNÉES MANQUANTES ONT NÉCESSITÉ UNE SIMULATION]
-<hr style="border: 0; border-top: 1px dashed #253E92; margin: 30px 0;">
-<div style="background-color: #fdf6e3; padding: 20px; border-radius: 8px; border: 1px solid #e6dbb9;">
-    <h4 style="color: #856404; margin-top: 0;">🔍 APPLICATION PRATIQUE (SIMULATION)</h4>
-    <p style="font-size: 13px; color: #856404; font-style: italic;">
-        Faute de données personnalisées complètes, voici une projection :
-    </p>
-    [Détail chiffré basé sur hypothèses clairement énoncées]
-</div>
-
-<div style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; padding-bottom: 25px; font-size: 11px; color: #666; line-height: 1.5;">
-    <strong>Sources utilisées :</strong> [Lister ici précisément les sources EXTRAITES selon la Section 3]<br>
-    <em>Données certifiées conformes aux barèmes 2026.</em><br>
-    <span style="font-style: italic; color: #626267;">Vérifiez toujours votre Convention Collective.</span>
+<div style="margin-top: 20px; border-top: 1px solid #ccc; font-size: 11px; color: #666;">
+    <strong>Sources utilisées :</strong> [Lister précisément selon Section 3]<br>
+    <em>Données certifiées conformes aux barèmes 2026.</em>
 </div>
 
 QUESTION : {question}
 """
-        # Exécution de la chaîne IA
         prompt = ChatPromptTemplate.from_template(template)
         chain = prompt | ia.get_llm() | StrOutputParser()
         
