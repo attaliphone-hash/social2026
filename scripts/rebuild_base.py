@@ -11,15 +11,29 @@ from pinecone import Pinecone
 load_dotenv()
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX_NAME = "expert-social"
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") # Nécessaire pour l'embedding
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY") 
 
-# Dossier des données (Aligné sur votre structure)
+# --- SÉCURITÉ CRITIQUE (AJOUTÉE) ---
+if not PINECONE_API_KEY or not GOOGLE_API_KEY:
+    print("❌ ERREUR CRITIQUE : Clés API manquantes dans le fichier .env")
+    print("   Arrêt immédiat pour protéger la base de données.")
+    exit()
+
+# Dossier des données
 DATA_PATH = "data_clean"
 
 # 2. Initialisation Pinecone
 print("🚀 DÉMARRAGE DE LA REFONTE TOTALE (SMART SPLIT / 3072d)...")
-pc = Pinecone(api_key=PINECONE_API_KEY)
-index = pc.Index(PINECONE_INDEX_NAME)
+try:
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    index = pc.Index(PINECONE_INDEX_NAME)
+    
+    # Test de connexion avant suppression
+    index.describe_index_stats()
+    print("✅ Connexion Pinecone validée.")
+except Exception as e:
+    print(f"❌ Impossible de se connecter à Pinecone : {e}")
+    exit()
 
 print("🗑️  SUPPRESSION TOTALE de l'ancienne mémoire...")
 try:
@@ -30,16 +44,10 @@ except Exception as e:
     print(f"⚠️ Index déjà vide ou erreur: {e}")
 
 # 3. Le Découpeur Juridique (Smart Splitter)
-# Configuration spécifique pour les textes de loi
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1200,       # Taille d'un article de loi moyen + contexte
-    chunk_overlap=200,     # Chevauchement pour lier les paragraphes
-    separators=[
-        "Article ",   # 🎯 CIBLE PRIORITAIRE : On coupe avant tout aux articles
-        "\n\n",       # Puis aux paragraphes
-        ". ",         # Puis aux phrases
-        " "           # Puis aux mots
-    ]
+    chunk_size=1200,       
+    chunk_overlap=200,     
+    separators=["Article ", "\n\n", ". ", " "]
 )
 
 documents = []
@@ -47,7 +55,6 @@ stats = {"CODES": 0, "REF": 0, "DOC": 0}
 
 print(f"📂 Scan des fichiers sources dans '{DATA_PATH}'...")
 
-# Liste des extensions acceptées
 VALID_EXTS = [".pdf", ".txt"]
 
 if not os.path.exists(DATA_PATH):
@@ -55,24 +62,21 @@ if not os.path.exists(DATA_PATH):
     exit()
 
 for root, dirs, files in os.walk(DATA_PATH):
-    # On ignore les dossiers cachés ou venv
     if "venv" in root or ".git" in root: continue
     
     for filename in files:
         filepath = os.path.join(root, filename)
         
-        # LOGIQUE DE TRI STRICTE
         category = None
-        if filename.startswith("FULL_") or "Code" in filename: category = "CODES" # Vos gros codes
-        elif filename.startswith("REF_"): category = "REF"   # Vos barèmes
-        elif filename.startswith("DOC_"): category = "DOC"   # Vos docs utilisateurs
+        if filename.startswith("FULL_") or "Code" in filename: category = "CODES" 
+        elif filename.startswith("REF_"): category = "REF"   
+        elif filename.startswith("DOC_"): category = "DOC"   
         
         if category and any(filename.lower().endswith(e) for e in VALID_EXTS):
             print(f"   -> Lecture de : {filename} ({category})")
             if category in stats: stats[category] += 1
             
             try:
-                # Lecture
                 docs = []
                 if filename.lower().endswith(".pdf"):
                     loader = PyPDFLoader(filepath)
@@ -81,11 +85,9 @@ for root, dirs, files in os.walk(DATA_PATH):
                     loader = TextLoader(filepath, encoding="utf-8")
                     docs = loader.load()
                 
-                # Métadonnées enrichies
                 for d in docs:
                     d.metadata["source"] = filename
                     d.metadata["category"] = category
-                    # Pour les gros codes, on précise que c'est du droit dur
                     if category == "CODES":
                         d.metadata["importance"] = "high"
                 
@@ -108,14 +110,13 @@ print(f"🧩 RÉSULTAT : {len(final_chunks)} blocs de connaissance haute défini
 # 5. Injection
 print("🧠 Injection dans Pinecone (C'est le moment critique)...")
 
-# ✅ CORRECTION MAJEURE : On force le modèle 001 (3072 dimensions)
+# Configuration explicite (Sécurisée)
 embeddings = GoogleGenerativeAIEmbeddings(
     model="models/gemini-embedding-001",
-    google_api_key=GOOGLE_API_KEY,
-    task_type="retrieval_document" # Optimisation pour l'indexation
+    google_api_key=GOOGLE_API_KEY, # Clé explicite
+    task_type="retrieval_document"
 )
 
-# Batch size réduit pour éviter les timeouts
 batch_size = 50 
 total_batches = len(final_chunks) // batch_size + 1
 
@@ -123,7 +124,6 @@ for i in range(0, len(final_chunks), batch_size):
     batch = final_chunks[i:i + batch_size]
     try:
         PineconeVectorStore.from_documents(batch, embeddings, index_name=PINECONE_INDEX_NAME)
-        # Petite barre de progression maison
         percent = round((i / len(final_chunks)) * 100)
         print(f"   ✓ Progression : {percent}% (Lot {i//batch_size + 1}/{total_batches})")
     except Exception as e:
