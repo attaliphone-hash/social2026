@@ -175,17 +175,35 @@ if user_input:
         matched = engine.match_rules(user_input)
         facts = engine.format_certified_facts(matched)
 
-        # ✅ CORRECTION : Utilisation des métadonnées déjà nettoyées par ia_service.py
+        # ✅ 1. RECHERCHE (Ton code validé)
+        # Utilisation des métadonnées déjà nettoyées par ia_service.py
         docs = ia.search_documents(user_input, k=6)
         context_str = ""
         sources_seen = []
+        
         for d in docs:
             # Récupération du label système propre déjà traité par le moteur
             pretty_name = d.metadata.get('clean_name', 'Source Inconnue')
+            
             if pretty_name not in sources_seen:
                 sources_seen.append(pretty_name)
+            
             # Formatage explicite pour la Section 3 du prompt
             context_str += f"DOCUMENT : {pretty_name}\n{d.page_content}\n\n"
+
+        # ✅ 2. LE MOUCHARD (Diagnostic technique immédiat)
+        # Ce bloc t'affichera la vérité crue sur l'état de ta base Pinecone
+        with st.expander("🔎 VOIR LE CERVEAU (DEBUG - A supprimer plus tard)", expanded=True):
+            if not docs:
+                st.error("❌ PINECONE EST VIDE ! (0 document trouvé)")
+                st.write("👉 Cause probable : Le script 'rebuild_base.py' n'a pas été lancé avec le modèle 3072d.")
+            else:
+                st.success(f"✅ Pinecone a trouvé {len(docs)} documents pertinents.")
+                for i, d in enumerate(docs):
+                    st.markdown(f"**📄 Doc {i+1} :** `{d.metadata.get('clean_name')}`")
+                    st.caption(f"📝 Extrait : {d.page_content[:150]}...")
+        
+        # ==============================================================================
 
         template = """
 Tu es l'Expert Social Pro 2026.
