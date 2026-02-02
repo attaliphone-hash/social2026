@@ -1,84 +1,82 @@
 import streamlit as st
-from core.config import Config
-from supabase import create_client, Client
+import os
+from dotenv import load_dotenv
+
+# Charge les variables pour lire votre .env actuel
+load_dotenv()
 
 class AuthManager:
-    """
-    Gère l'authentification des utilisateurs.
-    Logique : Admin (RSS) vs Codes Promo (Pas RSS) vs Abonnés Supabase.
-    """
-    
     def __init__(self):
-        # Récupération de la config
-        self.config = Config()
-        
-        # Initialisation du client Supabase uniquement si les clés existent
-        if self.config.supabase_url and self.config.supabase_key:
-            try:
-                self.supabase: Client = create_client(self.config.supabase_url, self.config.supabase_key)
-            except Exception as e:
-                print(f"⚠️ Erreur init Supabase: {e}")
-                self.supabase = None
-        else:
-            self.supabase = None
+        # On récupère Supabase via la config si dispo
+        self.supabase = None
+        if hasattr(st.session_state, 'config'):
+            self.supabase = st.session_state.config.get_supabase_client()
+            
+        if "user_info" not in st.session_state:
+            st.session_state.user_info = None
 
     def login(self, email_or_code, password=None):
         """
-        Tente de connecter l'utilisateur.
-        Retourne un dictionnaire user_info si succès, None sinon.
+        Gère la connexion selon l'onglet utilisé.
         """
+
+        # --- CAS 1 : ONGLET "J'AI UN CODE DÉCOUVERTE" (Code seul) ---
+        # Ici, email_or_code contient le CODE. password est vide.
         
-        # --- 1. TEST : EST-CE UN ADMIN ? (ACCÈS TOTAL + RSS) ---
-        # Vérifie si le mot de passe correspond à celui dans secrets.toml OU si c'est le code Admin
-        if email_or_code == self.config.admin_password or password == self.config.admin_password:
+        # 1. Test du Code "SocialPro..." (APP_PASSWORD dans votre .env)
+        if email_or_code == os.getenv("APP_PASSWORD"):
+             return {
+                 "email": "Invité Découverte", 
+                 "role": "TRIAL", # 🔒 PAS DE RSS, PAS DE DEBUG
+                 "name": "Invité Découverte",
+                 "id": "guest_sp"
+             }
+
+        # 2. Test du Code "ANDRH..." (CODE_PROMO_ANDRH dans votre .env)
+        if email_or_code == os.getenv("CODE_PROMO_ANDRH"):
+             return {
+                 "email": "Invité RH", 
+                 "role": "TRIAL", # 🔒 PAS DE RSS, PAS DE DEBUG
+                 "name": "Invité RH",
+                 "id": "guest_andrh"
+             }
+
+        # --- CAS 2 : ONGLET "JE SUIS ABONNÉ" (Email + Mot de passe) ---
+        
+        # 3. Test ADMIN (Master Password)
+        # Si le mot de passe saisi est celui de l'ADMIN (ADMIN_PASSWORD dans .env)
+        # Peu importe l'email saisi, ça connecte en Admin.
+        if password == os.getenv("ADMIN_PASSWORD"):
             return {
                 "email": "ADMINISTRATEUR", 
-                "role": "ADMIN", # <--- C'est ce rôle qui débloque le RSS dans app.py
-                "name": "Administrateur"
+                "role": "ADMIN", # ✅ LE SEUL QUI VOIT TOUT (RSS + DEBUG)
+                "name": "Administrateur",
+                "id": "admin_001"
             }
 
-        # --- 2. TEST : CODE PROMO "SEPT À HUIT" (PAS DE RSS) ---
-        if email_or_code == "SocialPro2026SeptHuit" or password == "SocialPro2026SeptHuit":
-             return {
-                 "email": "Invité Sept à Huit", 
-                 "role": "TRIAL", # <--- Pas de RSS
-                 "name": "Invité Découverte"
-             }
-
-        # --- 3. TEST : CODE "ANDRH VIP" (PAS DE RSS) ---
-        if email_or_code == "ANDRH_2026_VIP" or password == "ANDRH_2026_VIP":
-             return {
-                 "email": "Membre ANDRH", 
-                 "role": "TRIAL", # <--- Pas de RSS
-                 "name": "Invité RH"
-             }
-
-        # --- 4. TEST : ABONNÉ SUPABASE (EMAIL / MOT DE PASSE) ---
-        if self.supabase and "@" in str(email_or_code) and password:
+        # 4. Test ABONNÉ CLASSIQUE (Supabase)
+        if self.supabase and password:
             try:
                 res = self.supabase.auth.sign_in_with_password({
-                    "email": email_or_code, 
+                    "email": email_or_code,
                     "password": password
                 })
                 if res.user:
-                    # L'abonné a le rôle 'SUBSCRIBER', donc il ne voit pas le RSS Admin (sauf si vous changez la règle)
                     return {
-                        "email": res.user.email, 
-                        "role": "SUBSCRIBER", 
-                        "name": "Abonné"
+                        "email": res.user.email,
+                        "role": "SUBSCRIBER", # 🔒 PAS DE RSS, PAS DE DEBUG
+                        "name": "Abonné",
+                        "id": res.user.id
                     }
-            except Exception as e:
-                print(f"Refus connexion Supabase: {e}")
-                return None
+            except Exception:
+                return None # Erreur (mauvais mot de passe ou email)
         
         return None
 
     def logout(self):
-        """Déconnecte l'utilisateur proprement"""
-        if "user_info" in st.session_state:
-            del st.session_state.user_info
-        
         if self.supabase:
             try:
                 self.supabase.auth.sign_out()
             except: pass
+        st.session_state.user_info = None
+        st.rerun()
