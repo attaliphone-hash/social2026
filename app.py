@@ -47,6 +47,7 @@ if "services_ready" not in st.session_state:
     st.session_state.auth_manager = AuthManager()
     st.session_state.sub_manager = SubscriptionManager()
     st.session_state.ia_service = IAService()
+    # On initialise ici sous le nom 'doc_service'
     st.session_state.doc_service = DocumentService()
     st.session_state.quota_service = QuotaService()
     st.session_state.rule_engine = SocialRuleEngine()
@@ -57,7 +58,10 @@ apply_pro_design()
 auth = st.session_state.auth_manager
 sub = st.session_state.sub_manager
 ia = st.session_state.ia_service
-docs_srv = st.session_state.document_service # Ajusté selon le nom de classe standard
+
+# ✅ CORRECTION : On utilise la clé exacte 'doc_service' définie à la ligne 23
+docs_srv = st.session_state.doc_service 
+
 quota = st.session_state.quota_service
 engine = st.session_state.rule_engine
 ui = UIComponents()
