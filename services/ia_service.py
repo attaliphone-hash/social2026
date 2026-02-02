@@ -26,9 +26,11 @@ class IAService:
     def search_documents(self, query, k=6):
         """Recherche les documents pertinents dans Pinecone"""
         try:
+            # ✅ RÉTABLISSEMENT DE VOTRE SYNTAXE PRÉCISE :
             embeddings = GoogleGenerativeAIEmbeddings(
-                model="models/embedding-001",
-                google_api_key=self.google_api_key
+                model="models/gemini-embedding-001", 
+                google_api_key=self.google_api_key,
+                task_type="retrieval_query"
             )
             
             vectorstore = PineconeVectorStore(
