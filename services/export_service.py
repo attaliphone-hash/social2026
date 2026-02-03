@@ -6,7 +6,6 @@ from utils.helpers import logger
 
 class SocialExpertPDF(FPDF):
     def header(self):
-        # --- EN-TÊTE ---
         logo_path = "avatar-logo.png"
         if os.path.exists(logo_path):
             try:
@@ -14,13 +13,11 @@ class SocialExpertPDF(FPDF):
             except:
                 pass
         
-        # Titre
         self.set_y(15)
         self.set_font('Helvetica', 'B', 12)
         self.set_text_color(37, 62, 146) 
         self.cell(0, 6, 'SOCIAL EXPERT FRANCE', ln=True, align='R')
         
-        # Ligne de séparation
         self.set_y(35)
         self.set_draw_color(200, 200, 200) 
         self.set_line_width(0.3)
@@ -38,41 +35,25 @@ class ExportService:
         self.logo_path = "avatar-logo.png"
 
     def _clean_markdown_for_pdf(self, text):
-        """
-        Prépare le texte Markdown pour FPDF.
-        Garde le gras (**texte**) mais retire les titres (###) pour éviter les erreurs de parsing.
-        """
         if not text: return ""
         text = str(text)
+        text = re.sub(r'<[^>]+>', '', text) # Sécurité
         
-        # 1. Nettoyage HTML résiduel (sécurité)
-        text = re.sub(r'<[^>]+>', '', text) 
-        
-        # 2. Gestion des Titres Markdown (### Titre)
-        # FPDF standard gère mal les titres #, on les transforme en gras simple avec saut de ligne
         lines = []
         for line in text.split('\n'):
             line = line.strip()
-            # Transformation des titres "### Titre" en "**Titre**"
+            # Conversion Titres Markdown -> Gras PDF
             if line.startswith('### ') or line.startswith('## '):
                 content = line.replace('#', '').strip()
-                line = f"\n**{content}**" # On force le gras et un saut de ligne avant
+                line = f"\n**{content}**"
             elif line.startswith('- ') or line.startswith('* '):
                  line = "  • " + line[1:].strip()
             lines.append(line)
-            
         text = "\n".join(lines)
 
-        # 3. Symboles Spéciaux
-        replacements = {
-            "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">",
-            "&euro;": " EUR", "€": " EUR",
-            "🎯": ">> "
-        }
-        for entity, char in replacements.items():
-            text = text.replace(entity, char)
+        replacements = {"&nbsp;": " ", "&euro;": " EUR", "€": " EUR", "🎯": ">> "}
+        for k, v in replacements.items(): text = text.replace(k, v)
 
-        # 4. Encodage
         return text.encode('latin-1', 'replace').decode('latin-1')
 
     def generate_pdf(self, user_query, ai_response):
@@ -85,106 +66,79 @@ class ExportService:
             
             clean_query = self._clean_markdown_for_pdf(user_query)
             
-            # --- EXTRACTION CONTENU ---
-            # On cherche le séparateur ">> RÉSULTAT" (format Markdown)
-            # Note : Le prompt IA met maintenant "### >> RÉSULTAT"
+            # Découpage intelligent
             if "RÉSULTAT" in ai_response:
-                # On split grossièrement sur "RÉSULTAT" pour trouver la fin
                 parts = ai_response.split("RÉSULTAT")
-                body_raw = parts[0]
-                # On essaie de récupérer le reste
-                rest_raw = parts[1] if len(parts) > 1 else ""
+                body = parts[0]
+                rest = parts[1] if len(parts)>1 else ""
             else:
-                body_raw = ai_response
-                rest_raw = ""
+                body, rest = ai_response, ""
 
-            # Extraction Sources (Souvent à la fin)
-            if "Sources utilisées" in rest_raw:
-                sub_parts = rest_raw.split("Sources utilisées")
-                result_raw = sub_parts[0]
-                sources_raw = "Sources utilisées" + sub_parts[1]
+            if "Sources" in rest:
+                sub = rest.split("Sources")
+                res_txt, src_txt = sub[0], "Sources" + sub[1]
             else:
-                result_raw = rest_raw
-                sources_raw = ""
+                res_txt, src_txt = rest, ""
 
-            # Nettoyage
-            # On retire les "###" éventuels qui traînent dans la découpe
-            clean_body = self._clean_markdown_for_pdf(body_raw).replace(">>", "")
-            clean_result = self._clean_markdown_for_pdf(result_raw).replace(":", "").strip()
-            clean_sources = self._clean_markdown_for_pdf(sources_raw).strip()
+            clean_body = self._clean_markdown_for_pdf(body).replace(">>", "")
+            clean_res = self._clean_markdown_for_pdf(res_txt).replace(":", "").strip()
+            clean_src = self._clean_markdown_for_pdf(src_txt).strip()
 
-            # ==========================================
-            # GÉNÉRATION DOCUMENT (Support Markdown activé)
-            # ==========================================
-
-            # 1. DATE
+            # --- DESSIN ---
+            # Date
             pdf.set_y(45)
             pdf.set_font("Helvetica", "B", 10)
-            pdf.set_text_color(100, 100, 100)
-            date_str = datetime.datetime.now().strftime("%d/%m/%Y")
-            
-            pdf.set_fill_color(240, 240, 240)
-            pdf.cell(40, 8, f"  Dossier du {date_str}  ", ln=True, fill=True, align='C')
+            pdf.set_text_color(100)
+            pdf.set_fill_color(240)
+            pdf.cell(40, 8, f"  Dossier du {datetime.datetime.now().strftime('%d/%m/%Y')}  ", ln=True, fill=True, align='C')
             pdf.ln(8)
 
-            # 2. OBJET
+            # Objet
             pdf.set_font("Helvetica", "B", 11)
-            pdf.set_text_color(0, 0, 0)
+            pdf.set_text_color(0)
             pdf.cell(0, 6, "OBJET DE LA CONSULTATION", ln=True)
             pdf.ln(2)
-            
             pdf.set_font("Helvetica", "", 11)
-            # Pas de markdown pour la question user, texte brut
             pdf.multi_cell(0, 6, clean_query)
-            
             pdf.ln(6)
-            pdf.set_draw_color(220, 220, 220)
+            pdf.set_draw_color(220)
             pdf.line(20, pdf.get_y(), 190, pdf.get_y())
             pdf.ln(8)
 
-            # 3. ANALYSE (Markdown Activé !)
+            # Analyse
             pdf.set_font("Helvetica", "B", 11)
             pdf.cell(0, 6, "ANALYSE JURIDIQUE & SIMULATION", ln=True)
             pdf.ln(4)
-
             pdf.set_font("Helvetica", "", 11)
-            pdf.set_text_color(20, 20, 20)
-            
-            # C'est ici la magie : markdown=True permet d'interpréter les **gras**
+            pdf.set_text_color(20)
             try:
                 pdf.multi_cell(0, 6, clean_body, markdown=True)
             except:
-                # Fallback si le markdown est cassé
                 pdf.multi_cell(0, 6, clean_body)
-            
             pdf.ln(8)
 
-            # 4. RÉSULTAT
-            if clean_result:
+            # Résultat
+            if clean_res:
                 pdf.set_font("Helvetica", "B", 11)
-                pdf.set_text_color(0, 0, 0)
+                pdf.set_text_color(0)
                 pdf.cell(0, 8, ">> RÉSULTAT", ln=True)
-                
                 pdf.set_font("Helvetica", "B", 12)
-                # On nettoie les éventuels astérisques résiduels pour le titre résultat
-                clean_result_display = clean_result.replace("**", "")
-                pdf.multi_cell(0, 8, clean_result_display)
+                pdf.multi_cell(0, 8, clean_res.replace("**", ""))
                 pdf.ln(4)
 
-            # 5. SOURCES
-            if clean_sources:
+            # Sources
+            if clean_src:
                 pdf.ln(2)
                 pdf.set_font("Helvetica", "", 9) 
-                pdf.set_text_color(80, 80, 80)
-                pdf.multi_cell(0, 5, clean_sources)
+                pdf.set_text_color(80)
+                pdf.multi_cell(0, 5, clean_src)
                 pdf.ln(8)
 
-            # 6. DISCLAIMER
-            pdf.set_draw_color(220, 220, 220)
+            # Disclaimer
+            pdf.set_draw_color(220)
             pdf.line(20, pdf.get_y(), 190, pdf.get_y())
             pdf.ln(6)
-            
-            pdf.set_text_color(100, 100, 100)
+            pdf.set_text_color(100)
             pdf.set_font("Helvetica", "B", 9)
             pdf.write(5, "DOCUMENT CONFIDENTIEL ")
             pdf.set_font("Helvetica", "", 9)
