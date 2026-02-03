@@ -1,6 +1,6 @@
 # ==============================================================================
-# RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ (ULTIMATE V3.0)
-# VERSION : 3.0 (FULL COVERAGE - AUDIT READY)
+# RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ
+# VERSION : 3.1 (FULL COVERAGE - 43 RÈGLES)
 # DATE DE MISE À JOUR : 03/02/2026
 # STATUS : PRODUCTION READY
 # ==============================================================================
@@ -80,7 +80,7 @@
 - id: TICKET_RESTO_2026
   keywords: ["ticket", "resto", "titre", "restaurant", "cheque", "déjeuner", "patronale", "exonération"]
   valeurs:
-    plafond_exonération: 7.32
+    plafond_exoneration: 7.32
   derniere_maj: "Janvier 2026"
   source: "Loi n° 2025-1200 de finances pour 2026 (Art. 81 CGI)"
   text: "Le plafond d'exonération de la part patronale sur les titres-restaurant est de 7,32 €."
@@ -347,7 +347,6 @@
     sal_ceg_T1: 0.86
     sal_ceg_T2: 1.08
     sal_apec: 0.024
-    
     # --- PART PATRONALE (Coût employeur) ---
     pat_maladie_base: 13.00
     pat_maladie_reduit: 7.00
@@ -428,10 +427,9 @@
   source: "Code de la Sécurité Sociale - Art. L137-15"
   text: "Taux standard 20%. Taux réduit 16% (PERCO piloté). Taux 8% (Prévoyance > 11 salariés)."
 
-  # -------------------------------------------------------------------------
-# 13. RÈGLES COMPLÉMENTAIRES 2026 (AJOUT v3.1)
 # -------------------------------------------------------------------------
-
+# 13. INDEMNITÉS KILOMÉTRIQUES VOITURE (BARÈME FISCAL 2026)
+# -------------------------------------------------------------------------
 - id: IK_VOITURE_2026
   keywords: ["ik", "kilometrique", "kilométrique", "voiture", "automobile", "barème", "fiscal", "cv", "frais", "réels", "trajet"]
   valeurs:
@@ -460,13 +458,16 @@
     7cv_plus_au_dela_20000: 0.470
     majoration_vehicule_electrique: 20
   derniere_maj: "Janvier 2026"
-  source: "Arrêté fiscal (Barème projeté stable pour 2026)"
+  source: "Arrêté du 27 mars 2023 (Barème fiscal inchangé pour 2026)"
   text: |
     BARÈME IK VOITURE 2026 :
     Formule de calcul selon la puissance fiscale (CV) et la distance (d).
     Exemple 5 CV pour 12 000 km : (12 000 x 0,357) + 1 395 = 5 679 €.
     MAJORATION : +20% sur le montant final pour les véhicules 100% électriques.
 
+# -------------------------------------------------------------------------
+# 14. CONGÉS PAYÉS (ACQUISITION & DÉCOMPTE)
+# -------------------------------------------------------------------------
 - id: CONGES_PAYES_2026
   keywords: ["conges", "congés", "payés", "cp", "acquisition", "jours", "ouvrés", "ouvrables", "indemnité", "vacances", "maladie"]
   valeurs:
@@ -476,15 +477,41 @@
     jours_ouvres_annuels: 25
     acquisition_maladie_non_pro_par_mois: 2
     acquisition_maladie_non_pro_max_annuel: 24
+    periode_reference_debut: "01/06"
+    periode_reference_fin: "31/05"
   derniere_maj: "Janvier 2026"
   source: "Code du travail - Art. L3141-3 & Loi DDADUE du 22 avril 2024"
   text: |
     RÈGLES D'ACQUISITION CP 2026 :
-    - Droit commun : 2,5 jours ouvrables/mois (30j/an).
+    - Droit commun : 2,5 jours ouvrables/mois (30j/an) ou 2,08 jours ouvrés/mois (25j/an).
     - Période de référence : 1er juin N-1 au 31 mai N (sauf accord d'entreprise).
     - Maladie NON professionnelle : Acquisition limitée à 2 jours ouvrables/mois, dans la limite de 24 jours (4 semaines) par an (Loi du 22/04/2024).
     - Maladie professionnelle / AT : Acquisition normale (2,5j/mois) dans la limite de 30 jours/an.
 
+# -------------------------------------------------------------------------
+# 15. FRACTIONNEMENT DES CONGÉS PAYÉS
+# -------------------------------------------------------------------------
+- id: FRACTIONNEMENT_CP_2026
+  keywords: ["fractionnement", "conges", "congés", "jours", "supplementaires", "supplémentaires", "mai", "octobre"]
+  valeurs:
+    jours_sup_3_a_5_hors_periode: 1
+    jours_sup_6_et_plus_hors_periode: 2
+    periode_legale_debut: "01/05"
+    periode_legale_fin: "31/10"
+    conge_principal_min_continu: 12
+    conge_principal_max: 24
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. L3141-19 et L3141-23"
+  text: |
+    JOURS DE FRACTIONNEMENT 2026 :
+    - Si 3 à 5 jours du congé principal pris hors période légale (1er mai - 31 octobre) : +1 jour ouvrable.
+    - Si 6 jours ou plus hors période légale : +2 jours ouvrables.
+    - Le congé principal (24 jours ouvrables max) doit inclure au moins 12 jours ouvrables continus.
+    - Renonciation possible par accord individuel ou collectif.
+
+# -------------------------------------------------------------------------
+# 16. PRÉAVIS DE LICENCIEMENT
+# -------------------------------------------------------------------------
 - id: PREAVIS_LICENCIEMENT_2026
   keywords: ["preavis", "préavis", "licenciement", "démission", "durée", "mois", "ancienneté", "délai"]
   valeurs:
@@ -500,3 +527,50 @@
     - De 6 mois à moins de 2 ans : 1 mois.
     - 2 ans d'ancienneté et plus : 2 mois.
     - Travailleur handicapé (RQTH) : Durée doublée dans la limite maximale de 3 mois.
+
+# -------------------------------------------------------------------------
+# 17. CONGÉ PARENTAL D'ÉDUCATION
+# -------------------------------------------------------------------------
+- id: CONGE_PARENTAL_2026
+  keywords: ["conge", "congé", "parental", "education", "éducation", "prepare", "caf", "temps", "partiel", "enfant"]
+  valeurs:
+    duree_max_1_enfant_mois: 12
+    duree_max_2_enfants_plus_mois: 36
+    prestation_temps_plein: 428.71
+    prestation_temps_partiel_50: 277.14
+    prestation_temps_partiel_50_80: 160.05
+    anciennete_requise_mois: 12
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. L1225-47 & CAF (PreParE 2026)"
+  text: |
+    CONGÉ PARENTAL D'ÉDUCATION 2026 :
+    - Condition : 1 an d'ancienneté minimum à la date de naissance ou d'adoption.
+    - Durée : 1 an renouvelable jusqu'au 1er anniversaire (1 enfant) ou jusqu'aux 3 ans de l'enfant (2+ enfants).
+    - PreParE (CAF) : 428,71 €/mois à temps plein, 277,14 €/mois entre 50% et 80%, 160,05 €/mois si activité > 80%.
+    - Le congé peut être pris par l'un ou l'autre parent, ou partagé.
+
+# -------------------------------------------------------------------------
+# 18. MAINTIEN DE SALAIRE MALADIE (LOI MENSUALISATION)
+# -------------------------------------------------------------------------
+- id: MAINTIEN_SALAIRE_MALADIE_2026
+  keywords: ["maintien", "salaire", "maladie", "carence", "employeur", "complement", "mensualisation", "arret"]
+  valeurs:
+    carence_jours_maladie: 7
+    carence_jours_at_mp: 0
+    periode_1_jours: 30
+    periode_1_taux: 90
+    periode_2_jours: 30
+    periode_2_taux: 66.66
+    anciennete_minimum_ans: 1
+    majoration_par_5ans_jours: 10
+    majoration_max_jours: 30
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. L1226-1 (Loi de mensualisation du 19 janvier 1978)"
+  text: |
+    MAINTIEN DE SALAIRE MALADIE (Obligation employeur) 2026 :
+    - Condition : 1 an d'ancienneté minimum dans l'entreprise.
+    - Carence : 7 jours calendaires (0 jour en cas d'AT/MP).
+    - 30 premiers jours : 90% du salaire brut (IJSS déduites).
+    - 30 jours suivants : 66,66% du salaire brut (IJSS déduites).
+    - Majoration : +10 jours par tranche de 5 ans d'ancienneté (maximum +30 jours par période).
+    - Exemple : 15 ans d'ancienneté = 60 jours à 90% + 60 jours à 66,66%.
