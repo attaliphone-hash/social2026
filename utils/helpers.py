@@ -7,15 +7,17 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(),  # Affiche dans la console
-        logging.FileHandler("app_debug.log", mode='a', encoding='utf-8')  # Sauvegarde dans un fichier
+        logging.StreamHandler(),
+        logging.FileHandler("app_debug.log", mode='a', encoding='utf-8')
     ]
 )
 logger = logging.getLogger("SocialExpert")
 
-def clean_source_name(filename):
+# ✅ CORRECTION : On ajoute l'argument 'category' (même optionnel) pour éviter le crash
+def clean_source_name(filename, category=None):
     """
-    Transforme un nom de fichier technique (REF_Code_Travail.pdf) en nom lisible (Code du Travail).
+    Transforme un nom de fichier technique en nom lisible.
+    Accepte une catégorie optionnelle pour compatibilité future.
     """
     if not filename: return "Document Inconnu"
     
@@ -34,4 +36,8 @@ def clean_source_name(filename):
     for old, new in replacements.items():
         name = name.replace(old, new)
     
+    # (Optionnel) Si vous vouliez utiliser la catégorie plus tard, c'est ici :
+    # if category and category != "AUTRE":
+    #     name = f"[{category}] {name}"
+
     return name.strip()
