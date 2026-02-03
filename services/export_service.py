@@ -1,13 +1,13 @@
-from fpdf import FPDF
+from fpdf import FPDF, HTMLMixin
 import datetime
 import os
 import re
 from utils.helpers import logger
 
-class SocialExpertPDF(FPDF):
+class SocialExpertPDF(FPDF, HTMLMixin):
     def header(self):
         # --- EN-TÊTE ---
-        # Logo (Aligné à gauche)
+        # 1. Logo à Gauche (X=20)
         logo_path = "avatar-logo.png"
         if os.path.exists(logo_path):
             try:
@@ -15,174 +15,175 @@ class SocialExpertPDF(FPDF):
             except:
                 pass
         
-        # Titre Entreprise (Aligné à droite)
+        # 2. Nom de l'entreprise à Droite (Aligné R)
         self.set_y(12)
-        self.set_font('Helvetica', 'B', 12) # Helvetica = Look moderne
-        self.set_text_color(37, 62, 146)    # Bleu Brand
+        self.set_font('Helvetica', 'B', 12)
+        self.set_text_color(37, 62, 146) # Bleu Brand
         self.cell(0, 6, 'SOCIAL EXPERT FRANCE', ln=True, align='R')
         
-        # Espace après header
-        self.ln(15) 
+        # Ligne de séparation très discrète
+        self.ln(10)
+        self.set_draw_color(230, 230, 230)
+        self.line(20, 25, 190, 25)
+        self.ln(10) # Espace avant le contenu
 
     def footer(self):
-        self.set_y(-20) 
+        self.set_y(-15) 
         self.set_font('Helvetica', '', 8)
-        self.set_text_color(150, 150, 150) # Gris clair
-        self.cell(0, 10, f'Page {self.page_no()}/{{nb}}', align='C')
+        self.set_text_color(180, 180, 180) # Gris très clair
+        self.cell(0, 10, f'{self.page_no()}/{{nb}}', align='C')
 
 class ExportService:
     def __init__(self):
         self.logo_path = "avatar-logo.png"
 
-    def _clean_text_for_pdf(self, text):
-        if text is None: return ""
+    def _markdown_to_html(self, text):
+        """
+        Convertit le Markdown de l'IA en HTML simple pour fpdf2.
+        Gère le gras inline (**texte**) et les listes.
+        """
+        if not text: return ""
         text = str(text)
         
-        # Préservation de la structure "Liste" (Bullet points)
-        structure_replacements = {
-            "</h1>": "\n", "</h2>": "\n", "</h3>": "\n", "</h4>": "\n",
-            "</p>": "\n", "</div>": "\n", "<br>": "\n", "<br/>": "\n",
-            "<li>": "  • ", "</li>": "\n", # Puce ronde comme sur le web
-            "<ul>": "", "</ul>": ""
-        }
-        for tag, replacement in structure_replacements.items():
-            text = text.replace(tag, replacement)
-
-        text = re.sub(r'<[^>]+>', '', text)
-
-        # Symboles
-        entity_replacements = {
-            "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">", "&#39;": "'", "&quot;": '"',
-            "&euro;": " EUR", "€": " EUR",
-            "🎯": ">>", "⚠️": "ATTENTION :", "✅": "[OK]", "❌": "[KO]"
-        }
-        for entity, char in entity_replacements.items():
-            text = text.replace(entity, char)
-
-        text = re.sub(r'\n{3,}', '\n\n', text)
-        return text.encode('latin-1', 'replace').decode('latin-1')
+        # 1. Nettoyage préliminaire
+        text = text.replace("</h1>", "<br>").replace("</h2>", "<br>").replace("</h3>", "<br>")
+        
+        # 2. Conversion du GRAS (**texte** -> <b>texte</b>)
+        # C'est la clé pour avoir "Analyse & Règles" en gras dans la ligne
+        text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+        
+        # 3. Conversion des LISTES
+        # On transforme les tirets "- " en <li>...</li>
+        lines = text.split('\n')
+        html_lines = []
+        in_list = False
+        
+        for line in lines:
+            line = line.strip()
+            if line.startswith('- ') or line.startswith('* '):
+                content = line[2:]
+                if not in_list:
+                    html_lines.append('<ul>')
+                    in_list = True
+                html_lines.append(f'<li>{content}</li>')
+            else:
+                if in_list:
+                    html_lines.append('</ul>')
+                    in_list = False
+                # Gestion des sauts de ligne
+                if line:
+                    html_lines.append(f'{line}<br>')
+        
+        if in_list: html_lines.append('</ul>')
+        
+        html_text = "".join(html_lines)
+        
+        # 4. Nettoyage final symboles
+        html_text = html_text.replace("€", " EUR").replace("EUR", "<b>EUR</b>") # Petit bonus : EUR en gras
+        
+        return html_text
 
     def generate_pdf(self, user_query, ai_response):
         try:
             pdf = SocialExpertPDF()
             pdf.alias_nb_pages()
             pdf.add_page()
-            # Marges 20mm (Aéré)
             pdf.set_margins(20, 20, 20)
+            pdf.set_auto_page_break(auto=True, margin=20)
             
-            clean_query = self._clean_text_for_pdf(user_query)
-            clean_response = self._clean_text_for_pdf(ai_response)
+            # Préparation des textes
+            html_response = self._markdown_to_html(ai_response)
+            clean_query = user_query.replace("\n", " ")
 
-            # --- EXTRACTION (Résultat & Sources) ---
-            if ">> RÉSULTAT" in clean_response:
-                parts = clean_response.split(">> RÉSULTAT")
-                body_text = parts[0]
-                result_text = parts[1].strip() # On enlève le ">> RÉSULTAT" du texte pour le gérer manuellement
-            else:
-                body_text = clean_response
-                result_text = ""
-            
-            sources_text = ""
-            keyword_sources = "Sources utilisées"
-            
-            # Recherche des sources dans le corps ou le résultat
-            if keyword_sources in body_text:
-                sub_parts = body_text.split(keyword_sources)
-                body_text = sub_parts[0]
-                sources_text = sub_parts[1]
-            elif keyword_sources in result_text:
-                sub_parts = result_text.split(keyword_sources)
-                result_text = sub_parts[0]
-                sources_text = sub_parts[1]
-
-            # ==========================================
-            # DÉBUT DU DOCUMENT (Style Capture d'écran)
-            # ==========================================
-
-            # 1. DATE (Gras, Noir)
-            pdf.set_font("Helvetica", "B", 11)
-            pdf.set_text_color(0, 0, 0)
+            # --- 1. DATE (Sous le header, aligné gauche, style "Tag") ---
+            pdf.set_y(30)
+            pdf.set_font("Helvetica", "B", 10)
+            pdf.set_text_color(20, 20, 20)
             date_str = datetime.datetime.now().strftime("%d/%m/%Y")
-            pdf.cell(0, 8, f"Dossier du {date_str}", ln=True)
-            pdf.ln(4)
+            pdf.cell(0, 6, f"Dossier du {date_str}", ln=True)
+            pdf.ln(8)
 
-            # 2. OBJET DE LA CONSULTATION (Titre Majuscule)
-            pdf.set_font("Helvetica", "B", 11) # Gras
-            pdf.cell(0, 8, "OBJET DE LA CONSULTATION", ln=True)
+            # --- 2. OBJET DE LA CONSULTATION ---
+            pdf.set_font("Helvetica", "B", 11)
+            pdf.set_text_color(0, 0, 0) # Noir
+            pdf.cell(0, 6, "OBJET DE LA CONSULTATION", ln=True)
+            pdf.ln(2)
             
-            # Contenu Objet (Normal, Aéré)
+            # Texte de la question (Normal)
             pdf.set_font("Helvetica", "", 10)
             pdf.multi_cell(0, 5, clean_query)
             
-            # Ligne de séparation fine et discrète
+            # Ligne fine séparation
             pdf.ln(6)
-            pdf.set_draw_color(220, 220, 220) # Gris très clair
+            pdf.set_draw_color(230, 230, 230)
             pdf.line(20, pdf.get_y(), 190, pdf.get_y())
             pdf.ln(6)
 
-            # 3. ANALYSE JURIDIQUE & SIMULATION
+            # --- 3. ANALYSE & CONTENU (Via HTML pour le gras inline) ---
+            # On sépare le bloc résultat pour le traiter à part
+            if ">> RÉSULTAT" in html_response:
+                parts = html_response.split(">> RÉSULTAT")
+                body_html = parts[0]
+                # On nettoie le résultat pour garder juste la valeur
+                raw_result = parts[1].replace("<br>", "").strip()
+            else:
+                body_html = html_response
+                raw_result = ""
+
+            # Titre Section
             pdf.set_font("Helvetica", "B", 11)
-            pdf.cell(0, 8, "ANALYSE JURIDIQUE & SIMULATION", ln=True)
+            pdf.cell(0, 6, "ANALYSE JURIDIQUE & SIMULATION", ln=True)
             pdf.ln(2)
 
-            # Corps du texte (Analyse)
-            # On imprime le corps tel quel. L'IA structure déjà avec des retours à la ligne.
-            # Helvetica 10 pour le corps (lisible et propre)
+            # CORPS DU TEXTE (HTML)
+            # C'est ici que la magie opère pour les puces et le gras
             pdf.set_font("Helvetica", "", 10)
-            pdf.set_text_color(20, 20, 20) # Noir doux
+            pdf.set_text_color(30, 30, 30)
             
-            # Astuce : On essaye de détecter les sous-titres "Analyse & Règles" et "Détail & Chiffres" 
-            # pour les mettre en gras si possible, sinon on imprime tout le bloc.
-            # Pour simplifier et garantir la robustesse : on imprime le bloc propre.
-            pdf.multi_cell(0, 5, body_text.strip())
+            # On injecte le HTML. fpdf2 va gérer les <b> et <li>
+            pdf.write_html(body_html)
             
-            pdf.ln(6)
+            pdf.ln(4)
 
-            # 4. LE RÉSULTAT (Style ">> RÉSULTAT")
-            if result_text:
-                # Titre du résultat
+            # --- 4. RÉSULTAT (Style Capture : Titre puis Valeur Grise) ---
+            if raw_result:
+                # Titre
                 pdf.set_font("Helvetica", "B", 11)
                 pdf.set_text_color(0, 0, 0)
                 pdf.cell(0, 8, ">> RÉSULTAT", ln=True)
                 
-                # Valeur du résultat (Gras, un peu plus grand, Noir)
-                pdf.set_font("Helvetica", "B", 11) 
-                pdf.multi_cell(0, 6, result_text.strip())
+                # Puce "Résultat" (Fond gris clair, texte gras)
+                pdf.set_fill_color(245, 247, 250) # Gris très léger
+                pdf.set_font("Helvetica", "B", 11)
                 
-                pdf.ln(4)
-                # Ligne fine sous le résultat
-                pdf.set_draw_color(220, 220, 220)
-                pdf.line(20, pdf.get_y(), 190, pdf.get_y())
-                pdf.ln(6)
-
-            # 5. SOURCES (Style "Label: Valeur")
-            if sources_text:
-                pdf.set_font("Helvetica", "B", 10) # Label "Sources utilisées" en gras
-                pdf.write(5, "Sources utilisées : ")
+                # On nettoie le HTML résiduel du résultat
+                clean_res = re.sub(r'<[^>]+>', '', raw_result).strip()
                 
-                pdf.set_font("Helvetica", "", 10) # Texte des sources normal
-                pdf.write(5, sources_text.strip())
-                pdf.ln(10)
+                # Affichage dans une cellule grise
+                pdf.cell(0, 10, f"  {clean_res}  ", ln=True, fill=True)
+                pdf.ln(8)
 
-            # 6. DISCLAIMER / PIED DE PAGE (Style italique)
-            # Gestion saut de page
-            if pdf.get_y() > 250: pdf.add_page()
+            # --- 5. DISCLAIMER & SOURCES ---
+            # Ligne séparation
+            pdf.set_draw_color(230, 230, 230)
+            pdf.line(20, pdf.get_y(), 190, pdf.get_y())
+            pdf.ln(6)
+
+            # Disclaimer (Italique)
+            pdf.set_font("Helvetica", "I", 9)
+            pdf.set_text_color(100, 100, 100)
+            pdf.multi_cell(0, 4, "Données certifiées conformes aux barèmes 2026.")
+            pdf.ln(2)
             
-            # Texte "Données certifiées..." (Italique)
-            pdf.set_font("Helvetica", "I", 10)
-            pdf.set_text_color(50, 50, 50)
-            pdf.cell(0, 5, "Données certifiées conformes aux barèmes 2026.", ln=True)
-            pdf.ln(4)
-
-            # Bloc "DOCUMENT CONFIDENTIEL" (Gras + Normal)
-            pdf.set_font("Helvetica", "B", 10)
-            pdf.write(5, "DOCUMENT CONFIDENTIEL ")
-            pdf.set_font("Helvetica", "", 10)
-            pdf.write(5, "Simulation établie sur la base des barèmes 2026. Ne remplace pas un conseil juridique.")
-            pdf.ln()
+            # Document Confidentiel (Gras + Normal)
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.write(4, "DOCUMENT CONFIDENTIEL ")
+            pdf.set_font("Helvetica", "", 9)
+            pdf.write(4, "Simulation établie sur la base des barèmes 2026. Ne remplace pas un conseil juridique.")
 
             return bytes(pdf.output())
 
         except Exception as e:
-            logger.error(f"ERREUR PDF : {e}")
+            logger.error(f"ERREUR PDF HTML : {e}")
+            # Fallback en cas d'erreur HTML (sécurité)
             return None
