@@ -1,7 +1,7 @@
 # ==============================================================================
 # RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ (ULTIMATE V2.1)
 # VERSION : 2.1 (GOLD MASTER)
-# DATE DE MISE À JOUR : 31/01/2026
+# DATE DE MISE À JOUR : 03/02/2026
 # STATUS : PRODUCTION READY
 # ==============================================================================
 
@@ -26,6 +26,19 @@
   derniere_maj: "Janvier 2026"
   source: "Décret n° 2025-1738 du 20 décembre 2025 portant relèvement du salaire minimum de croissance"
   text: "Au 1er janvier 2026, le SMIC horaire est de 12,02 €, soit 1 823,03 € mensuel pour 35h."
+
+- id: ACTIVITE_PARTIELLE_2026
+  keywords: ["activité", "partielle", "chômage", "technique", "allocation", "employeur", "plancher", "taux", "apld"]
+  valeurs:
+    allocation_horaire_mini_droit_commun: 8.57
+    allocation_horaire_mini_apld: 9.52
+  derniere_maj: "Février 2026"
+  source: "Décret n° 2026-95 du 29 janvier 2026 (JO du 30/01/2026)"
+  text: |
+    RÈGLE APPLICABLE AU 1ER JANVIER 2026 :
+    1. Le taux horaire minimum de l'allocation versée à l'employeur (Droit commun) est de 8,57 €.
+    2. Pour l'APLD (Activité Partielle Longue Durée), le plancher est fixé à 9,52 €.
+    ⛔ ATTENTION : Ces montants sont les minima garantis à l'employeur pour compenser l'indemnité versée au salarié.
 
 - id: MG_2026
   keywords: ["mg", "minimum", "garanti", "valeur", "repas"]
