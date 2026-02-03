@@ -38,9 +38,14 @@ class ExportService:
             "&gt;": ">", 
             "&#39;": "'", 
             "&quot;": '"',
-            # 👇 MODIFICATION ICI : On utilise le code ISO "EUR"
+            # Gestion des devises
             "&euro;": " EUR", 
-            "€": " EUR" 
+            "€": " EUR",
+            # 👇 CORRECTION EMOJIS ICI 👇
+            "🎯": ">> ",      # Remplace la cible par des chevrons (plus propre que ?)
+            "⚠️": "ATTENTION : ",
+            "✅": "[OK] ",
+            "❌": "[KO] "
         }
         for entity, char in entity_replacements.items():
             text = text.replace(entity, char)
@@ -48,7 +53,7 @@ class ExportService:
         # 5. Nettoyage des espaces multiples
         text = re.sub(r'\n{3,}', '\n\n', text)
         
-        # 6. Encodage Latin-1 (Gestion des émojis par remplacement)
+        # 6. Encodage Latin-1 (Sécurité finale)
         return text.encode('latin-1', 'replace').decode('latin-1')
 
     def generate_pdf(self, user_query, ai_response):
@@ -110,7 +115,7 @@ class ExportService:
             )
             pdf.multi_cell(0, 5, self._clean_text_for_pdf(disclaimer), align="C")
             
-            # Retourne des bytes
+            # Retourne des bytes (Compatible Streamlit)
             return bytes(pdf.output())
 
         except Exception as e:
