@@ -168,7 +168,7 @@ if user_input:
         st.stop()
         
     st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user", avatar="🧑‍💻"):
+    with st.chat_message("user", avatar="⚫"):
         st.markdown(user_input)
     
     quota.increment()
@@ -225,7 +225,7 @@ STRUCTURE DE RÉPONSE ATTENDUE :
 - Base : ...
 - Taux : ...
 
-### >> RÉSULTAT
+### RÉSULTAT
 **[Montant final en EUR]**
 
 Sources utilisées : [Liste des documents]
