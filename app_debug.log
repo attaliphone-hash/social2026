@@ -7,3 +7,7 @@
 2026-02-03 17:24:37,374 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
 2026-02-03 17:24:38,198 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
 2026-02-03 17:24:38,909 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
+2026-02-03 17:33:09,683 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+2026-02-03 17:33:10,571 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-02-03 17:33:14,087 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
+2026-02-03 17:33:35,167 - SocialExpert - WARNING - Veille BOSS : Échec de récupération du flux - HTTPSConnectionPool(host='boss.gouv.fr', port=443): Read timed out. (read timeout=5)
