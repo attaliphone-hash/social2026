@@ -1,21 +1,63 @@
 from fpdf import FPDF
 import datetime
 import os
+import re
 
 class ExportService:
     def __init__(self):
         self.logo_path = "avatar-logo.png"
 
+    def _clean_text_for_pdf(self, text):
+        """
+        Nettoie le texte pour FPDF (Latin-1) et supprime les balises HTML.
+        Gère aussi la conversion forcée en string.
+        """
+        if text is None:
+            return ""
+        
+        # 1. Force le type String
+        text = str(text)
+        
+        # 2. Nettoyage HTML basique
+        replacements = {
+            "<h4>": "\n", "</h4>": "\n",
+            "<ul>": "", "</ul>": "",
+            "<li>": "- ", "</li>": "\n",
+            "<strong>": "", "</strong>": "",
+            "<br>": "\n", "<p>": "", "</p>": "\n",
+            "<em>": "", "</em>": "",
+            "</div>": "\n",
+            "&nbsp;": " ", "&euro;": "Euros"
+        }
+        
+        for tag, replacement in replacements.items():
+            text = text.replace(tag, replacement)
+
+        # 3. Suppression des balises div stylisées (Nettoyage agressif)
+        text = re.sub(r'<div[^>]*>', '\n', text)
+        
+        # 4. Encodage : Remplacement des caractères non supportés par Latin-1
+        # FPDF standard ne supporte pas les émojis -> On les supprime ou remplace
+        # Cette ligne encode en latin-1 en ignorant les erreurs, puis décode pour avoir une string propre
+        return text.encode('latin-1', 'replace').decode('latin-1')
+
     def generate_pdf(self, user_query, ai_response):
         pdf = FPDF()
         pdf.add_page()
         
+        # Nettoyage préventif des entrées
+        clean_query = self._clean_text_for_pdf(user_query)
+        clean_response = self._clean_text_for_pdf(ai_response)
+
         # 1. En-tête avec Logo
         if os.path.exists(self.logo_path):
-            pdf.image(self.logo_path, 10, 8, 25)
+            try:
+                pdf.image(self.logo_path, 10, 8, 25)
+            except:
+                pass # Si l'image est corrompue, on continue sans logo
         
         pdf.set_font("helvetica", "B", 16)
-        pdf.set_text_color(37, 62, 146) # Votre bleu #253E92
+        pdf.set_text_color(37, 62, 146) # Bleu #253E92
         pdf.cell(0, 10, "SOCIAL EXPERT FRANCE", ln=True, align="R")
         
         pdf.set_font("helvetica", "I", 10)
@@ -31,11 +73,12 @@ class ExportService:
         pdf.set_text_color(0, 0, 0)
         pdf.cell(0, 10, " OBJET DE LA CONSULTATION :", ln=True, fill=True)
         pdf.set_font("helvetica", "", 11)
-        pdf.multi_cell(0, 10, user_query)
+        # Utilisation de la version nettoyée
+        pdf.multi_cell(0, 10, clean_query)
         
         pdf.ln(10)
         
-        # 3. Analyse et Résultats (Nettoyage du HTML pour le PDF)
+        # 3. Analyse et Résultats
         pdf.set_font("helvetica", "B", 12)
         pdf.set_text_color(37, 62, 146)
         pdf.cell(0, 10, "ANALYSE JURIDIQUE ET SIMULATION :", ln=True)
@@ -43,16 +86,8 @@ class ExportService:
         pdf.set_font("helvetica", "", 11)
         pdf.set_text_color(0, 0, 0)
         
-        # Nettoyage simple des balises HTML courantes pour le PDF
-        clean_text = ai_response.replace("<h4>", "").replace("</h4>", "\n")
-        clean_text = clean_text.replace("<ul>", "").replace("</ul>", "")
-        clean_text = clean_text.replace("<li>", "- ").replace("</li>", "\n")
-        clean_text = clean_text.replace("<strong>", "").replace("</strong>", "")
-        clean_text = clean_text.replace("<br>", "\n").replace("<div style=\"background-color: #f9f9f9; padding: 15px; border-radius: 5px;\">", "\n--- DÉTAILS ---\n")
-        clean_text = clean_text.replace("<div style=\"background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;\">", "\n--- RÉSULTAT FINAL ---\n")
-        clean_text = clean_text.replace("</div>", "\n")
-        
-        pdf.multi_cell(0, 7, clean_text)
+        # Utilisation de la version nettoyée
+        pdf.multi_cell(0, 7, clean_response)
         
         pdf.ln(10)
         
@@ -65,9 +100,10 @@ class ExportService:
             "AVERTISSEMENT : Ce compte-rendu est une simulation automatisée établie selon les barèmes 2026. "
             "Il est exclusivement destiné à faciliter la réflexion de l'utilisateur et ne constitue en aucun cas "
             "un acte de conseil juridique. Social Expert France ne saurait être tenu pour responsable de l'usage "
-            "fait de ces calculs. Seul un examen approfondi de votre dossier par un professionnel qualifié "
-            "(expert-comptable ou avocat) peut garantir une sécurité juridique totale."
+            "fait de ces calculs."
         )
-        pdf.multi_cell(0, 5, disclaimer, align="C")
+        # Nettoyage aussi du disclaimer pour être sûr (encodage)
+        pdf.multi_cell(0, 5, self._clean_text_for_pdf(disclaimer), align="C")
         
-        return pdf.output()
+        return pdf.output(dest='S').encode('latin-1') 
+        # Note: dest='S' retourne une string, qu'on encode en bytes pour st.download_button

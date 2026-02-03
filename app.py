@@ -270,6 +270,7 @@ QUESTION : {question}
         
         full_response = ""
         try:
+            # 1. Boucle de streaming (Génération progressive)
             for chunk in chain.stream({
                 "context": context_str, 
                 "question": user_input, 
@@ -279,22 +280,36 @@ QUESTION : {question}
                 full_response += chunk
                 box.markdown(full_response + "▌", unsafe_allow_html=True)
             
+            # 2. Affichage final propre (Sans le curseur clignotant)
             box.markdown(full_response, unsafe_allow_html=True)
+            
+            # 3. Sauvegarde dans l'historique
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             
-            # ✅ AJOUT DU BOUTON D'EXPORT PDF (Position UX optimale après génération)
+            # 4. EXPORT PDF SÉCURISÉ (BLINDÉ)
             try:
-                pdf_data = st.session_state.export_service.generate_pdf(user_input, full_response)
-                st.download_button(
-                    label="📥 Télécharger le compte-rendu (PDF)",
-                    data=pdf_data,
-                    file_name=f"Consultation_Sociale_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                    mime="application/pdf",
-                    key=f"dl_{len(st.session_state.messages)}"
-                )
+                # A. Sécurisation des types : On force la conversion en texte (str)
+                # Cela empêche le crash "can only concatenate str (not 'list') to str"
+                safe_prompt = str(user_input) if user_input else "Consultation"
+                safe_response = str(full_response) if full_response else "Pas de réponse."
+                
+                # B. Appel du service avec les variables sécurisées
+                pdf_bytes = st.session_state.export_service.generate_pdf(safe_prompt, safe_response)
+                
+                # C. Affichage du bouton uniquement si le PDF est bien généré
+                if pdf_bytes:
+                    st.download_button(
+                        label="📥 Télécharger le compte-rendu (PDF)",
+                        data=pdf_bytes,
+                        file_name=f"Consultation_Sociale_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                        mime="application/pdf",
+                        key=f"dl_{len(st.session_state.messages)}"
+                    )
             except Exception as pdf_err:
-                logger.error(f"Erreur Export PDF : {pdf_err}")
+                # Si le PDF plante, on log l'erreur MAIS on ne plante pas l'app pour l'utilisateur
+                logger.error(f"⚠️ Erreur Génération PDF (Non bloquant) : {pdf_err}")
                 
         except Exception as e:
-            logger.error(f"Erreur Génération : {e}")
+            # Ce bloc gère uniquement les erreurs critiques de l'IA (Stream coupé)
+            logger.error(f"Erreur Génération IA : {e}")
             box.error(f"Une erreur est survenue lors de la génération de la réponse : {e}")
