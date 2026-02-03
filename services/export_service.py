@@ -2,7 +2,7 @@ from fpdf import FPDF
 import datetime
 import os
 import re
-from utils.helpers import logger  # On utilise votre logger existant
+from utils.helpers import logger
 
 class ExportService:
     def __init__(self):
@@ -10,7 +10,7 @@ class ExportService:
 
     def _clean_text_for_pdf(self, text):
         """
-        Nettoyage Hybride : Robuste (Claude) + Respect de la mise en page (Gemini).
+        Nettoyage Hybride : Robuste + Respect de la mise en page.
         """
         if text is None:
             return ""
@@ -18,8 +18,7 @@ class ExportService:
         # 1. Sécurité Type
         text = str(text)
         
-        # 2. Préservation de la structure (C'est là que je complète Claude)
-        # On remplace les balises de bloc par des sauts de ligne AVANT de supprimer le reste
+        # 2. Préservation de la structure
         structure_replacements = {
             "</h1>": "\n\n", "</h2>": "\n\n", "</h3>": "\n\n", "</h4>": "\n\n",
             "</p>": "\n", "</div>": "\n", "<br>": "\n", "<br/>": "\n",
@@ -28,10 +27,10 @@ class ExportService:
         for tag, replacement in structure_replacements.items():
             text = text.replace(tag, replacement)
 
-        # 3. Nettoyage agressif (Méthode Claude) : On vire tout ce qui reste de HTML
+        # 3. Nettoyage agressif HTML
         text = re.sub(r'<[^>]+>', '', text)
 
-        # 4. Nettoyage des entités HTML courantes
+        # 4. Nettoyage des entités HTML
         entity_replacements = {
             "&nbsp;": " ", "&euro;": "Euros", "&amp;": "&",
             "&lt;": "<", "&gt;": ">", "&#39;": "'", "&quot;": '"'
@@ -39,11 +38,10 @@ class ExportService:
         for entity, char in entity_replacements.items():
             text = text.replace(entity, char)
 
-        # 5. Nettoyage des espaces multiples (Esthétique)
+        # 5. Nettoyage des espaces multiples
         text = re.sub(r'\n{3,}', '\n\n', text)
         
-        # 6. Encodage Latin-1 (Obligatoire pour FPDF standard)
-        # Gestion des émojis : 'replace' va mettre un '?' au lieu de planter
+        # 6. Encodage Latin-1 (Gestion des émojis par remplacement)
         return text.encode('latin-1', 'replace').decode('latin-1')
 
     def generate_pdf(self, user_query, ai_response):
@@ -52,11 +50,11 @@ class ExportService:
             pdf = FPDF()
             pdf.add_page()
             
-            # Nettoyage des entrées
+            # Nettoyage
             clean_query = self._clean_text_for_pdf(user_query)
             clean_response = self._clean_text_for_pdf(ai_response)
 
-            # 1. En-tête avec Logo (Gestion d'erreur silencieuse propre)
+            # 1. En-tête
             if os.path.exists(self.logo_path):
                 try:
                     pdf.image(self.logo_path, 10, 8, 25)
@@ -64,7 +62,7 @@ class ExportService:
                     logger.warning(f"Export PDF : Logo ignoré ({e})")
             
             pdf.set_font("helvetica", "B", 16)
-            pdf.set_text_color(37, 62, 146) # Bleu #253E92
+            pdf.set_text_color(37, 62, 146) 
             pdf.cell(0, 10, "SOCIAL EXPERT FRANCE", ln=True, align="R")
             
             pdf.set_font("helvetica", "I", 10)
@@ -84,12 +82,12 @@ class ExportService:
             
             pdf.ln(10)
             
-            # 3. Réponse IA
+            # 3. Réponse
             pdf.set_font("helvetica", "B", 12)
             pdf.set_text_color(37, 62, 146)
             pdf.cell(0, 10, "ANALYSE ET SIMULATION :", ln=True)
             
-            pdf.set_font("helvetica", "", 10) # Police légèrement réduite pour lisibilité
+            pdf.set_font("helvetica", "", 10)
             pdf.set_text_color(0, 0, 0)
             pdf.multi_cell(0, 6, clean_response)
             
@@ -105,8 +103,9 @@ class ExportService:
             )
             pdf.multi_cell(0, 5, self._clean_text_for_pdf(disclaimer), align="C")
             
-            # RETOUR DIRECT DES BYTES (Compatibilité fpdf2)
-            return pdf.output()
+            # 👇👇👇 LA CORRECTION EST ICI 👇👇👇
+            # On convertit le 'bytearray' de fpdf2 en 'bytes' standard pour Streamlit
+            return bytes(pdf.output())
 
         except Exception as e:
             logger.error(f"ERREUR CRITIQUE SERVICE PDF : {e}")
