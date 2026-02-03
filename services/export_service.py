@@ -19,7 +19,7 @@ class SocialExpertPDF(FPDF):
         self.set_y(15)
         self.set_font('Helvetica', 'B', 12)
         self.set_text_color(37, 62, 146) # Bleu
-        self.cell(0, 6, 'SOCIAL EXPERT FRANCE', ln=True, align='R')
+        self.cell(0, 6, 'Social Expert France', ln=True, align='R')
         
         # 3. Ligne de séparation (À Y=35 pour être LARGE sous le logo)
         self.set_y(35)
@@ -113,7 +113,7 @@ class ExportService:
             
             # Astuce pour le "Badge" gris (Fond gris clair)
             pdf.set_fill_color(240, 240, 240)
-            pdf.cell(40, 8, f"  Dossier du {date_str}  ", ln=True, fill=True, align='C')
+            pdf.cell(40, 8, f"  Question du {date_str}  ", ln=True, fill=True, align='C')
             pdf.ln(8)
 
             # 2. OBJET (Titre Gras + Texte)
@@ -136,7 +136,7 @@ class ExportService:
             pdf.cell(0, 6, "ANALYSE JURIDIQUE & SIMULATION", ln=True)
             pdf.ln(4)
 
-            pdf.set_font("Helvetica", "", 11)
+            pdf.set_font("Helvetica", "", 10)
             pdf.set_text_color(20, 20, 20)
             pdf.multi_cell(0, 6, clean_body)
             
@@ -146,10 +146,10 @@ class ExportService:
             if clean_result:
                 pdf.set_font("Helvetica", "B", 11)
                 pdf.set_text_color(0, 0, 0)
-                pdf.cell(0, 8, ">> RÉSULTAT", ln=True)
+                pdf.cell(0, 8, "RÉSULTAT", ln=True)
                 
                 # Le résultat en Gras plus gros
-                pdf.set_font("Helvetica", "B", 12)
+                pdf.set_font("Helvetica", "B", 11)
                 pdf.set_text_color(0, 0, 0)
                 pdf.multi_cell(0, 8, clean_result)
                 
@@ -168,11 +168,6 @@ class ExportService:
             pdf.write(5, "Barèmes officiels URSSAF & Code du travail 2026.") # Texte générique propre si extraction échoue
             pdf.ln(8)
 
-            # Disclaimer légal
-            pdf.set_font("Helvetica", "I", 9)
-            pdf.set_text_color(100, 100, 100)
-            pdf.multi_cell(0, 5, "Données certifiées conformes aux barèmes 2026.")
-            pdf.ln(2)
             
             pdf.set_font("Helvetica", "B", 9)
             pdf.write(5, "DOCUMENT CONFIDENTIEL ")
