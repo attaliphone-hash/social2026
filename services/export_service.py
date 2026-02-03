@@ -20,7 +20,7 @@ class SocialExpertPDF(FPDF):
         self.set_text_color(37, 62, 146) 
         self.cell(0, 6, 'SOCIAL EXPERT FRANCE', ln=True, align='R')
         
-        # Ligne
+        # Ligne de séparation
         self.set_y(35)
         self.set_draw_color(200, 200, 200) 
         self.set_line_width(0.3)
@@ -38,7 +38,7 @@ class ExportService:
         self.logo_path = "avatar-logo.png"
 
     def _clean_text_strict(self, text):
-        """Nettoyage strict pour éviter tout bug d'affichage."""
+        """Nettoyage strict du texte."""
         if not text: return ""
         text = str(text)
         text = re.sub(r'<[^>]+>', '', text) 
@@ -73,12 +73,11 @@ class ExportService:
             
             clean_query = self._clean_text_strict(user_query)
             
-            # --- EXTRACTION INTELLIGENTE ---
-            # 1. Séparation Body / Reste
+            # --- EXTRACTION CONTENU ---
             if ">> RÉSULTAT" in ai_response:
                 parts = ai_response.split(">> RÉSULTAT")
                 body_raw = parts[0]
-                rest_raw = parts[1] # Contient le Résultat ET les Sources
+                rest_raw = parts[1]
             elif "RÉSULTAT" in ai_response:
                 parts = ai_response.split("RÉSULTAT")
                 body_raw = parts[0]
@@ -87,16 +86,15 @@ class ExportService:
                 body_raw = ai_response
                 rest_raw = ""
 
-            # 2. Séparation Résultat / Sources (dans la 2ème partie)
+            # Extraction des sources dans la partie restante
             sources_raw = ""
             result_raw = rest_raw
             
-            # On cherche le mot clé "Sources utilisées"
             if "Sources utilisées" in rest_raw:
                 sub_parts = rest_raw.split("Sources utilisées")
                 result_raw = sub_parts[0]
                 sources_raw = "Sources utilisées" + sub_parts[1]
-            elif "Sources" in rest_raw: # Variantes
+            elif "Sources" in rest_raw:
                 sub_parts = rest_raw.split("Sources")
                 result_raw = sub_parts[0]
                 sources_raw = "Sources" + sub_parts[1]
@@ -106,7 +104,7 @@ class ExportService:
             clean_sources = self._clean_text_strict(sources_raw).strip()
 
             # ==========================================
-            # CONSTRUCTION DU DOCUMENT
+            # DÉBUT DU DOCUMENT
             # ==========================================
 
             # 1. DATE
@@ -116,7 +114,7 @@ class ExportService:
             date_str = datetime.datetime.now().strftime("%d/%m/%Y")
             
             pdf.set_fill_color(240, 240, 240)
-            pdf.cell(40, 8, f"  Dossier du {date_str}  ", ln=True, fill=True, align='C')
+            pdf.cell(40, 8, f"  Votre question du {date_str}  ", ln=True, fill=True, align='C')
             pdf.ln(8)
 
             # 2. OBJET
@@ -147,31 +145,29 @@ class ExportService:
             if clean_result:
                 pdf.set_font("Helvetica", "B", 11)
                 pdf.set_text_color(0, 0, 0)
-                pdf.cell(0, 8, ">> RÉSULTAT", ln=True)
+                pdf.cell(0, 8, "RÉSULTAT", ln=True)
                 
                 pdf.set_font("Helvetica", "B", 12)
                 pdf.multi_cell(0, 8, clean_result)
                 pdf.ln(4)
 
-            # 5. SOURCES (CORRECTION ZONE ROUGE : TEXTE PETIT)
+            # 5. SOURCES RÉELLES (Taille réduite 9, Gris foncé)
             if clean_sources:
                 pdf.ln(2)
-                pdf.set_font("Helvetica", "", 9) # Taille 9 (Petit)
-                pdf.set_text_color(80, 80, 80)   # Gris foncé pour différencier
+                pdf.set_font("Helvetica", "", 9) 
+                pdf.set_text_color(80, 80, 80)
                 pdf.multi_cell(0, 5, clean_sources)
                 pdf.ln(8)
 
-            # 6. DISCLAIMER (CORRECTION ZONE BLEUE : SUPPRESSION DU DOUBLON)
+            # 6. DISCLAIMER FINAL (Ligne seule)
             pdf.set_draw_color(220, 220, 220)
             pdf.line(20, pdf.get_y(), 190, pdf.get_y())
             pdf.ln(6)
             
-            # On passe directement au disclaimer légal, sans remettre les sources génériques
-            pdf.set_font("Helvetica", "I", 9)
-            pdf.set_text_color(100, 100, 100)
-            pdf.multi_cell(0, 5, "Données certifiées conformes aux barèmes 2026.")
-            pdf.ln(2)
+            # Suppression de la ligne "Données certifiées..." demandée
+            # Seul le bloc DOCUMENT CONFIDENTIEL reste
             
+            pdf.set_text_color(100, 100, 100)
             pdf.set_font("Helvetica", "B", 9)
             pdf.write(5, "DOCUMENT CONFIDENTIEL ")
             pdf.set_font("Helvetica", "", 9)
