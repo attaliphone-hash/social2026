@@ -7,8 +7,6 @@ from utils.helpers import logger
 class SocialExpertPDF(FPDF):
     def header(self):
         # --- EN-TÊTE ---
-        
-        # Logo (Remonté légèrement à Y=8 pour éviter la ligne)
         logo_path = "avatar-logo.png"
         if os.path.exists(logo_path):
             try:
@@ -16,7 +14,7 @@ class SocialExpertPDF(FPDF):
             except:
                 pass
         
-        # Titre 
+        # Titre
         self.set_y(10)
         self.set_font('Times', 'B', 12)
         self.set_text_color(37, 62, 146) 
@@ -28,11 +26,11 @@ class SocialExpertPDF(FPDF):
         date_str = datetime.datetime.now().strftime("%d/%m/%Y")
         self.cell(0, 5, f'Dossier du {date_str}', ln=True, align='R')
         
-        # Ligne de séparation (Abaissée à Y=28 pour ne pas couper le logo)
+        # Ligne de séparation
         self.set_draw_color(37, 62, 146)
         self.set_line_width(0.3)
         self.line(20, 28, 190, 28)
-        self.ln(20) # Espace après header
+        self.ln(20) 
 
     def footer(self):
         self.set_y(-20) 
@@ -93,16 +91,14 @@ class ExportService:
                 body_text = clean_response
                 result_text = ""
             
-            # 2. Séparer les SOURCES (Souvent à la fin du corps ou du résultat)
+            # 2. Séparer les SOURCES
             sources_text = ""
             keyword_sources = "Sources utilisées"
             
-            # On cherche dans le corps
             if keyword_sources in body_text:
                 sub_parts = body_text.split(keyword_sources)
                 body_text = sub_parts[0]
                 sources_text = keyword_sources + sub_parts[1]
-            # Sinon on cherche dans le résultat (parfois l'IA le met après le prix)
             elif keyword_sources in result_text:
                 sub_parts = result_text.split(keyword_sources)
                 result_text = sub_parts[0]
@@ -133,15 +129,14 @@ class ExportService:
             pdf.set_text_color(20, 20, 20)
             pdf.multi_cell(0, 5.5, body_text.strip())
             
-            # --- 4. BLOC RÉSULTAT (Large Padding) ---
+            # --- 4. BLOC RÉSULTAT ---
             if result_text:
-                pdf.ln(8) # Espace avant le bloc
+                pdf.ln(8)
                 
                 pdf.set_font("Times", "B", 11)
-                # On calcule la hauteur du texte
                 lines = pdf.multi_cell(useful_width - 10, 6, result_text.strip(), split_only=True)
                 
-                # PADDING AUGMENTÉ : +12mm (6mm haut / 6mm bas)
+                # Padding calculé
                 height = len(lines) * 6 + 12 
                 
                 pdf.set_fill_color(245, 248, 255)
@@ -149,30 +144,26 @@ class ExportService:
                 x = pdf.get_x()
                 y = pdf.get_y()
                 
-                # Fond
                 pdf.rect(x, y, useful_width, height, 'F')
-                # Barre bleue
                 pdf.set_fill_color(37, 62, 146)
                 pdf.rect(x, y, 1, height, 'F')
                 
-                # Écriture du texte avec décalage (Padding interne)
-                pdf.set_xy(x + 5, y + 6) # X+5mm, Y+6mm (Padding haut)
+                # Texte décalé
+                pdf.set_xy(x + 5, y + 6)
                 pdf.set_text_color(37, 62, 146)
                 pdf.multi_cell(useful_width - 10, 6, result_text.strip())
                 
-                # On repositionne le curseur après le bloc
                 pdf.set_y(y + height + 5)
 
-            # --- 5. SOURCES (Format Spécifique : Petit & Gauche) ---
+            # --- 5. SOURCES ---
             if sources_text:
                 pdf.ln(2)
-                pdf.set_font("Times", "I", 8) # Corps 8 italique
-                pdf.set_text_color(100, 100, 100) # Gris foncé
-                pdf.multi_cell(0, 4, sources_text.strip(), align='L') # Alignement Gauche
+                pdf.set_font("Times", "I", 8)
+                pdf.set_text_color(100, 100, 100)
+                pdf.multi_cell(0, 4, sources_text.strip(), align='L')
                 pdf.ln(5)
 
             # --- 6. DISCLAIMER ---
-            # Gestion saut de page
             if pdf.get_y() > 250: 
                 pdf.add_page()
             
@@ -184,4 +175,18 @@ class ExportService:
 
             pdf.set_draw_color(220, 220, 220)
             pdf.line(20, pdf.get_y(), 190, pdf.get_y())
-            pdf.
+            pdf.ln(3)
+            
+            pdf.set_font("Times", "I", 7)
+            pdf.set_text_color(100, 100, 100)
+            
+            # Simplification pour éviter l'erreur de syntaxe
+            disclaimer = "DOCUMENT CONFIDENTIEL.\nSimulation établie sur la base des barèmes 2026. Ne remplace pas un conseil juridique."
+            
+            pdf.multi_cell(0, 3.5, self._clean_text_for_pdf(disclaimer), align="C")
+
+            return bytes(pdf.output())
+
+        except Exception as e:
+            logger.error(f"ERREUR PDF : {e}")
+            return None
