@@ -20,7 +20,7 @@ from services.legal_watch import show_legal_watch_bar
 from ui.styles import apply_pro_design
 from ui.components import UIComponents
 
-# ✅ Correction Audit : Import centralisé (Suppression de la duplication)
+# ✅ Correction Audit : Import centralisé (Suppression de la duplication locale)
 from utils.helpers import clean_source_name, logger
 
 # --- IMPORTS MOTEUR & IA ---
@@ -44,13 +44,15 @@ if "query_count" not in st.session_state: st.session_state.query_count = 0
 if "user_info" not in st.session_state: st.session_state.user_info = None
 
 if "services_ready" not in st.session_state:
-    # ✅ Note : L'ordre d'initialisation suit la recommandation B de l'audit
+    # ✅ Note : L'ordre d'initialisation suit la recommandation de l'audit
     st.session_state.config = Config() 
     st.session_state.auth_manager = AuthManager()
     st.session_state.sub_manager = SubscriptionManager()
     st.session_state.ia_service = IAService()
+    
     # ✅ AJOUT : Initialisation du service d'exportation PDF
     st.session_state.export_service = ExportService() 
+    
     # On initialise ici sous le nom 'doc_service'
     st.session_state.doc_service = DocumentService()
     st.session_state.quota_service = QuotaService()
@@ -59,25 +61,17 @@ if "services_ready" not in st.session_state:
 
 apply_pro_design()
 
+# Raccourcis pour lisibilité
 auth = st.session_state.auth_manager
 sub = st.session_state.sub_manager
 ia = st.session_state.ia_service
-
-# ✅ CORRECTION : On utilise la clé exacte 'doc_service' définie à la ligne 23
 docs_srv = st.session_state.doc_service 
-
 quota = st.session_state.quota_service
 engine = st.session_state.rule_engine
 ui = UIComponents()
 
 # ==============================================================================
-# 2. NETTOYAGE DES SOURCES (Désormais géré par utils/helpers.py)
-# ==============================================================================
-# ✅ Correction Audit : La fonction locale clean_source_name a été supprimée.
-# Elle est maintenant importée de utils.helpers pour garantir une source unique.
-
-# ==============================================================================
-# 3. PAGE DE LOGIN
+# 2. PAGE DE LOGIN
 # ==============================================================================
 def check_password():
     if st.session_state.user_info:
@@ -120,7 +114,7 @@ if not check_password():
     st.stop()
 
 # ==============================================================================
-# 4. DASHBOARD (ESPACE ABONNÉS)
+# 3. DASHBOARD (ESPACE ABONNÉS)
 # ==============================================================================
 
 ui.render_top_arguments()
@@ -142,6 +136,7 @@ with col_act2:
 
 st.markdown("<h1 style='color:#253E92; margin-top:10px;'>SOCIAL EXPERT FRANCE ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
 
+# Traitement du document utilisateur
 user_doc_content = ""
 if uploaded_file:
     with st.spinner("Analyse du document en cours..."):
@@ -149,10 +144,12 @@ if uploaded_file:
         if user_doc_content:
             st.toast(f"📎 {uploaded_file.name} analysé avec succès", icon="✅")
 
+# Affichage de l'historique
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
         st.markdown(msg["content"], unsafe_allow_html=True)
 
+# Gestion de l'input utilisateur (Prompt ou Input direct)
 user_input = None
 if "pending_prompt" in st.session_state:
     user_input = st.session_state.pending_prompt
@@ -161,6 +158,7 @@ else:
     user_input = st.chat_input("Posez une question, chargez un document ou demandez une rédaction")
 
 if user_input:
+    # Vérification des quotas
     role = st.session_state.user_info.get("role", "GUEST")
     if not quota.check_quota(role):
         st.warning("🛑 Limite de requêtes atteinte.")
@@ -176,16 +174,17 @@ if user_input:
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         box = st.empty()
         
+        # Moteur de règles (YAML)
         matched = engine.match_rules(user_input)
         facts = engine.format_certified_facts(matched)
 
-        # ✅ 1. RECHERCHE
+        # ✅ 1. RECHERCHE DOCUMENTAIRE (RAG)
         docs = ia.search_documents(user_input, k=6)
         context_str = ""
         sources_seen = []
         
         for d in docs:
-            # Récupération du label système propre déjà traité par helpers.py
+            # Récupération du label système propre via helpers
             pretty_name = d.metadata.get('clean_name', 'Source Inconnue')
             
             if pretty_name not in sources_seen:
@@ -205,7 +204,8 @@ if user_input:
                         st.caption(f"📝 Extrait : {d.page_content[:200]}...")
         
         # ==============================================================================
-
+        # TEMPLATE DU PROMPT
+        # ==============================================================================
         template = """
 Tu es l'Expert Social Pro 2026.
 

@@ -1,17 +1,37 @@
-import os
 import logging
+import re
+import os
 
-# Configuration du logging centralisé (Point 1 de l'audit)
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("SocialPro2026")
+# --- CONFIGURATION DU LOGGER ---
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Affiche dans la console
+        logging.FileHandler("app_debug.log", mode='a', encoding='utf-8')  # Sauvegarde dans un fichier
+    ]
+)
+logger = logging.getLogger("SocialExpert")
 
-def clean_source_name(filename, category="AUTRE"):
-    """Fonction unique de nettoyage (Supprime la duplication app/ia_service)"""
-    filename = os.path.basename(filename).replace('.pdf', '').replace('.txt', '')
+def clean_source_name(filename):
+    """
+    Transforme un nom de fichier technique (REF_Code_Travail.pdf) en nom lisible (Code du Travail).
+    """
+    if not filename: return "Document Inconnu"
     
-    if "Code_Travail" in filename: return "Code du Travail 2026"
-    if "Code_Secu" in filename: return "Code de la Sécurité Sociale 2026"
-    if category == "REF" or filename.startswith("REF_"): return "Barèmes Officiels 2026"
-    if category == "DOC" or filename.startswith("DOC_"): return "BOSS 2026 et Jurisprudences"
+    name = os.path.basename(filename)
+    name = name.replace(".pdf", "").replace(".txt", "")
     
-    return filename.replace('_', ' ')
+    # Dictionnaire de remplacement pour faire "Pro"
+    replacements = {
+        "REF_": "",
+        "Code_Travail": "Code du Travail",
+        "Barème_URSSAF": "Barème URSSAF",
+        "BOSS_": "BOSS - ",
+        "_": " "
+    }
+    
+    for old, new in replacements.items():
+        name = name.replace(old, new)
+    
+    return name.strip()

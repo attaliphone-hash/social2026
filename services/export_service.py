@@ -37,30 +37,42 @@ class ExportService:
     def __init__(self):
         self.logo_path = "avatar-logo.png"
 
-    def _clean_text_strict(self, text):
-        """Nettoyage strict du texte."""
+    def _clean_markdown_for_pdf(self, text):
+        """
+        Prépare le texte Markdown pour FPDF.
+        Garde le gras (**texte**) mais retire les titres (###) pour éviter les erreurs de parsing.
+        """
         if not text: return ""
         text = str(text)
-        text = re.sub(r'<[^>]+>', '', text) 
-        text = text.replace("**", "").replace("__", "").replace("##", "")
         
+        # 1. Nettoyage HTML résiduel (sécurité)
+        text = re.sub(r'<[^>]+>', '', text) 
+        
+        # 2. Gestion des Titres Markdown (### Titre)
+        # FPDF standard gère mal les titres #, on les transforme en gras simple avec saut de ligne
         lines = []
         for line in text.split('\n'):
             line = line.strip()
-            if line.startswith('* ') or line.startswith('- ') or line.startswith('•'):
-                line = "  • " + line[1:].strip()
+            # Transformation des titres "### Titre" en "**Titre**"
+            if line.startswith('### ') or line.startswith('## '):
+                content = line.replace('#', '').strip()
+                line = f"\n**{content}**" # On force le gras et un saut de ligne avant
+            elif line.startswith('- ') or line.startswith('* '):
+                 line = "  • " + line[1:].strip()
             lines.append(line)
+            
         text = "\n".join(lines)
 
+        # 3. Symboles Spéciaux
         replacements = {
             "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">",
             "&euro;": " EUR", "€": " EUR",
-            "🎯": "", "⚠️": "ATTENTION : ", "✅": "[OK] ", "❌": "[KO] "
+            "🎯": ">> "
         }
         for entity, char in replacements.items():
             text = text.replace(entity, char)
 
-        text = re.sub(r'\n{3,}', '\n\n', text)
+        # 4. Encodage
         return text.encode('latin-1', 'replace').decode('latin-1')
 
     def generate_pdf(self, user_query, ai_response):
@@ -71,40 +83,38 @@ class ExportService:
             pdf.set_margins(20, 20, 20)
             pdf.set_auto_page_break(auto=True, margin=20)
             
-            clean_query = self._clean_text_strict(user_query)
+            clean_query = self._clean_markdown_for_pdf(user_query)
             
             # --- EXTRACTION CONTENU ---
-            if ">> RÉSULTAT" in ai_response:
-                parts = ai_response.split(">> RÉSULTAT")
-                body_raw = parts[0]
-                rest_raw = parts[1]
-            elif "RÉSULTAT" in ai_response:
+            # On cherche le séparateur ">> RÉSULTAT" (format Markdown)
+            # Note : Le prompt IA met maintenant "### >> RÉSULTAT"
+            if "RÉSULTAT" in ai_response:
+                # On split grossièrement sur "RÉSULTAT" pour trouver la fin
                 parts = ai_response.split("RÉSULTAT")
                 body_raw = parts[0]
-                rest_raw = parts[1]
+                # On essaie de récupérer le reste
+                rest_raw = parts[1] if len(parts) > 1 else ""
             else:
                 body_raw = ai_response
                 rest_raw = ""
 
-            # Extraction des sources dans la partie restante
-            sources_raw = ""
-            result_raw = rest_raw
-            
+            # Extraction Sources (Souvent à la fin)
             if "Sources utilisées" in rest_raw:
                 sub_parts = rest_raw.split("Sources utilisées")
                 result_raw = sub_parts[0]
                 sources_raw = "Sources utilisées" + sub_parts[1]
-            elif "Sources" in rest_raw:
-                sub_parts = rest_raw.split("Sources")
-                result_raw = sub_parts[0]
-                sources_raw = "Sources" + sub_parts[1]
+            else:
+                result_raw = rest_raw
+                sources_raw = ""
 
-            clean_body = self._clean_text_strict(body_raw)
-            clean_result = self._clean_text_strict(result_raw).strip()
-            clean_sources = self._clean_text_strict(sources_raw).strip()
+            # Nettoyage
+            # On retire les "###" éventuels qui traînent dans la découpe
+            clean_body = self._clean_markdown_for_pdf(body_raw).replace(">>", "")
+            clean_result = self._clean_markdown_for_pdf(result_raw).replace(":", "").strip()
+            clean_sources = self._clean_markdown_for_pdf(sources_raw).strip()
 
             # ==========================================
-            # DÉBUT DU DOCUMENT
+            # GÉNÉRATION DOCUMENT (Support Markdown activé)
             # ==========================================
 
             # 1. DATE
@@ -114,7 +124,7 @@ class ExportService:
             date_str = datetime.datetime.now().strftime("%d/%m/%Y")
             
             pdf.set_fill_color(240, 240, 240)
-            pdf.cell(40, 8, f"  Question du {date_str}  ", ln=True, fill=True, align='C')
+            pdf.cell(40, 8, f"  Dossier du {date_str}  ", ln=True, fill=True, align='C')
             pdf.ln(8)
 
             # 2. OBJET
@@ -124,6 +134,7 @@ class ExportService:
             pdf.ln(2)
             
             pdf.set_font("Helvetica", "", 11)
+            # Pas de markdown pour la question user, texte brut
             pdf.multi_cell(0, 6, clean_query)
             
             pdf.ln(6)
@@ -131,27 +142,36 @@ class ExportService:
             pdf.line(20, pdf.get_y(), 190, pdf.get_y())
             pdf.ln(8)
 
-            # 3. ANALYSE
+            # 3. ANALYSE (Markdown Activé !)
             pdf.set_font("Helvetica", "B", 11)
             pdf.cell(0, 6, "ANALYSE JURIDIQUE & SIMULATION", ln=True)
             pdf.ln(4)
 
             pdf.set_font("Helvetica", "", 11)
             pdf.set_text_color(20, 20, 20)
-            pdf.multi_cell(0, 6, clean_body)
+            
+            # C'est ici la magie : markdown=True permet d'interpréter les **gras**
+            try:
+                pdf.multi_cell(0, 6, clean_body, markdown=True)
+            except:
+                # Fallback si le markdown est cassé
+                pdf.multi_cell(0, 6, clean_body)
+            
             pdf.ln(8)
 
             # 4. RÉSULTAT
             if clean_result:
                 pdf.set_font("Helvetica", "B", 11)
                 pdf.set_text_color(0, 0, 0)
-                pdf.cell(0, 8, "RÉSULTAT", ln=True)
+                pdf.cell(0, 8, ">> RÉSULTAT", ln=True)
                 
                 pdf.set_font("Helvetica", "B", 12)
-                pdf.multi_cell(0, 8, clean_result)
+                # On nettoie les éventuels astérisques résiduels pour le titre résultat
+                clean_result_display = clean_result.replace("**", "")
+                pdf.multi_cell(0, 8, clean_result_display)
                 pdf.ln(4)
 
-            # 5. SOURCES RÉELLES (Taille réduite 9, Gris foncé)
+            # 5. SOURCES
             if clean_sources:
                 pdf.ln(2)
                 pdf.set_font("Helvetica", "", 9) 
@@ -159,13 +179,10 @@ class ExportService:
                 pdf.multi_cell(0, 5, clean_sources)
                 pdf.ln(8)
 
-            # 6. DISCLAIMER FINAL (Ligne seule)
+            # 6. DISCLAIMER
             pdf.set_draw_color(220, 220, 220)
             pdf.line(20, pdf.get_y(), 190, pdf.get_y())
             pdf.ln(6)
-            
-            # Suppression de la ligne "Données certifiées..." demandée
-            # Seul le bloc DOCUMENT CONFIDENTIEL reste
             
             pdf.set_text_color(100, 100, 100)
             pdf.set_font("Helvetica", "B", 9)
