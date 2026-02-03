@@ -2,25 +2,23 @@ import streamlit as st
 import time
 import os
 import re
-import datetime  # ✅ Ajouté pour le marquage temporel des exports PDF
+import datetime
 from dotenv import load_dotenv
 
 # Charge les variables d'environnement
 load_dotenv()
 
-# --- IMPORTS ARCHITECTURE V2 ---
+# --- IMPORTS ARCHITECTURE ---
 from core.config import Config
 from core.auth_manager import AuthManager
 from core.subscription_manager import SubscriptionManager
 from services.ia_service import IAService
 from services.document_service import DocumentService
 from services.quota_service import QuotaService
-from services.export_service import ExportService  # ✅ Ajouté : Service d'exportation PDF
+from services.export_service import ExportService
 from services.legal_watch import show_legal_watch_bar
 from ui.styles import apply_pro_design
 from ui.components import UIComponents
-
-# ✅ Correction Audit : Import centralisé (Suppression de la duplication locale)
 from utils.helpers import clean_source_name, logger
 
 # --- IMPORTS MOTEUR & IA ---
@@ -29,31 +27,23 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 # ==============================================================================
-# 1. INITIALISATION & CONFIGURATION
+# 1. INITIALISATION
 # ==============================================================================
 st.set_page_config(
-    page_title="Expert Social Pro 2026 - Le Copilote RH et Paie",
+    page_title="Expert Social Pro 2026",
     page_icon="avatar-logo.png",
     layout="wide"
 )
 
-# Initialisation du Session State
 if "messages" not in st.session_state: st.session_state.messages = []
 if "uploader_key" not in st.session_state: st.session_state.uploader_key = 0
-if "query_count" not in st.session_state: st.session_state.query_count = 0
 if "user_info" not in st.session_state: st.session_state.user_info = None
-
 if "services_ready" not in st.session_state:
-    # ✅ Note : L'ordre d'initialisation suit la recommandation de l'audit
     st.session_state.config = Config() 
     st.session_state.auth_manager = AuthManager()
     st.session_state.sub_manager = SubscriptionManager()
     st.session_state.ia_service = IAService()
-    
-    # ✅ AJOUT : Initialisation du service d'exportation PDF
     st.session_state.export_service = ExportService() 
-    
-    # On initialise ici sous le nom 'doc_service'
     st.session_state.doc_service = DocumentService()
     st.session_state.quota_service = QuotaService()
     st.session_state.rule_engine = SocialRuleEngine()
@@ -61,9 +51,7 @@ if "services_ready" not in st.session_state:
 
 apply_pro_design()
 
-# Raccourcis pour lisibilité
 auth = st.session_state.auth_manager
-sub = st.session_state.sub_manager
 ia = st.session_state.ia_service
 docs_srv = st.session_state.doc_service 
 quota = st.session_state.quota_service
@@ -71,102 +59,105 @@ engine = st.session_state.rule_engine
 ui = UIComponents()
 
 # ==============================================================================
-# 2. PAGE DE LOGIN
+# 2. LOGIN
 # ==============================================================================
 def check_password():
-    if st.session_state.user_info:
-        return True
-
+    if st.session_state.user_info: return True
     ui.render_top_arguments()
     ui.render_footer()
-
-    st.markdown("<h1 style='text-align: left; color: #253E92;'>SOCIAL EXPERT FRANCE — VOTRE COPILOTE RH & PAIE EN 2026.</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #253E92;'>SOCIAL EXPERT FRANCE — 2026</h1>", unsafe_allow_html=True)
     
-    t1, t2 = st.tabs(["🔐 Je suis abonné", "🎫 J'ai un code découverte"])
-    
+    t1, t2 = st.tabs(["🔐 Abonné", "🎫 Code"])
     with t1:
         email = st.text_input("Email", key="login_email")
         pwd = st.text_input("Mot de passe", type="password", key="login_pwd")
-        if st.button("Connexion", use_container_width=True, type="primary"):
+        if st.button("Connexion", type="primary", use_container_width=True):
             user = auth.login(email, pwd)
             if user:
                 st.session_state.user_info = user
                 st.rerun()
             else:
-                st.error("Identifiants incorrects.")
-        
-        st.markdown("---")
-        st.subheader("PAS ENCORE ABONNÉ ?")
-        ui.render_subscription_cards()
-
+                st.error("Erreur d'identification.")
     with t2:
         code = st.text_input("Code", type="password", key="login_code")
         if st.button("Valider", use_container_width=True):
-            user = auth.login(code, None) # password=None pour le mode code
+            user = auth.login(code, None)
             if user:
                 st.session_state.user_info = user
                 st.rerun()
             else:
-                st.error("Code erroné.")
+                st.error("Code invalide.")
     return False
 
-if not check_password():
-    st.stop()
+if not check_password(): st.stop()
 
 # ==============================================================================
-# 3. DASHBOARD (ESPACE ABONNÉS)
+# 3. APPLICATION PRINCIPALE
 # ==============================================================================
-
 ui.render_top_arguments()
 ui.render_footer()
 
 if st.session_state.user_info.get("role") == "ADMIN":
     show_legal_watch_bar()
 
-col_act1, col_act2, _ = st.columns([1.5, 1.5, 4], vertical_alignment="center", gap="small")
-with col_act1:
+col1, col2, _ = st.columns([1.5, 1.5, 4], gap="small")
+with col1:
     st.markdown('<div class="fake-upload-btn">Charger un document</div>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("Upload", type=["pdf", "txt"], label_visibility="collapsed", key=f"uploader_{st.session_state.uploader_key}")
-
-with col_act2:
+with col2:
     if st.button("Nouvelle session", use_container_width=True):
         st.session_state.messages = []
         st.session_state.uploader_key += 1
         st.rerun()
 
-st.markdown("<h1 style='color:#253E92; margin-top:10px;'>SOCIAL EXPERT FRANCE ESPACE ABONNÉS</h1>", unsafe_allow_html=True)
+# 🔴 LE TEST : Si vous ne voyez pas ce titre, le fichier n'est pas mis à jour
+st.markdown("<h1 style='color:#253E92;'>SOCIAL EXPERT FRANCE (✅ VERSION MARKDOWN)</h1>", unsafe_allow_html=True)
 
-# Traitement du document utilisateur
+# Traitement Upload
 user_doc_content = ""
 if uploaded_file:
-    with st.spinner("Analyse du document en cours..."):
+    with st.spinner("Lecture du document..."):
         user_doc_content = docs_srv.extract_text(uploaded_file)
-        if user_doc_content:
-            st.toast(f"📎 {uploaded_file.name} analysé avec succès", icon="✅")
+        if user_doc_content: st.toast("Document analysé", icon="✅")
 
-# Affichage de l'historique
+# Affichage Historique (MODE SÉCURISÉ)
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=("avatar-logo.png" if msg["role"] == "assistant" else None)):
-        st.markdown(msg["content"], unsafe_allow_html=True)
+    avatar = "avatar-logo.png" if msg["role"] == "assistant" else "🧑‍💻"
+    with st.chat_message(msg["role"], avatar=avatar):
+        # 🔴 CHANGEMENT CRITIQUE ICI : Plus de unsafe_allow_html=True
+        st.markdown(msg["content"])
+        
+        # Bouton PDF (uniquement sous les réponses assistant)
+        if msg["role"] == "assistant" and "Désolé" not in msg["content"]:
+            try:
+                idx = st.session_state.messages.index(msg)
+                q_text = st.session_state.messages[idx-1]["content"] if idx > 0 else "Consultation"
+            except:
+                q_text = "Consultation"
+            
+            # Génération PDF
+            pdf_data = st.session_state.export_service.generate_pdf(str(q_text), str(msg["content"]))
+            
+            if pdf_data:
+                st.download_button(
+                    label="📄 Télécharger le dossier PDF",
+                    data=pdf_data,
+                    file_name=f"Dossier_Social_{datetime.datetime.now().strftime('%H%M')}.pdf",
+                    mime="application/pdf",
+                    key=f"btn_pdf_{idx}"
+                )
 
-# Gestion de l'input utilisateur (Prompt ou Input direct)
-user_input = None
-if "pending_prompt" in st.session_state:
-    user_input = st.session_state.pending_prompt
-    del st.session_state.pending_prompt
-else:
-    user_input = st.chat_input("Posez une question, chargez un document ou demandez une rédaction")
+# Input Utilisateur
+user_input = st.chat_input("Votre question juridique ou sociale...")
 
 if user_input:
-    # Vérification des quotas
     role = st.session_state.user_info.get("role", "GUEST")
     if not quota.check_quota(role):
-        st.warning("🛑 Limite de requêtes atteinte.")
-        ui.render_subscription_cards()
+        st.warning("Quota atteint.")
         st.stop()
         
     st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar="🧑‍💻"):
         st.markdown(user_input)
     
     quota.increment()
@@ -174,146 +165,75 @@ if user_input:
     with st.chat_message("assistant", avatar="avatar-logo.png"):
         box = st.empty()
         
-        # Moteur de règles (YAML)
+        # Moteurs
         matched = engine.match_rules(user_input)
         facts = engine.format_certified_facts(matched)
-
-        # ✅ 1. RECHERCHE DOCUMENTAIRE (RAG)
+        
         docs = ia.search_documents(user_input, k=6)
         context_str = ""
-        sources_seen = []
-        
+        seen = []
         for d in docs:
-            # Récupération du label système propre via helpers
-            pretty_name = d.metadata.get('clean_name', 'Source Inconnue')
-            
-            if pretty_name not in sources_seen:
-                sources_seen.append(pretty_name)
-            
-            context_str += f"DOCUMENT : {pretty_name}\n{d.page_content}\n\n"
+            pname = d.metadata.get('clean_name', 'Source')
+            if pname not in seen: seen.append(pname)
+            context_str += f"DOC: {pname}\n{d.page_content}\n\n"
 
-        # ✅ 2. LE MOUCHARD ADMIN (DEBUG)
-        if st.session_state.user_info.get("role") == "ADMIN":
-            with st.expander("🕵️‍♂️ MODE ADMIN : VOIR LE CERVEAU (DEBUG)", expanded=False):
-                if not docs:
-                    st.error("❌ PINECONE RENVOIE 0 DOCUMENT !")
-                else:
-                    st.success(f"✅ {len(docs)} documents injectés dans le contexte.")
-                    for i, d in enumerate(docs):
-                        st.markdown(f"**📄 Doc {i+1} :** `{d.metadata.get('clean_name')}`")
-                        st.caption(f"📝 Extrait : {d.page_content[:200]}...")
-        
-        # ==============================================================================
-        # TEMPLATE DU PROMPT
-        # ==============================================================================
+        # 🔴 CHANGEMENT CRITIQUE : PROMPT MARKDOWN (PLUS DE HTML)
         template = """
 Tu es l'Expert Social Pro 2026.
 
-💎 RÈGLES DE FORME & VOCABULAIRE (CRITIQUE) :
-1. Génère du **HTML BRUT** sans balises de code.
-2. ⚠️ FORMATAGE MONÉTAIRE FR : Utilise TOUJOURS la virgule pour les décimales et un espace pour les milliers (ex: 1 950,00 €).
-3. Affiche systématiquement 2 décimales pour tous les montants en Euros.
-4. Pas de Markdown pour les titres.
-5. ⛔ SILENCE TECHNIQUE OBLIGATOIRE.
+CONSIGNES DE FORME (MARKDOWN STRICT) :
+1. N'utilise JAMAIS de HTML (pas de <div>, <br>, <h4>).
+2. Utilise la syntaxe Markdown pour la structure :
+   - Titres : ### TITRE
+   - Gras : **Texte Important**
+   - Listes : - Élément
+3. Formatage Montants : 1 200,50 EUR (Espace millier, virgule décimale).
 
----- 1. RÈGLES DE PRIORITÉ (LOGIQUE DE CASCADE) ---
-A. DONNÉES CHIFFRÉES : Priorité 1 aux Faits Certifiés (YAML).
-B. RAISONNEMENT JURIDIQUE : Priorité 2 aux Documents Contextuels (RAG).
+STRUCTURE DE RÉPONSE ATTENDUE :
 
---- 2. LOGIQUE MÉTIER & MATHÉMATIQUE ---
-Calcul strict selon les protocoles certifiés.
+### ANALYSE & RÈGLES
+[Explique la règle juridique applicable. Cite les sources entre parenthèses.]
 
---- 3. GESTION DES SOURCES (EXTRACTION CHIRURGICALE) ---
-- **RÈGLE D'OR :** Ne crée JAMAIS une source générique si un article précis existe.
-- **ALGORITHME DE SCAN ET SYNCHRONISATION :**
-  1. **Priorité au Label Système :** Pour chaque document, utilise EXCLUSIVEMENT le nom nettoyé fourni après 'DOCUMENT :'.
-  2. **Extraction de l'Article :** Cherche 'SOURCE :' ou 'Art. L...'.
-  3. **Reconstruction Obligatoire :** {{Nom_Nettoyé_Système}} - {{Référence_Article}}.
-- **INTERDICTION :** Ne retire JAMAIS la mention '2026'.
+### DÉTAIL & CHIFFRES
+[Pose le calcul clairement]
+- Base : ...
+- Taux : ...
 
---- 4. CONTEXTE RAG ---
-Faits Certifiés (Priorité 1) :
-{certified_facts}
+### >> RÉSULTAT
+**[Montant final en EUR]**
 
-Documents Contextuels (Priorité 2) :
+Sources utilisées : [Liste des documents]
+
+---
+CONTEXTE RAG :
 {context}
 
+FAITS CERTIFIÉS (Prioritaires) :
+{certified_facts}
+
+DOC UTILISATEUR :
 {user_doc_section}
-
---- 5. TEMPLATE DE RÉPONSE (HTML STYLYSÉ) ---
-[Mode Rédaction : Texte Brut / Mode Standard : HTML]
-
-👇 DÉBUT DU TEMPLATE HTML 👇
-<h4 style="color: #024c6f; border-bottom: 1px solid #ddd;">Analyse & Règles</h4>
-<ul>
-    <li>[Règle juridique] <em style="color:#666;">(Source : [Art. extrait à l'étape 3])</em></li>
-</ul>
-<h4 style="color: #024c6f; border-bottom: 1px solid #ddd; margin-top:20px;">Détail & Chiffres</h4>
-<div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px;">
-    <strong>Données clés :</strong> [Valeurs]<br>
-    <strong>Calcul :</strong> [Étapes]
-</div>
-<div style="background-color: #f0f8ff; padding: 20px; border-left: 5px solid #024c6f; margin: 25px 0;">
-    <h2 style="color: #024c6f; margin-top: 0;">🎯 RÉSULTAT</h2>
-    <p style="font-size: 18px;"><strong>[Montant]</strong></p>
-</div>
-<div style="margin-top: 20px; border-top: 1px solid #ccc; font-size: 11px; color: #666;">
-    <strong>Sources utilisées :</strong> [Lister précisément selon Section 3]<br>
-    <em>Données certifiées conformes aux barèmes 2026.</em>
-</div>
 
 QUESTION : {question}
 """
         prompt = ChatPromptTemplate.from_template(template)
-        # ✅ Utilisation systématique de gemini-2.0-flash
         chain = prompt | ia.get_llm() | StrOutputParser()
         
         full_response = ""
         try:
-            # 1. Boucle de streaming (Génération progressive)
             for chunk in chain.stream({
                 "context": context_str, 
                 "question": user_input, 
                 "certified_facts": facts,
-                "user_doc_section": f"Document Utilisateur : {user_doc_content}" if user_doc_content else ""
+                "user_doc_section": user_doc_content
             }):
                 full_response += chunk
-                box.markdown(full_response + "▌", unsafe_allow_html=True)
+                box.markdown(full_response + "▌") 
             
-            # 2. Affichage final propre (Sans le curseur clignotant)
-            box.markdown(full_response, unsafe_allow_html=True)
-            
-            # 3. Sauvegarde dans l'historique
+            box.markdown(full_response)
             st.session_state.messages.append({"role": "assistant", "content": full_response})
+            st.rerun()
             
-            # 4. EXPORT PDF SÉCURISÉ (BLINDÉ)
-            try:
-                # A. Sécurisation des types : On force la conversion en texte (str)
-                # Cela empêche le crash "can only concatenate str (not 'list') to str"
-                safe_prompt = str(user_input) if user_input else "Consultation"
-                safe_response = str(full_response) if full_response else "Pas de réponse."
-                
-                # B. Appel du service avec les variables sécurisées
-                # Le service renvoie maintenant directement des BYTES (grâce à pdf.output() de fpdf2)
-                pdf_bytes = st.session_state.export_service.generate_pdf(safe_prompt, safe_response)
-                
-                # C. Affichage du bouton uniquement si le PDF est bien généré
-                if pdf_bytes:
-                    st.download_button(
-                        label="📥 Télécharger le compte-rendu (PDF)",
-                        data=pdf_bytes,
-                        file_name=f"Consultation_Sociale_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                        mime="application/pdf",
-                        key=f"dl_{len(st.session_state.messages)}"
-                    )
-                else:
-                    logger.warning("PDF : Aucune donnée générée (voir logs).")
-
-            except Exception as pdf_err:
-                # Si le PDF plante, on log l'erreur MAIS on ne plante pas l'app pour l'utilisateur
-                logger.error(f"⚠️ Erreur Génération PDF (Non bloquant) : {pdf_err}")
-                
         except Exception as e:
-            # Ce bloc gère uniquement les erreurs critiques de l'IA (Stream coupé)
-            logger.error(f"Erreur Génération IA : {e}")
-            box.error(f"Une erreur est survenue lors de la génération de la réponse : {e}")
+            logger.error(f"IA Error: {e}")
+            box.error("Erreur de génération.")
