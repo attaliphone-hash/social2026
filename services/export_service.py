@@ -124,8 +124,8 @@ class ExportService:
                 main_text = clean_response
                 result_text = ""
 
-            # Corps Analyse : Times 12
-            pdf.set_font("Times", "", 12)
+            # Corps Analyse : Times 10
+            pdf.set_font("Times", "", 10)
             pdf.set_text_color(20, 20, 20)
             pdf.multi_cell(0, 6, main_text) # Hauteur de ligne 6 pour aérer le texte en 12
             pdf.ln(5)
@@ -138,8 +138,8 @@ class ExportService:
                 x = pdf.get_x()
                 y = pdf.get_y()
                 
-                # Résultat : Times Bold 12 (On garde 12 pour le corps, mais en gras pour le résultat)
-                pdf.set_font("Times", "B", 12)
+                # Résultat : Times Bold 10 (On garde 10 pour le corps, mais en gras pour le résultat)
+                pdf.set_font("Times", "B", 10)
                 pdf.set_text_color(37, 62, 146)
                 
                 pdf.multi_cell(0, 8, result_text, fill=True)
