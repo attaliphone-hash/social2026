@@ -43,7 +43,7 @@ def get_boss_status_html():
     target_url = "https://boss.gouv.fr/portail/accueil/actualites.html"
     rss_url = "https://boss.gouv.fr/portail/fil-rss-boss-rescrit/pagecontent/flux-actualites.rss"
     try:
-        response = requests.get(rss_url, headers=get_headers(), timeout=5)
+        response = requests.get(rss_url, headers=get_headers(), timeout=20)
         if response.status_code == 200:
             soup = BeautifulSoup(response.content, 'xml') # 'xml' est plus robuste pour RSS
             item = soup.find('item')
