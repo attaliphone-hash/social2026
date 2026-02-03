@@ -43,12 +43,31 @@ h1 {
     height: 40px !important;
 }
 
-/* CHAT MESSAGES */
+/* --- TWEAKS CHAT MESSAGES (NOUVEAU) --- */
+
+/* 1. La Bulle globale */
 .stChatMessage { 
     background-color: rgba(255,255,255,0.95); 
-    border-radius: 10px; 
+    border-radius: 12px; 
     border: 1px solid #f0f0f0; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
+
+/* 2. Le Contenu Texte (Padding & Aération) */
+[data-testid="stChatMessageContent"] {
+    padding-top: 1rem !important;    /* Espace en haut */
+    padding-bottom: 1rem !important; /* Espace en bas */
+    padding-right: 2.5rem !important;/* GROS espace à droite (demande utilisateur) */
+    padding-left: 1.5rem !important; /* Espace à gauche (vs Avatar) */
+}
+
+/* 3. Correction Avatar vs Titre (Alignement) */
+/* On remonte le premier titre H3 pour qu'il s'aligne avec les yeux de l'avatar */
+[data-testid="stChatMessageContent"] h3:first-of-type {
+    margin-top: -5px !important; 
+    padding-top: 0 !important;
+}
+
 /* Input Zone */
 div[data-testid="stChatInput"] button {
     color: #eda146 !important;

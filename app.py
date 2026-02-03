@@ -65,9 +65,9 @@ def check_password():
     if st.session_state.user_info: return True
     ui.render_top_arguments()
     ui.render_footer()
-    st.markdown("<h1 style='color: #253E92;'>SOCIAL EXPERT FRANCE — 2026</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #253E92;'>Social Expert France — Votre Copilote RH et Paie</h1>", unsafe_allow_html=True)
     
-    t1, t2 = st.tabs(["🔐 Abonné", "🎫 Code"])
+    t1, t2 = st.tabs(["🔐 Abonné", "🎫 J'ai un code découverte"])
     with t1:
         email = st.text_input("Email", key="login_email")
         pwd = st.text_input("Mot de passe", type="password", key="login_pwd")
@@ -110,7 +110,7 @@ with col2:
         st.session_state.uploader_key += 1
         st.rerun()
 
-st.markdown("<h1 style='color:#253E92;'>SOCIAL EXPERT FRANCE (✅ VERSION FINAL)</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#253E92;'>SOCIAL EXPERT FRANCE - ESPACE ABONNÉ</h1>", unsafe_allow_html=True)
 
 # Traitement Upload
 user_doc_content = ""
@@ -123,7 +123,7 @@ if uploaded_file:
 # AFFICHAGE DE L'HISTORIQUE (AVEC DEBUG PERSISTANT)
 # ------------------------------------------------------------------------------
 for msg in st.session_state.messages:
-    avatar = "avatar-logo.png" if msg["role"] == "assistant" else "🧑‍💻"
+    avatar = "avatar-logo.png" if msg["role"] == "assistant" else "⚫"
     with st.chat_message(msg["role"], avatar=avatar):
         # 1. Le message
         st.markdown(msg["content"])
@@ -131,7 +131,7 @@ for msg in st.session_state.messages:
         # 2. Le Debugger (Si Admin et si présent dans le message)
         # C'est ici que ça s'affiche même après le rerun !
         if st.session_state.user_info.get("role") == "ADMIN" and "debug_data" in msg:
-            with st.expander("🕵️‍♂️ SOURCES TECHNIQUES (PINECONE)", expanded=False):
+            with st.expander("▪️ SOURCES TECHNIQUES (PINECONE)", expanded=False):
                 for src in msg["debug_data"]:
                     st.markdown(f"**📄 {src['name']}**")
                     st.caption(src['extract'][:200] + "...")
