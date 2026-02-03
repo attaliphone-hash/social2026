@@ -445,11 +445,6 @@
 - id: IK_VOITURE_2026
   keywords: ["ik", "kilometrique", "kilométrique", "voiture", "automobile", "barème", "fiscal", "cv", "frais", "réels", "trajet"]
   valeurs:
-    3cv_jusqua_5000: 0.529
-    4cv_jusqua_5000: 0.606
-    5cv_jusqua_5000: 0.636
-    6cv_jusqua_5000: 0.665
-    7cv_plus_jusqua_5000: 0.697
     3cv_5001_20000_coef: 0.316
     3cv_5001_20000_fixe: 1065
     4cv_5001_20000_coef: 0.340
@@ -460,15 +455,26 @@
     6cv_5001_20000_fixe: 1457
     7cv_plus_5001_20000_coef: 0.394
     7cv_plus_5001_20000_fixe: 1515
-    3cv_au_dela_20000: 0.370
-    4cv_au_dela_20000: 0.407
-    5cv_au_dela_20000: 0.427
-    6cv_au_dela_20000: 0.447
-    7cv_plus_au_dela_20000: 0.470
     majoration_vehicule_electrique_pct: 20.0
   derniere_maj: "Janvier 2026"
-  source: "Arrêté du 27 mars 2023"
-  text: "Barème IK 2026 selon CV et distance."
+  source: "Arrêté du 27 mars 2023 (Barème fiscal officiel 2026)"
+  text: |
+    BARÈME OFFICIEL IK VOITURE 2026 (À utiliser impérativement) :
+    
+    POUR LA TRANCHE 5 001 à 20 000 km :
+    - 3 CV : (Distance x 0.316) + 1065
+    - 4 CV : (Distance x 0.340) + 1330
+    - 5 CV : (Distance x 0.357) + 1395  <-- C'est cette ligne qu'il faut utiliser pour 5CV
+    - 6 CV : (Distance x 0.374) + 1457
+    - 7 CV et + : (Distance x 0.394) + 1515
+    
+    POUR MOINS DE 5 000 km : 
+    - 5 CV : Distance x 0.636
+    
+    POUR PLUS DE 20 000 km :
+    - 5 CV : Distance x 0.427
+    
+    MAJORATION : +20% pour les véhicules électriques.
 
 # -------------------------------------------------------------------------
 # 14. CONGÉS PAYÉS
