@@ -110,7 +110,6 @@ with col2:
         st.session_state.uploader_key += 1
         st.rerun()
 
-# 🔴 LE TEST : Si vous ne voyez pas ce titre, le fichier n'est pas mis à jour
 st.markdown("<h1 style='color:#253E92;'>SOCIAL EXPERT FRANCE (✅ VERSION MARKDOWN)</h1>", unsafe_allow_html=True)
 
 # Traitement Upload
@@ -124,7 +123,6 @@ if uploaded_file:
 for msg in st.session_state.messages:
     avatar = "avatar-logo.png" if msg["role"] == "assistant" else "🧑‍💻"
     with st.chat_message(msg["role"], avatar=avatar):
-        # 🔴 CHANGEMENT CRITIQUE ICI : Plus de unsafe_allow_html=True
         st.markdown(msg["content"])
         
         # Bouton PDF (uniquement sous les réponses assistant)
@@ -177,7 +175,21 @@ if user_input:
             if pname not in seen: seen.append(pname)
             context_str += f"DOC: {pname}\n{d.page_content}\n\n"
 
-        # 🔴 CHANGEMENT CRITIQUE : PROMPT MARKDOWN (PLUS DE HTML)
+        # ------------------------------------------------------------------
+        # 🕵️‍♂️ RESTAURATION DU DEBUGGER ADMIN (PINECONE)
+        # ------------------------------------------------------------------
+        if st.session_state.user_info.get("role") == "ADMIN":
+            with st.expander("🕵️‍♂️ MODE ADMIN : SOURCES PINECONE", expanded=False):
+                if not docs:
+                    st.error("Aucun document trouvé (0).")
+                else:
+                    st.success(f"{len(docs)} documents injectés.")
+                    for d in docs:
+                        st.markdown(f"**📄 {d.metadata.get('clean_name')}**")
+                        st.caption(d.page_content[:250] + "...")
+        # ------------------------------------------------------------------
+
+        # PROMPT MARKDOWN (STRICT)
         template = """
 Tu es l'Expert Social Pro 2026.
 
