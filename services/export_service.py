@@ -30,10 +30,17 @@ class ExportService:
         # 3. Nettoyage agressif HTML
         text = re.sub(r'<[^>]+>', '', text)
 
-        # 4. Nettoyage des entités HTML
+        # 4. Nettoyage des entités HTML & SYMBOLES SPÉCIAUX
         entity_replacements = {
-            "&nbsp;": " ", "&euro;": "Euros", "&amp;": "&",
-            "&lt;": "<", "&gt;": ">", "&#39;": "'", "&quot;": '"'
+            "&nbsp;": " ", 
+            "&amp;": "&",
+            "&lt;": "<", 
+            "&gt;": ">", 
+            "&#39;": "'", 
+            "&quot;": '"',
+            # 👇 MODIFICATION ICI : On utilise le code ISO "EUR"
+            "&euro;": " EUR", 
+            "€": " EUR" 
         }
         for entity, char in entity_replacements.items():
             text = text.replace(entity, char)
@@ -103,8 +110,7 @@ class ExportService:
             )
             pdf.multi_cell(0, 5, self._clean_text_for_pdf(disclaimer), align="C")
             
-            # 👇👇👇 LA CORRECTION EST ICI 👇👇👇
-            # On convertit le 'bytearray' de fpdf2 en 'bytes' standard pour Streamlit
+            # Retourne des bytes
             return bytes(pdf.output())
 
         except Exception as e:
