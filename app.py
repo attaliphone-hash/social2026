@@ -110,7 +110,7 @@ with col2:
         st.session_state.uploader_key += 1
         st.rerun()
 
-st.markdown("<h1 style='color:#253E92;'>SOCIAL EXPERT FRANCE (✅ VERSION MARKDOWN)</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#253E92;'>SOCIAL EXPERT FRANCE (✅ VERSION FINAL)</h1>", unsafe_allow_html=True)
 
 # Traitement Upload
 user_doc_content = ""
@@ -119,13 +119,24 @@ if uploaded_file:
         user_doc_content = docs_srv.extract_text(uploaded_file)
         if user_doc_content: st.toast("Document analysé", icon="✅")
 
-# Affichage Historique (MODE SÉCURISÉ)
+# ------------------------------------------------------------------------------
+# AFFICHAGE DE L'HISTORIQUE (AVEC DEBUG PERSISTANT)
+# ------------------------------------------------------------------------------
 for msg in st.session_state.messages:
     avatar = "avatar-logo.png" if msg["role"] == "assistant" else "🧑‍💻"
     with st.chat_message(msg["role"], avatar=avatar):
+        # 1. Le message
         st.markdown(msg["content"])
         
-        # Bouton PDF (uniquement sous les réponses assistant)
+        # 2. Le Debugger (Si Admin et si présent dans le message)
+        # C'est ici que ça s'affiche même après le rerun !
+        if st.session_state.user_info.get("role") == "ADMIN" and "debug_data" in msg:
+            with st.expander("🕵️‍♂️ SOURCES TECHNIQUES (PINECONE)", expanded=False):
+                for src in msg["debug_data"]:
+                    st.markdown(f"**📄 {src['name']}**")
+                    st.caption(src['extract'][:200] + "...")
+
+        # 3. Le Bouton PDF (Si assistant)
         if msg["role"] == "assistant" and "Désolé" not in msg["content"]:
             try:
                 idx = st.session_state.messages.index(msg)
@@ -133,7 +144,7 @@ for msg in st.session_state.messages:
             except:
                 q_text = "Consultation"
             
-            # Génération PDF
+            # On vérifie juste si on peut générer
             pdf_data = st.session_state.export_service.generate_pdf(str(q_text), str(msg["content"]))
             
             if pdf_data:
@@ -145,7 +156,9 @@ for msg in st.session_state.messages:
                     key=f"btn_pdf_{idx}"
                 )
 
-# Input Utilisateur
+# ------------------------------------------------------------------------------
+# INPUT & GÉNÉRATION
+# ------------------------------------------------------------------------------
 user_input = st.chat_input("Votre question juridique ou sociale...")
 
 if user_input:
@@ -168,28 +181,29 @@ if user_input:
         facts = engine.format_certified_facts(matched)
         
         docs = ia.search_documents(user_input, k=6)
+        
+        # Préparation du contexte + Sauvegarde des données de debug
         context_str = ""
         seen = []
+        debug_data_list = [] # On va stocker les sources ici pour l'historique
+
         for d in docs:
             pname = d.metadata.get('clean_name', 'Source')
-            if pname not in seen: seen.append(pname)
+            if pname not in seen: 
+                seen.append(pname)
+                # On ajoute à la liste de debug
+                debug_data_list.append({
+                    "name": pname,
+                    "extract": d.page_content
+                })
+            
             context_str += f"DOC: {pname}\n{d.page_content}\n\n"
 
-        # ------------------------------------------------------------------
-        # 🕵️‍♂️ RESTAURATION DU DEBUGGER ADMIN (PINECONE)
-        # ------------------------------------------------------------------
-        if st.session_state.user_info.get("role") == "ADMIN":
-            with st.expander("🕵️‍♂️ MODE ADMIN : SOURCES PINECONE", expanded=False):
-                if not docs:
-                    st.error("Aucun document trouvé (0).")
-                else:
-                    st.success(f"{len(docs)} documents injectés.")
-                    for d in docs:
-                        st.markdown(f"**📄 {d.metadata.get('clean_name')}**")
-                        st.caption(d.page_content[:250] + "...")
-        # ------------------------------------------------------------------
+        # Affichage TEMPORAIRE du debug (pendant que l'IA réfléchit)
+        if st.session_state.user_info.get("role") == "ADMIN" and docs:
+             with st.expander("🕵️‍♂️ SOURCES PINECONE (EN COURS)", expanded=True):
+                 st.success(f"{len(docs)} documents trouvés.")
 
-        # PROMPT MARKDOWN (STRICT)
         template = """
 Tu es l'Expert Social Pro 2026.
 
@@ -243,7 +257,14 @@ QUESTION : {question}
                 box.markdown(full_response + "▌") 
             
             box.markdown(full_response)
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            
+            # SAUVEGARDE PERSISTANTE : On enregistre le message ET les debug_data
+            st.session_state.messages.append({
+                "role": "assistant", 
+                "content": full_response,
+                "debug_data": debug_data_list # ✅ C'EST ÇA QUI SAUVE L'AFFICHAGE
+            })
+            
             st.rerun()
             
         except Exception as e:
