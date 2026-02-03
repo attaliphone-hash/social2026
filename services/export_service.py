@@ -114,7 +114,7 @@ class ExportService:
             date_str = datetime.datetime.now().strftime("%d/%m/%Y")
             
             pdf.set_fill_color(240, 240, 240)
-            pdf.cell(40, 8, f"  Votre question du {date_str}  ", ln=True, fill=True, align='C')
+            pdf.cell(40, 8, f"  Question du {date_str}  ", ln=True, fill=True, align='C')
             pdf.ln(8)
 
             # 2. OBJET
