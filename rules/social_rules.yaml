@@ -427,3 +427,76 @@
   derniere_maj: "Janvier 2026"
   source: "Code de la Sécurité Sociale - Art. L137-15"
   text: "Taux standard 20%. Taux réduit 16% (PERCO piloté). Taux 8% (Prévoyance > 11 salariés)."
+
+  # -------------------------------------------------------------------------
+# 13. RÈGLES COMPLÉMENTAIRES 2026 (AJOUT v3.1)
+# -------------------------------------------------------------------------
+
+- id: IK_VOITURE_2026
+  keywords: ["ik", "kilometrique", "kilométrique", "voiture", "automobile", "barème", "fiscal", "cv", "frais", "réels", "trajet"]
+  valeurs:
+    # Jusqu'à 5 000 km
+    3cv_jusqua_5000: 0.529
+    4cv_jusqua_5000: 0.606
+    5cv_jusqua_5000: 0.636
+    6cv_jusqua_5000: 0.665
+    7cv_plus_jusqua_5000: 0.697
+    # De 5 001 à 20 000 km (formule : d x coef + montant fixe)
+    3cv_5001_20000_coef: 0.316
+    3cv_5001_20000_fixe: 1065
+    4cv_5001_20000_coef: 0.340
+    4cv_5001_20000_fixe: 1330
+    5cv_5001_20000_coef: 0.357
+    5cv_5001_20000_fixe: 1395
+    6cv_5001_20000_coef: 0.374
+    6cv_5001_20000_fixe: 1457
+    7cv_plus_5001_20000_coef: 0.394
+    7cv_plus_5001_20000_fixe: 1515
+    # Au-delà de 20 000 km
+    3cv_au_dela_20000: 0.370
+    4cv_au_dela_20000: 0.407
+    5cv_au_dela_20000: 0.427
+    6cv_au_dela_20000: 0.447
+    7cv_plus_au_dela_20000: 0.470
+    majoration_vehicule_electrique: 20
+  derniere_maj: "Janvier 2026"
+  source: "Arrêté fiscal (Barème projeté stable pour 2026)"
+  text: |
+    BARÈME IK VOITURE 2026 :
+    Formule de calcul selon la puissance fiscale (CV) et la distance (d).
+    Exemple 5 CV pour 12 000 km : (12 000 x 0,357) + 1 395 = 5 679 €.
+    MAJORATION : +20% sur le montant final pour les véhicules 100% électriques.
+
+- id: CONGES_PAYES_2026
+  keywords: ["conges", "congés", "payés", "cp", "acquisition", "jours", "ouvrés", "ouvrables", "indemnité", "vacances", "maladie"]
+  valeurs:
+    jours_ouvrables_par_mois: 2.5
+    jours_ouvrables_annuels: 30
+    jours_ouvres_par_mois: 2.08
+    jours_ouvres_annuels: 25
+    acquisition_maladie_non_pro_par_mois: 2
+    acquisition_maladie_non_pro_max_annuel: 24
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. L3141-3 & Loi DDADUE du 22 avril 2024"
+  text: |
+    RÈGLES D'ACQUISITION CP 2026 :
+    - Droit commun : 2,5 jours ouvrables/mois (30j/an).
+    - Période de référence : 1er juin N-1 au 31 mai N (sauf accord d'entreprise).
+    - Maladie NON professionnelle : Acquisition limitée à 2 jours ouvrables/mois, dans la limite de 24 jours (4 semaines) par an (Loi du 22/04/2024).
+    - Maladie professionnelle / AT : Acquisition normale (2,5j/mois) dans la limite de 30 jours/an.
+
+- id: PREAVIS_LICENCIEMENT_2026
+  keywords: ["preavis", "préavis", "licenciement", "démission", "durée", "mois", "ancienneté", "délai"]
+  valeurs:
+    moins_6mois: 0
+    6mois_moins_2ans: 1
+    2ans_et_plus: 2
+    handicape_max: 3
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. L1234-1"
+  text: |
+    DURÉE PRÉAVIS LÉGAL LICENCIEMENT 2026 :
+    - Moins de 6 mois d'ancienneté : Déterminé par la convention collective ou les usages (souvent 1 semaine ou 15 jours).
+    - De 6 mois à moins de 2 ans : 1 mois.
+    - 2 ans d'ancienneté et plus : 2 mois.
+    - Travailleur handicapé (RQTH) : Durée doublée dans la limite maximale de 3 mois.
