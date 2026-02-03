@@ -294,6 +294,7 @@ QUESTION : {question}
                 safe_response = str(full_response) if full_response else "Pas de réponse."
                 
                 # B. Appel du service avec les variables sécurisées
+                # Le service renvoie maintenant directement des BYTES (grâce à pdf.output() de fpdf2)
                 pdf_bytes = st.session_state.export_service.generate_pdf(safe_prompt, safe_response)
                 
                 # C. Affichage du bouton uniquement si le PDF est bien généré
@@ -305,6 +306,9 @@ QUESTION : {question}
                         mime="application/pdf",
                         key=f"dl_{len(st.session_state.messages)}"
                     )
+                else:
+                    logger.warning("PDF : Aucune donnée générée (voir logs).")
+
             except Exception as pdf_err:
                 # Si le PDF plante, on log l'erreur MAIS on ne plante pas l'app pour l'utilisateur
                 logger.error(f"⚠️ Erreur Génération PDF (Non bloquant) : {pdf_err}")
