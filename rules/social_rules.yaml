@@ -1,6 +1,6 @@
 # ==============================================================================
-# RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ (ULTIMATE V2.1)
-# VERSION : 2.1 (GOLD MASTER)
+# RÈGLES MÉTIER PAIE & SOCIAL 2026 - SOURCE UNIQUE DE VÉRITÉ (ULTIMATE V3.0)
+# VERSION : 3.0 (FULL COVERAGE - AUDIT READY)
 # DATE DE MISE À JOUR : 03/02/2026
 # STATUS : PRODUCTION READY
 # ==============================================================================
@@ -24,7 +24,7 @@
     horaire: 12.02
     mensuel_35h: 1823.03
   derniere_maj: "Janvier 2026"
-  source: "Décret n° 2025-1738 du 20 décembre 2025 portant relèvement du salaire minimum de croissance"
+  source: "Décret n° 2025-1228 du 17 décembre 2025 portant relèvement du salaire minimum de croissance"
   text: "Au 1er janvier 2026, le SMIC horaire est de 12,02 €, soit 1 823,03 € mensuel pour 35h."
 
 - id: ACTIVITE_PARTIELLE_2026
@@ -38,7 +38,6 @@
     RÈGLE APPLICABLE AU 1ER JANVIER 2026 :
     1. Le taux horaire minimum de l'allocation versée à l'employeur (Droit commun) est de 8,57 €.
     2. Pour l'APLD (Activité Partielle Longue Durée), le plancher est fixé à 9,52 €.
-    ⛔ ATTENTION : Ces montants sont les minima garantis à l'employeur pour compenser l'indemnité versée au salarié.
 
 - id: MG_2026
   keywords: ["mg", "minimum", "garanti", "valeur", "repas"]
@@ -69,6 +68,15 @@
   source: "Arrêté du 23 décembre 2025 relatif aux avantages en nature (Barème URSSAF)"
   text: "L'avantage en nature nourriture est évalué à 5,50 € par repas (4,25 € pour les HCR)."
 
+- id: AVN_LOGEMENT_2026
+  keywords: ["logement", "avantage", "nature", "hebergement", "loyer"]
+  valeurs:
+    forfait_1_piece: 77.30
+    forfait_par_piece_sup: 41.20
+  derniere_maj: "Janvier 2026"
+  source: "Arrêté du 23 décembre 2025 (Barème URSSAF)"
+  text: "Barème forfaitaire mensuel : 77,30 € pour une pièce principale, et 41,20 € par pièce supplémentaire (si salaire < 1793,60 €). D'autres tranches existent selon le salaire."
+
 - id: TICKET_RESTO_2026
   keywords: ["ticket", "resto", "titre", "restaurant", "cheque", "déjeuner", "patronale", "exonération"]
   valeurs:
@@ -88,8 +96,15 @@
     RÈGLE IMPÉRATIVE 2026 (INDEMNITÉ FORFAITAIRE) :
     1. Si paiement au réel : 2,70 € par jour de télétravail effectué.
     2. Si allocation forfaitaire mensuelle : La limite d'exonération est STRICTEMENT de 10,80 € multiplié par le nombre de jours de télétravail par semaine.
-    ⛔ INTERDICTION DE CALCUL : Ne jamais utiliser de moyenne (type 4,33 semaines). Appliquez strictement le forfait.
-    EXEMPLES OFFICIELS : 1 jour/semaine = 10,80 €/mois. 2 jours = 21,60 €. 3 jours = 32,40 €. 4 jours = 43,20 €.
+
+- id: IK_VELO_2026
+  keywords: ["velo", "vélo", "kilometrique", "indemnite", "trajet"]
+  valeurs:
+    taux_km: 0.25
+    plafond_annuel: 700
+  derniere_maj: "Janvier 2026"
+  source: "Barème URSSAF 2026"
+  text: "Le forfait mobilités durables (incluant l'IK Vélo) est exonéré jusqu'à 700 € par an. Le montant de l'indemnité kilométrique vélo est de 0,25 €/km."
 
 - id: AVN_VEHICULE_ELEC_2026
   keywords: ["vehicule", "véhicule", "electrique", "électrique", "abattement", "taux", "avantage", "nature"]
@@ -101,7 +116,7 @@
   text: "RÈGLE DE CALCUL : 1. Calculez d'abord l'avantage brut = 9% du prix d'achat TTC (si véhicule < 5 ans). 2. Appliquez ensuite l'abattement de 50% sur ce montant. 3. Ce montant d'abattement est plafonné à 1 964,90 € par an."
 
 # -------------------------------------------------------------------------
-# 3. STAGES & APPRENTISSAGE (RÈGLES STRICTES)
+# 3. STAGES & APPRENTISSAGE
 # -------------------------------------------------------------------------
 - id: REMUNERATION_APPRENTI_2026
   keywords: ["salaire", "apprenti", "pourcentage", "smic", "age", "21 ans", "26 ans", "grille"]
@@ -123,20 +138,31 @@
   text: "La gratification minimale de stage est de 4,50 €/heure (calcul officiel : 15% du Plafond Horaire SS de 30 €)."
 
 - id: EXONERATION_APPRENTI_2026
-  keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond", "79%", "seuil"]
+  keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond", "50%", "79%", "seuil"]
   valeurs:
-    taux_plafond: 0.79
+    taux_plafond_nouveaux_contrats: 0.50
+    taux_plafond_anciens_contrats: 0.79
+    seuil_50pct_mensuel: 911.52
   derniere_maj: "Janvier 2026"
-  source: "Code de la Sécurité Sociale - Art. L6243-2 (Version 2026)"
-  text: "RÈGLE 2026 : L'exonération des cotisations salariales pour les apprentis est plafonnée à la part de rémunération inférieure ou égale à 79% du SMIC. La part supérieure à 79% du SMIC est soumise à cotisations."
+  source: "Décret n° 2025-290 du 28 mars 2025 (Art. D6243-5 Code du travail)"
+  text: |
+    RÈGLE 2026 (DEUX RÉGIMES COEXISTENT) :
+    1. Contrats signés AVANT le 1er mars 2025 : Exonération totale jusqu'à 79% du SMIC. Pas de CSG/CRDS.
+    2. Contrats signés DEPUIS le 1er mars 2025 : Exonération jusqu'à 50% du SMIC (soit 911,52 €/mois). Au-delà, cotisations salariales + CSG/CRDS dues.
 
 - id: AIDE_EMBAUCHE_APPRENTI_2026
-  keywords: ["aide", "embauche", "apprenti", "apprentissage", "prime", "soutien", "6000"]
+  keywords: ["aide", "embauche", "apprenti", "apprentissage", "prime", "soutien", "5000", "6000"]
   valeurs:
-    montant_annuel: 6000
+    montant_standard: 5000
+    montant_handicap: 6000
+    effectif_max: 250
+    niveau_diplome_max: 4
   derniere_maj: "Janvier 2026"
-  source: "Décret n° 2025-1888 du 29 décembre 2025 (Prorogation de l'aide)"
-  text: "Une aide exceptionnelle de 6 000 € est versée aux employeurs pour la première année d'exécution des contrats d'apprentissage conclus en 2026." 
+  source: "Code du travail - Aide unique (en l'absence de LFI 2026)"
+  text: |
+    AIDE UNIQUE APPRENTISSAGE 2026 :
+    - 5 000 € pour les entreprises de moins de 250 salariés.
+    - 6 000 € pour l'embauche d'un apprenti en situation de handicap (toutes tailles).
 
 # -------------------------------------------------------------------------
 # 4. RÉDUCTION GÉNÉRALE (RGDU)
@@ -152,7 +178,7 @@
   text: "RÈGLE RGDU 2026 : Le dispositif est étendu jusqu'à 3 SMIC annuels (contre 1,6 avant). T = 0,3981 (moins de 50 salariés) et T = 0,4021 (50 salariés et plus). La formule de calcul est désormais polynomiale."
 
 # -------------------------------------------------------------------------
-# 5. PRESTATIONS SÉCU (IJSS) & INDEMNITÉS RUPTURE
+# 5. PRESTATIONS SÉCU (IJSS) & AT/MP
 # -------------------------------------------------------------------------
 - id: IJSS_MALADIE_2026
   keywords: ["ijss", "maladie", "arret", "indemnite", "journaliere", "cpam", "plafond", "50%"]
@@ -161,16 +187,48 @@
     taux_remuneration: 50
   derniere_maj: "Janvier 2026"
   source: "Code de la Sécurité Sociale - Art. R323-4 (Calcul SMIC 2026)"
-  text: "RÈGLE : L'IJSS Maladie est égale à 50% du Salaire Journalier de Base (moyenne 3 derniers mois). Elle est plafonnée à 53,94 € bruts par jour en 2026 (correspondant à un salaire mensuel de 1,8 SMIC)."
+  text: "RÈGLE : L'IJSS Maladie est égale à 50% du Salaire Journalier de Base (moyenne 3 derniers mois). Elle est plafonnée à 53,94 € bruts par jour en 2026."
 
 - id: IJSS_MATERNITE_2026
   keywords: ["ijss", "maternite", "maternité", "plafond", "grossesse"]
   valeurs:
     plafond_journalier_brut: 131.67
-    plafond_journalier_net_estime: 104.02
   derniere_maj: "Janvier 2026"
   source: "Code de la Sécurité Sociale - Art. R331-5 (Calcul PASS 2026)"
   text: "L'IJSS Maternité journalière maximale est de 131,67 € bruts (calculée sur le Plafond Mensuel de la Sécurité Sociale de 4 005 €)."
+
+- id: IJSS_PATERNITE_2026
+  keywords: ["ijss", "paternite", "paternité", "naissance", "accueil", "enfant"]
+  valeurs:
+    duree_naissance: 25
+    duree_accueil: 25
+    plafond_journalier_brut: 131.67
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale - Art. L331-8"
+  text: "Congé de paternité 2026 : 25 jours calendaires (32 jours si naissances multiples). Indemnité journalière plafonnée à 131,67 € (comme la maternité)."
+
+- id: IJSS_AT_MP_2026
+  keywords: ["ijss", "accident", "travail", "maladie", "professionnelle", "at", "mp"]
+  valeurs:
+    taux_j1_j28: 60
+    taux_j29_plus: 80
+    gain_journalier_max: 391.56
+  derniere_maj: "Janvier 2026"
+  source: "Code de la Sécurité Sociale - Art. R433-1"
+  text: "IJSS Accident du Travail : 60% du SJB pendant les 28 premiers jours, puis 80% à partir du 29ème jour. Le gain journalier de référence est plafonné à 0,834% du PASS annuel (soit 391,56 €)."
+
+# -------------------------------------------------------------------------
+# 6. RUPTURE, LICENCIEMENT & SAISIES
+# -------------------------------------------------------------------------
+- id: INDEMNITE_LICENCIEMENT_LEGALE_2026
+  keywords: ["indemnite", "licenciement", "légale", "ancienneté", "calcul"]
+  valeurs:
+    taux_0_10_ans: 0.25
+    taux_au_dela_10_ans: 0.333
+    anciennete_minimum_mois: 8
+  derniere_maj: "Janvier 2026"
+  source: "Code du travail - Art. R1234-2"
+  text: "Formule Légale : 1/4 de mois de salaire par année d'ancienneté jusqu'à 10 ans. 1/3 de mois de salaire par année au-delà de 10 ans."
 
 - id: EXONERATION_RUPTURE_2026
   keywords: ["rupture", "licenciement", "conventionnelle", "indemnité", "exoneration", "plafond", "pass"]
@@ -180,17 +238,39 @@
   source: "Bulletin Officiel de la Sécurité Sociale (BOSS) - Janvier 2026"
   text: "L'indemnité de rupture est exonérée de cotisations sociales dans la limite de 2 PASS, soit 96 120 € en 2026."
 
-- id: FORFAIT_RUPTURE_2026
-  keywords: ["forfait", "social", "rupture", "conventionnelle", "contribution", "patronale", "40%", "taxe"]
+- id: INDEMNITE_RUPTURE_CONV_2026
+  keywords: ["rupture", "conventionnelle", "indemnite", "minimum", "rc", "forfait"]
   valeurs:
-    taux_2026: 40
+    minimum_legal: "Identique à l'indemnité de licenciement"
+    contribution_patronale_taux: 40
   derniere_maj: "Janvier 2026"
-  source: "Loi de Financement de la Sécurité Sociale 2026 (Art. L.137-12 CSS)"
-  text: "RÈGLE CRITIQUE 2026 : L'indemnité de rupture conventionnelle est soumise à une contribution patronale spécifique de 40% (au lieu de 30% précédemment). Cette contribution s'applique sur la part de l'indemnité exonérée de cotisations sociales."
+  source: "Code du travail - Art. L1237-13 & LFSS 2026"
+  text: "RÈGLE CRITIQUE 2026 : Le minimum est l'indemnité légale de licenciement. Le forfait social patronal est de 40% sur la part exonérée de cotisations."
+
+- id: SAISIE_SALAIRE_2026
+  keywords: ["saisie", "salaire", "retenue", "quotite", "cessible", "saisissable"]
+  valeurs:
+    tranche_1_plafond: 4410
+    tranche_1_taux: 0.0333
+    tranche_2_plafond: 8600
+    tranche_2_taux: 0.0667
+    majoration_personne_charge: 1700
+  derniere_maj: "Janvier 2026"
+  source: "Barème des Saisies sur Rémunérations 2026"
+  text: "Le barème 2026 comporte 7 tranches. La majoration du seuil insaisissable pour personne à charge est estimée à 1 700 € annuels."
 
 # -------------------------------------------------------------------------
-# 6. TAXE SUR LES SALAIRES 2026
+# 7. FISCALITÉ & HEURES SUPPLÉMENTAIRES
 # -------------------------------------------------------------------------
+- id: HEURES_SUP_EXONERATION_2026
+  keywords: ["heures", "supplementaires", "exoneration", "defiscalisation", "ir"]
+  valeurs:
+    plafond_exoneration_ir: 7500
+    reduction_cotisations_salariales: 11.31
+  derniere_maj: "Janvier 2026"
+  source: "CGI Art. 81 quater & CSS Art. L241-17"
+  text: "Les heures supplémentaires sont exonérées d'Impôt sur le Revenu dans la limite de 7 500 € par an net. Elles ouvrent droit à une réduction de cotisations salariales de 11,31%."
+
 - id: TAXE_SALAIRES_2026
   keywords: ["taxe", "salaire", "salaires", "tranches", "association", "banque", "decote"]
   valeurs:
@@ -201,11 +281,21 @@
     seuil_tranche_2: 17936
   derniere_maj: "Janvier 2026"
   source: "Code général des impôts - Article 231 (Barème 2026)"
-  text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% sur la part de salaire annuel comprise entre 8 985 € et 17 936 €. 13,60% au-delà de 17 936 €. IMPORTANT : Une décote s'applique si la taxe annuelle est inférieure à 2 040 €. Une franchise totale s'applique si la taxe est inférieure à 1 200 €."
+  text: "Barème Taxe sur les Salaires 2026 : 4,25% (Taux normal). 8,50% entre 8 985 € et 17 936 €. 13,60% au-delà."
 
 # -------------------------------------------------------------------------
-# 6 BIS. EXONÉRATIONS CIBLÉES 2026
+# 8. EXONÉRATIONS CIBLÉES & PPV
 # -------------------------------------------------------------------------
+- id: PPV_2026
+  keywords: ["ppv", "prime", "partage", "valeur", "macron", "pouvoir", "achat"]
+  valeurs:
+    plafond_exoneration_standard: 3000
+    plafond_interessement: 6000
+    condition_salaire_max_smic: 3
+  derniere_maj: "Janvier 2026"
+  source: "Loi n° 2022-1158 (prorogée 2026)"
+  text: "Prime de Partage de la Valeur (PPV) : Exonération sociale (et fiscale sous conditions < 3 SMIC) jusqu'à 3 000 € par an, portée à 6 000 € si accord d'intéressement ou participation."
+
 - id: EXONERATION_JEI_2026
   keywords: ["jei", "jeune", "entreprise", "innovante", "recherche", "développement", "r&d"]
   valeurs:
@@ -214,27 +304,10 @@
     plafond_salarie_smic: 4.5
   derniere_maj: "Janvier 2026"
   source: "Loi n° 2025-1200 de finances pour 2026 (Dispositif JEI)"
-  text: "RÈGLE JEI 2026 : L'exonération patronale est plafonnée à 5 PASS par établissement et par an (soit 240 300 €). Elle s'applique aux salariés R&D rémunérés moins de 4,5 SMIC."
+  text: "RÈGLE JEI 2026 : L'exonération patronale est plafonnée à 5 PASS par établissement et par an (soit 240 300 €)."
 
 # -------------------------------------------------------------------------
-# 7. PROTOCOLES DE CALCUL UNIVERSELS (ZÉRO ERREUR)
-# -------------------------------------------------------------------------
-- id: PROTOCOLE_CALCUL_SOCIAL
-  keywords: ["formule", "calcul", "méthode", "règle", "ancienneté", "heures", "rupture"]
-  source: "Code du travail - Art. L1234-9 et R1234-2"
-  text: |
-    PROTOCOLES OBLIGATOIRES 2026 (À APPLIQUER STRICTEMENT) :
-    1. INDEMNITÉ RUPTURE/LICENCIEMENT (CALCUL PAR TRANCHES) : 
-       - Tranche A (0 à 10 ans) : (Salaire_Ref / 4) * 10.
-       - Tranche B (Au-delà de 10 ans) : (Salaire_Ref / 3) * (Ancienneté_Totale - 10).
-       - Total = Tranche A + Tranche B.
-       - Proratisation ancienneté : Années + (Mois / 12). (Ex: 12 ans 9 mois = 12,75 ans).
-    2. HEURES SUPPLÉMENTAIRES : Majoration de 25% (heures 36 à 43) puis 50% (dès la 44ème heure). EXONÉRATION : Les HS sont exonérées d'impôt sur le revenu (limite 7500€/an) et bénéficient d'une réduction de cotisations salariales (11,31%).
-    3. TEMPS : Conversion décimale obligatoire (Minutes / 60). Jamais de format 1h30 pour les calculs.
-    4. PLAFOND SS : Proratisation entrée/sortie = (4005 / Jours_Calendaires_Mois) * Jours_Presence_Calendaires.
-
-# -------------------------------------------------------------------------
-# 8. TAUX & CONSTANTES UNIVERSELS (MANQUANTS DANS LA V1)
+# 9. CONSTANTES PROTOCOLAIRES & CSG
 # -------------------------------------------------------------------------
 - id: CSG_CRDS_2026
   keywords: ["csg", "crds", "taux", "salaire", "abattement", "non_deductible"]
@@ -245,20 +318,22 @@
     abattement_assiette: 1.75
   derniere_maj: "Janvier 2026"
   source: "Code de la Sécurité Sociale - Art. L136-8"
-  text: "Les revenus d'activité sont soumis à la CSG/CRDS au taux global de 9,70% sur 98,25% du salaire brut (après abattement de 1,75%)."
+  text: "Taux global CSG/CRDS : 9,70% sur 98,25% du salaire brut."
 
-- id: TRANSPORT_2026
-  keywords: ["transport", "navigo", "abonnement", "fmd", "mobilité", "durable", "velo", "covoiturage"]
-  valeurs:
-    taux_obligatoire_abonnements: 50
-    plafond_fmd_seul: 700
-    plafond_fmd_cumul: 800
-  derniere_maj: "Janvier 2026"
-  source: "Loi de Finances 2026 (Forfait Mobilité Durable)"
-  text: "1. ABONNEMENTS : Prise en charge obligatoire de 50%. 2. FORFAIT MOBILITÉ DURABLE (FMD) : Exonéré jusqu'à 700 €/an (ou 800 € en cas de cumul avec un abonnement transport)."
+- id: PROTOCOLE_CALCUL_SOCIAL
+  keywords: ["formule", "calcul", "méthode", "règle", "ancienneté", "heures", "rupture"]
+  source: "Code du travail - Art. L1234-9 et R1234-2"
+  text: |
+    PROTOCOLES OBLIGATOIRES 2026 (À APPLIQUER STRICTEMENT) :
+    1. INDEMNITÉ RUPTURE/LICENCIEMENT (CALCUL PAR TRANCHES) : 
+       - Tranche A (0 à 10 ans) : (Salaire_Ref / 4) * Ancienneté.
+       - Tranche B (Au-delà de 10 ans) : (Salaire_Ref / 3) * (Ancienneté_Totale - 10).
+       - Proratisation ancienneté : Années + (Mois / 12).
+    2. HEURES SUPPLÉMENTAIRES : Majoration de 25% (heures 36 à 43) puis 50% (dès la 44ème heure).
+    3. PLAFOND SS : Proratisation entrée/sortie = (4005 / Jours_Calendaires_Mois) * Jours_Presence_Calendaires.
 
 # -------------------------------------------------------------------------
-# 9. TAUX DE COTISATIONS STANDARDS (URSSAF & RETRAITE 2026)
+# 10. TAUX DE COTISATIONS STANDARDS
 # -------------------------------------------------------------------------
 - id: TAUX_COTISATIONS_2026
   keywords: ["taux", "cotisation", "urssaf", "retraite", "agirc", "arrco", "chomage", "maladie", "vieillesse"]
@@ -272,7 +347,7 @@
     sal_ceg_T1: 0.86
     sal_ceg_T2: 1.08
     sal_apec: 0.024
-
+    
     # --- PART PATRONALE (Coût employeur) ---
     pat_maladie_base: 13.00
     pat_maladie_reduit: 7.00
@@ -287,22 +362,12 @@
     pat_ceg_T1: 1.29
     pat_ceg_T2: 1.62
     pat_apec: 0.036
-    
-    # --- SEUILS D'ÉLIGIBILITÉ TAUX RÉDUITS (En SMIC) ---
-    seuil_maladie_reduite: 2.5
-    seuil_famille_reduite: 3.5
   derniere_maj: "Janvier 2026"
   source: "Barèmes URSSAF & AGIRC-ARRCO 2026 (Taux de droit commun)"
-  text: "TAUX STANDARDS 2026 : Maladie employeur = 7% (si salaire < 2,5 SMIC) sinon 13%. Famille = 3,45% (si salaire < 3,5 SMIC) sinon 5,25%. Retraite Complémentaire T1 = 7,87% (Répartition 60/40). Retraite T2 = 21,59%."
-
-- id: REGIME_FRAIS_SANTE_2026
-  keywords: ["mutuelle", "prevoyance", "sante", "part", "patronale", "imposable", "csg"]
-  derniere_maj: "Janvier 2026"
-  source: "Code de la Sécurité Sociale & CGI 2026"
-  text: "RÉGIME SOCIAL & FISCAL : La part patronale de Mutuelle/Prévoyance est : 1. Soumise à CSG/CRDS (sans abattement). 2. Soumise au Forfait Social (8% si >11 salariés). 3. Imposable pour le salarié (à ajouter au Net Imposable)."
+  text: "TAUX STANDARDS 2026 : Maladie employeur = 7% (si salaire < 2,5 SMIC) sinon 13%. Famille = 3,45% (si salaire < 3,5 SMIC) sinon 5,25%."
 
 # -------------------------------------------------------------------------
-# 10. ÉPARGNE SALARIALE 2026
+# 11. ÉPARGNE SALARIALE & RETRAITE
 # -------------------------------------------------------------------------
 - id: EPARGNE_SALARIALE_2026
   keywords: ["pee", "perco", "participation", "interessement", "abondement", "plafond"]
@@ -311,11 +376,20 @@
     plafond_abondement_pee_euro: 3709.44
     plafond_abondement_perco_euro: 7418.88
   derniere_maj: "Janvier 2026"
-  source: "Code du travail - Art. R3332-8 et D3332-8"
-  text: "PLAFONDS 2026 : L'abondement PEE est plafonné à 8% du PASS (3 709,44 €) et celui du PERCO à 16% du PASS (7 418,88 €). Le versement volontaire du salarié est limité à 25% de sa rémunération annuelle brute."
+  source: "Code du travail - Art. R3332-8"
+  text: "PLAFONDS 2026 : Abondement PEE plafonné à 8% du PASS. PERCO plafonné à 16% du PASS."
+
+- id: PLAFOND_EPARGNE_RETRAITE_2026
+  keywords: ["per", "pereco", "article", "83", "retraite", "supplementaire"]
+  valeurs:
+    plafond_8pct_pass: 3844.80
+    plafond_global_10pct_remu: true
+  derniere_maj: "Janvier 2026"
+  source: "CGI Art. 163 quatervicies"
+  text: "Le plafond de déductibilité des cotisations de retraite supplémentaire (Art 83 / PER Obligatoire) est généralement de 8% du PASS."
 
 # -------------------------------------------------------------------------
-# 11. CDD (PRÉCARITÉ & CONGÉS PAYÉS)
+# 12. CDD & DIVERS
 # -------------------------------------------------------------------------
 - id: INDEMNITE_CDD_2026
   keywords: ["cdd", "precarite", "précarité", "fin", "contrat", "court", "prime"]
@@ -324,70 +398,25 @@
     taux_cp: 10
   derniere_maj: "Janvier 2026"
   source: "Code du travail - Art. L1243-8"
-  text: "RÈGLE CDD : Une indemnité de fin de contrat (précarité) de 10% de la rémunération brute totale est due, sauf cas d'exclusion (usage, saisonnier, CDI à la suite). Une indemnité de congés payés de 10% s'ajoute ensuite sur le total (Salaire + Précarité)."
+  text: "Indemnité de précarité : 10% de la rémunération brute. Indemnité de CP : 10% du total."
 
-# -------------------------------------------------------------------------
-# 12. FRAIS KILOMÉTRIQUES & REPAS 2026
-# -------------------------------------------------------------------------
-- id: FRAIS_REPAS_URSSAF_2026
-  keywords: ["repas", "panier", "frais", "deplacement", "chantier", "restauration"]
+- id: TRANSPORT_2026
+  keywords: ["transport", "navigo", "abonnement", "fmd", "mobilité", "durable", "velo", "covoiturage"]
   valeurs:
-    repas_sur_lieu_travail: 7.30
-    repas_hors_locaux: 20.70
-    repas_restaurant: 20.70
+    taux_obligatoire_abonnements: 50
+    plafond_fmd_seul: 700
+    plafond_fmd_cumul: 800
   derniere_maj: "Janvier 2026"
-  source: "Barème URSSAF 2026 (Limites d'exonération)"
-  text: "LIMITES EXONÉRATION 2026 : Repas sur le lieu de travail (panier) = 7,30 €. Repas hors locaux (déplacement) = 20,70 €. Repas au restaurant (déplacement) = 20,70 €."
+  source: "Loi de Finances 2026 (Forfait Mobilité Durable)"
+  text: "1. ABONNEMENTS : Prise en charge obligatoire de 50%. 2. FORFAIT MOBILITÉ DURABLE (FMD) : Exonéré jusqu'à 700 €/an."
 
-- id: BAREME_KILOMETRIQUE_2026_REF
-  keywords: ["kilometrique", "kilométrique", "ik", "voiture", "frais", "route"]
-  valeurs:
-    d_5cv_coeff: 0.636
-  derniere_maj: "Janvier 2026"
-  source: "Arrêté du 27 janvier 2026 (Barème Fiscal)"
-  text: "Le barème kilométrique 2026 dépend de la puissance fiscale. Pour une 5 CV (standard) : Jusqu'à 5000 km = d x 0,636. De 5001 à 20000 km = (d x 0,357) + 1395. Au-delà = d x 0,420."
-
-# -------------------------------------------------------------------------
-# 13. JOURS FÉRIÉS 2026
-# -------------------------------------------------------------------------
-- id: JOURS_FERIES_2026
-  keywords: ["ferie", "férié", "calendrier", "pont", "travaillé"]
-  source: "Code du travail - Art. L3133-1"
-  text: |
-    CALENDRIER 2026 :
-    - 1er janvier (Jeudi)
-    - Lundi de Pâques (6 avril)
-    - 1er mai (Vendredi - Fête du Travail)
-    - 8 mai (Vendredi - Victoire 1945)
-    - Ascension (Jeudi 14 mai)
-    - Lundi de Pentecôte (25 mai)
-    - 14 juillet (Mardi - Fête Nationale)
-    - 15 août (Samedi - Assomption)
-    - 1er novembre (Dimanche - Toussaint)
-    - 11 novembre (Mercredi - Armistice)
-    - 25 décembre (Vendredi - Noël)
-
-# -------------------------------------------------------------------------
-# 14. COMPLÉMENTS PRIORITAIRES (FINALE)
-# -------------------------------------------------------------------------
 - id: CHEQUES_CADEAUX_2026
   keywords: ["cheque", "chèque", "cadeau", "bon", "achat", "noel", "plafond", "urssaf"]
   valeurs:
     plafond_par_evenement: 200.25
   derniere_maj: "Janvier 2026"
   source: "Instruction URSSAF - Plafond 5% PMSS 2026"
-  text: "Le plafond d'exonération pour les chèques-cadeaux est de 5% du Plafond Mensuel de la Sécurité Sociale, soit 200,25 € par événement et par salarié en 2026."
-
-- id: TAXES_FORMATION_APPRENTISSAGE_2026
-  keywords: ["formation", "apprentissage", "taxe", "contribution", "fp", "cufpa"]
-  valeurs:
-    taux_formation_moins_11: 0.55
-    taux_formation_11_et_plus: 1.00
-    taux_taxe_apprentissage: 0.68
-    taux_cdd_cpf: 1.00
-  derniere_maj: "Janvier 2026"
-  source: "URSSAF - Contributions Formation & Apprentissage 2026"
-  text: "Contribution Formation : 0,55% (entreprises < 11 salariés) ou 1,00% (>= 11 salariés). Taxe d'apprentissage : 0,68% de la masse salariale (0,44% en Alsace-Moselle). Contribution CPF-CDD : 1%."
+  text: "Le plafond d'exonération est de 5% du PMSS, soit 200,25 € par événement."
 
 - id: FORFAIT_SOCIAL_2026
   keywords: ["forfait", "social", "taux", "epargne", "abondement", "prets"]
@@ -397,58 +426,4 @@
     taux_prevoyance_plus_11: 8
   derniere_maj: "Janvier 2026"
   source: "Code de la Sécurité Sociale - Art. L137-15"
-  text: "Le Forfait Social est généralement de 20% (sur intéressement/participation/abondement PEE). Taux réduit à 16% sur certains versements PERCO (gestion pilotée). Taux de 8% sur les contributions prévoyance/mutuelle pour les entreprises > 11 salariés."
-
-- id: VERSEMENT_MOBILITE_2026
-  keywords: ["versement", "mobilite", "transport", "taxe", "vm", "commune"]
-  valeurs:
-    taux_min: 0.00
-    taux_max: 2.95
-  derniere_maj: "Janvier 2026"
-  source: "URSSAF - Taux par commune"
-  text: "Le Versement Mobilité (VM) dépend de la zone géographique (commune). Le taux varie de 0% à 2,95% (Paris/IdF). Cette contribution est due par les employeurs de 11 salariés et plus."
-
-- id: DUREE_TRAVAIL_LEGAL_2026
-  keywords: ["duree", "legale", "heures", "mensuel", "hebdo", "limite"]
-  valeurs:
-    mensuel_legal: 151.67
-    hebdo_legal: 35
-    max_journalier: 10
-    max_hebdo_absolu: 48
-    max_hebdo_moyen_12sem: 44
-  derniere_maj: "Janvier 2026"
-  source: "Code du Travail - Durées Légales"
-  text: "CONSTANTES TEMPS : Temps plein mensuel = 151,67 heures. Max jour = 10h. Max hebdo absolu = 48h. Max hebdo moyen (sur 12 semaines) = 44h."
-
-# -------------------------------------------------------------------------
-# 15. CONGÉS & ABSENCES (NOUVEAU - V2.1)
-# -------------------------------------------------------------------------
-- id: CONGES_PAYES_ACQUISITION_2026
-  keywords: ["conges", "payes", "cp", "acquisition", "jours", "ouvrables", "ouvrés"]
-  valeurs:
-    jours_ouvrables_mois: 2.5
-    jours_ouvrables_an: 30
-    jours_ouvres_mois: 2.08
-    jours_ouvres_an: 25
-  derniere_maj: "Janvier 2026"
-  source: "Code du Travail - Art. L3141-3"
-  text: "ACQUISITION LÉGALE : Le salarié acquiert 2,5 jours ouvrables par mois de travail effectif (soit 30 jours/an). Par équivalence : 2,08 jours ouvrés (25 jours/an)."
-
-- id: CONGES_PAYES_VALORISATION_2026
-  keywords: ["conges", "indemnite", "calcul", "dixieme", "maintien"]
-  source: "Code du Travail - Art. L3141-24"
-  text: "RÈGLE DU DIXIÈME VS MAINTIEN : L'indemnité de congés payés est égale au montant le plus favorable entre : 1. Le 1/10ème de la rémunération brute totale perçue pendant la période de référence. 2. Le maintien de salaire (salaire qui aurait été perçu si le salarié avait travaillé)."
-
-# -------------------------------------------------------------------------
-# 16. PRÉAVIS LÉGAUX (NOUVEAU - V2.1)
-# -------------------------------------------------------------------------
-- id: DUREES_PREAVIS_LEGAL_2026
-  keywords: ["preavis", "préavis", "licenciement", "demission", "duree", "anciennete"]
-  derniere_maj: "Janvier 2026"
-  source: "Code du Travail - Art. L1234-1"
-  text: |
-    MINIMUM LÉGAL (HORS CCN) :
-    - Ancienneté < 6 mois : Durée fixée par la loi, la CCN ou les usages.
-    - Ancienneté 6 mois à 2 ans : 1 mois.
-    - Ancienneté > 2 ans : 2 mois.
-    ⚠️ IMPORTANT : La Convention Collective (CCN) est souvent plus favorable (ex: 3 mois pour les Cadres). Toujours vérifier la CCN.
+  text: "Taux standard 20%. Taux réduit 16% (PERCO piloté). Taux 8% (Prévoyance > 11 salariés)."
