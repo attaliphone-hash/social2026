@@ -44,18 +44,28 @@ h2 {
     margin-top: 20px !important;
 }
 
-/* --- H3 : CIBLAGE RENFORCÉ POUR LE CHAT --- */
-/* On cible spécifiquement les h3 DANS le contenu du message pour être prioritaire */
+//* --- H3 : CIBLAGE RENFORCÉ POUR LE CHAT --- */
 [data-testid="stChatMessageContent"] h3 {
     font-family: Georgia, 'Times New Roman', Times, serif !important;
     color: #253E92 !important;
-    font-weight: 600 !important; /* 500 est souvent trop fin sur Georgia, 600 est mieux */
-    font-size: 18px !important; /* Votre demande (Petit titre) */
+    font-weight: 600 !important;
+    font-size: 18px !important;
     
-    /* ESPACEMENT FORCÉ */
-    margin-top: 30px !important;    /* Augmenté à 30px pour bien voir la séparation */
+    /* LE SECRET DE L'ESPACEMENT : On force avec du Padding */
+    margin-top: 20px !important;     
+    padding-top: 20px !important;    /* Le padding ne fusionne jamais ! */
     margin-bottom: 10px !important;
     line-height: 1.4 !important;
+    
+    /* Optionnel : Une petite ligne de séparation subtile pour bien marquer la section */
+    /* border-top: 1px solid rgba(37, 62, 146, 0.1) !important; */
+}
+
+/* EXCEPTION : Le tout premier H3 (ANALYSE) doit coller en haut */
+[data-testid="stChatMessageContent"] h3:first-of-type {
+    margin-top: 0px !important;  
+    padding-top: 0px !important; /* On annule le padding pour le premier */
+    border-top: none !important;
 }
 
 /* EXCEPTION : Le tout premier H3 (ANALYSE) doit coller en haut */

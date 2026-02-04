@@ -48,3 +48,6 @@
 2026-02-04 11:47:59,661 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
 2026-02-04 11:48:00,479 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
 2026-02-04 11:48:01,110 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
+2026-02-04 11:54:31,973 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+2026-02-04 11:54:32,805 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-02-04 11:54:33,610 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
