@@ -66,7 +66,7 @@ h2 {
     font-size: 18px !important;
     
     margin-top: 10px !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 0px !important;
     
     line-height: 1.4 !important;
     display: block !important;
