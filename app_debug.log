@@ -33,3 +33,6 @@
 2026-02-04 10:50:32,489 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
 2026-02-04 10:50:33,080 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
 2026-02-04 11:26:16,667 - SocialExpert - ERROR - AuthManager: Erreur de connexion Supabase : You must provide either an email or phone number and a password
+2026-02-04 11:28:29,310 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+2026-02-04 11:28:30,100 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-02-04 11:28:30,779 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
