@@ -20,8 +20,8 @@ def apply_pro_design():
 /* 2. TYPOGRAPHIE : CORPS DE TEXTE (SYSTÈME) */
 html, body, [class*="css"] {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-    font-size: 13px !important; /* Taille de base en PX */
-    line-height: 1.4 !important;
+    font-size: 15px !important; /* Taille de base en PX */
+    line-height: 1.5 !important;
 }
 
 /* 3. TYPOGRAPHIE : TITRES (SÉPARÉS & EN PIXELS) */
@@ -49,7 +49,9 @@ h3 {
     font-family: Georgia, 'Times New Roman', Times, serif !important;
     color: #253E92 !important;
     font-weight: 500 !important;
-    font-size: 17px !important; /* Petit titre */
+    font-size: 18px !important; /* Petit titre */
+    margin-top: 25px !important;
+    margin-bottom: 10px !important;
 }
 
 /* 4. BOUTON UPLOAD */
