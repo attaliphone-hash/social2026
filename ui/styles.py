@@ -44,34 +44,38 @@ h2 {
     margin-top: 20px !important;
 }
 
-//* --- H3 : CIBLAGE RENFORCÉ POUR LE CHAT --- */
+/* --- CORRECTION ICI : NOUVELLE STRATÉGIE ESPACEMENT --- */
+
+/* A. Le texte (paragraphes/listes) POUSSE ce qui suit vers le bas */
+[data-testid="stChatMessageContent"] p, 
+[data-testid="stChatMessageContent"] ul, 
+[data-testid="stChatMessageContent"] ol {
+    margin-bottom: 25px !important; /* C'est ici que l'espace se crée */
+}
+
+/* B. On empêche le dernier élément de créer un vide inutile */
+[data-testid="stChatMessageContent"] > div > *:last-child {
+    margin-bottom: 0px !important;
+}
+
+/* C. H3 Propre (sans marges excessives puisque le texte s'en charge) */
 [data-testid="stChatMessageContent"] h3 {
     font-family: Georgia, 'Times New Roman', Times, serif !important;
     color: #253E92 !important;
     font-weight: 600 !important;
     font-size: 18px !important;
     
-    /* LE SECRET DE L'ESPACEMENT : On force avec du Padding */
-    margin-top: 20px !important;     
-    padding-top: 20px !important;    /* Le padding ne fusionne jamais ! */
+    margin-top: 10px !important;
     margin-bottom: 10px !important;
-    line-height: 1.4 !important;
     
-    /* Optionnel : Une petite ligne de séparation subtile pour bien marquer la section */
-    /* border-top: 1px solid rgba(37, 62, 146, 0.1) !important; */
+    line-height: 1.4 !important;
+    display: block !important;
 }
 
-/* EXCEPTION : Le tout premier H3 (ANALYSE) doit coller en haut */
+/* D. EXCEPTION : Le tout premier H3 (ANALYSE) doit coller en haut */
 [data-testid="stChatMessageContent"] h3:first-of-type {
     margin-top: 0px !important;  
-    padding-top: 0px !important; /* On annule le padding pour le premier */
-    border-top: none !important;
-}
-
-/* EXCEPTION : Le tout premier H3 (ANALYSE) doit coller en haut */
-[data-testid="stChatMessageContent"] h3:first-of-type {
-    margin-top: -5px !important; /* On annule la marge de 30px juste pour lui */
-    padding-top: 0 !important;
+    padding-top: 0px !important;
 }
 
 /* 4. BOUTON UPLOAD */
