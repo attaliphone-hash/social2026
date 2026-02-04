@@ -46,8 +46,9 @@ class ExportService:
             if line.startswith('### ') or line.startswith('## '):
                 content = line.replace('#', '').strip()
                 line = f"\n**{content}**"
+            # ✅ CORRECTIF BULLET POINTS (Le seul changement)
             elif line.startswith('- ') or line.startswith('* '):
-                 line = "  • " + line[1:].strip()
+                 line = "  - " + line[1:].strip()
             lines.append(line)
         text = "\n".join(lines)
 
