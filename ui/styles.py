@@ -39,7 +39,7 @@ h1 {
 h2 {
     font-family: Georgia, 'Times New Roman', Times, serif !important;
     color: #253E92 !important;
-    font-weight: 700 !important;
+    font-weight: 600 !important;
     font-size: 24px !important;
     margin-top: 20px !important;
 }
