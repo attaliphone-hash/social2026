@@ -90,13 +90,13 @@
   keywords: ["teletravail", "télétravail", "indemnité", "frais", "allocation", "forfaitaire"]
   valeurs:
     par_jour: 2.70
-    limite_mensuelle_1j_semaine: 10.80
-  derniere_maj: "Janvier 2026"
-  source: "BOSS - Frais professionnels (Barème URSSAF 2026)"
+    limite_mensuelle_1j_semaine: 11.00
+  derniere_maj: "Février 2026"
+  source: "BOSS - Frais professionnels (Mise à jour Février 2026)"
   text: |
     RÈGLE IMPÉRATIVE 2026 (INDEMNITÉ FORFAITAIRE) :
     1. Si paiement au réel : 2,70 € par jour de télétravail effectué.
-    2. Si allocation forfaitaire mensuelle : La limite d'exonération est STRICTEMENT de 10,80 € multiplié par le nombre de jours de télétravail par semaine.
+    2. Si allocation forfaitaire mensuelle : La limite d'exonération est STRICTEMENT de 11,00 € multiplié par le nombre de jours de télétravail par semaine.
 
 - id: IK_VELO_2026
   keywords: ["velo", "vélo", "kilometrique", "indemnite", "trajet"]
