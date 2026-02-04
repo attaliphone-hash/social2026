@@ -30,7 +30,7 @@ from langchain_core.output_parsers import StrOutputParser
 # 1. INITIALISATION
 # ==============================================================================
 st.set_page_config(
-    page_title="Expert Social Pro 2026",
+    page_title="Social Expert France",
     page_icon="avatar-logo.png",
     layout="wide"
 )
@@ -65,7 +65,7 @@ def check_password():
     if st.session_state.user_info: return True
     ui.render_top_arguments()
     ui.render_footer()
-    st.markdown("<h1 style='color: #253E92;'>Social Expert France — Votre Copilote RH et Paie</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #253E92;'>Social Expert France. Votre Copilote RH et Paie</h1>", unsafe_allow_html=True)
     
     t1, t2 = st.tabs(["🔐 Abonné", "🎫 J'ai un code découverte"])
     with t1:
@@ -110,7 +110,7 @@ with col2:
         st.session_state.uploader_key += 1
         st.rerun()
 
-st.markdown("<h1 style='color:#253E92;'>SOCIAL EXPERT FRANCE - ESPACE ABONNÉ</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='color:#253E92;'>Social Expert France. Espace Abonné</h1>", unsafe_allow_html=True)
 
 # Traitement Upload
 user_doc_content = ""
