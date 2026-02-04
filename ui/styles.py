@@ -20,44 +20,54 @@ def apply_pro_design():
 /* 2. TYPOGRAPHIE : CORPS DE TEXTE (SYSTÈME) */
 html, body, [class*="css"] {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-    font-size: 15px !important; /* Taille de base en PX */
-    line-height: 1.5 !important;
+    font-size: 16px !important;
+    line-height: 1.6 !important;
 }
 
-/* 3. TYPOGRAPHIE : TITRES (SÉPARÉS & EN PIXELS) */
+/* 3. TYPOGRAPHIE : TITRES (SÉPARÉS & CIBLÉS) */
 
 /* H1 : Le Grand Titre Principal */
 h1 {
     font-family: Georgia, 'Times New Roman', Times, serif !important;
     color: #253E92 !important;
-    font-weight: 600 !important;
-    font-size: 28px !important; /* Gros titre */
+    font-weight: 700 !important;
+    font-size: 32px !important;
     padding-bottom: 10px !important;
 }
 
-/* H2 : Les Sous-Titres de sections */
+/* H2 : Les Sous-Titres */
 h2 {
     font-family: Georgia, 'Times New Roman', Times, serif !important;
     color: #253E92 !important;
-    font-weight: 500 !important;
-    font-size: 23px !important; /* Moyen titre */
+    font-weight: 700 !important;
+    font-size: 24px !important;
     margin-top: 20px !important;
 }
 
-/* H3 : Les Titres dans le Chat (Analyse, Détail...) */
-h3 {
+/* --- H3 : CIBLAGE RENFORCÉ POUR LE CHAT --- */
+/* On cible spécifiquement les h3 DANS le contenu du message pour être prioritaire */
+[data-testid="stChatMessageContent"] h3 {
     font-family: Georgia, 'Times New Roman', Times, serif !important;
     color: #253E92 !important;
-    font-weight: 500 !important;
-    font-size: 18px !important; /* Petit titre */
-    margin-top: 25px !important;
+    font-weight: 600 !important; /* 500 est souvent trop fin sur Georgia, 600 est mieux */
+    font-size: 18px !important; /* Votre demande (Petit titre) */
+    
+    /* ESPACEMENT FORCÉ */
+    margin-top: 30px !important;    /* Augmenté à 30px pour bien voir la séparation */
     margin-bottom: 10px !important;
+    line-height: 1.4 !important;
+}
+
+/* EXCEPTION : Le tout premier H3 (ANALYSE) doit coller en haut */
+[data-testid="stChatMessageContent"] h3:first-of-type {
+    margin-top: -5px !important; /* On annule la marge de 30px juste pour lui */
+    padding-top: 0 !important;
 }
 
 /* 4. BOUTON UPLOAD */
 .fake-upload-btn {
     font-family: inherit !important;
-    font-size: 14px !important; /* Ajusté en px */
+    font-size: 14px !important;
     height: 40px;
     background-color: white;
     border: 1px solid #ccc;
@@ -87,12 +97,6 @@ h3 {
     padding-bottom: 1rem !important;
     padding-right: 2.5rem !important;
     padding-left: 1.5rem !important;
-}
-
-/* Alignement Avatar vs H3 */
-[data-testid="stChatMessageContent"] h3:first-of-type {
-    margin-top: -6px !important; /* Ajustement fin en px */
-    padding-top: 0 !important;
 }
 
 /* 6. INPUT ZONE */
