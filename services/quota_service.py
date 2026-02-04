@@ -1,28 +1,32 @@
 import streamlit as st
-from datetime import date
+import time
 
 class QuotaService:
-    """
-    Gère les limites d'utilisation (Quotas).
-    - Invités : Limité (ex: 20 questions/session)
-    - Abonnés/Admins/Promo : Illimité
-    """
-    
     def __init__(self):
         if "questions_count" not in st.session_state:
             st.session_state.questions_count = 0
+        
+        # ✅ OPTIMISATION CLAUDE : On utilise la config déjà chargée en session
+        # On met une valeur par défaut (2.0) par sécurité si config n'est pas prêt
+        if hasattr(st.session_state, 'config'):
+            self.rate_limit_delay = st.session_state.config.RATE_LIMIT_DELAY
+        else:
+            self.rate_limit_delay = 2.0
             
     def check_quota(self, user_role):
-        """
-        Vérifie si l'utilisateur peut encore poser des questions.
-        Retourne True si OK, False si bloqué.
-        """
-        # 1. Illimité pour les payants/admins/codes promo
-        # CORRECTION : Ajout de "ADMIN" et "TRIAL" pour matcher AuthManager
+        # 1. RATE LIMITING (Anti-Spam)
+        if user_role != "ADMIN":
+            last_time = st.session_state.get("last_request_time", 0)
+            now = time.time()
+            if now - last_time < self.rate_limit_delay:
+                st.toast("🧘 Doucement ! Laissez-moi réfléchir...", icon="⏳")
+                return False
+            st.session_state["last_request_time"] = now
+
+        # 2. VÉRIFICATION QUOTA CLASSIQUE
         if user_role in ["ADMIN", "ADMINISTRATEUR", "PROMO", "PREMIUM", "SUBSCRIBER", "TRIAL", "ANDRH"]:
             return True
             
-        # 2. Limité pour les invités standards (sans compte)
         LIMIT = 20
         if st.session_state.questions_count >= LIMIT:
             return False
@@ -30,7 +34,6 @@ class QuotaService:
         return True
 
     def increment(self):
-        """Ajoute +1 au compteur"""
         st.session_state.questions_count += 1
 
     def get_count(self):

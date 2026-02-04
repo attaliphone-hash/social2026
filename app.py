@@ -19,7 +19,7 @@ from services.export_service import ExportService
 from services.legal_watch import show_legal_watch_bar
 from ui.styles import apply_pro_design
 from ui.components import UIComponents
-from utils.helpers import clean_source_name, logger
+from utils.helpers import clean_source_name, logger, sanitize_user_input
 
 # --- IMPORTS MOTEUR & IA ---
 from rules.engine import SocialRuleEngine
@@ -162,9 +162,19 @@ for msg in st.session_state.messages:
 user_input = st.chat_input("Votre question juridique ou sociale...")
 
 if user_input:
+    # 1. SÉCURITÉ : SANITIZATION
+    # On nettoie l'entrée avant toute utilisation
+    user_input = sanitize_user_input(user_input, st.session_state.config.MAX_INPUT_LENGTH)
+    
+    if not user_input:
+        st.warning("Message vide ou invalide.")
+        st.stop()
+
     role = st.session_state.user_info.get("role", "GUEST")
+    
+    # 2. RATE LIMITING & QUOTA
+    # check_quota gère le Toast "Doucement..." si clic trop rapide
     if not quota.check_quota(role):
-        st.warning("Quota atteint.")
         st.stop()
         
     st.session_state.messages.append({"role": "user", "content": user_input})
@@ -180,7 +190,8 @@ if user_input:
         matched = engine.match_rules(user_input)
         facts = engine.format_certified_facts(matched)
         
-        docs = ia.search_documents(user_input, k=6)
+        # 3. UTILISATION DE LA CONFIG (Top K centralisé)
+        docs = ia.search_documents(user_input, k=st.session_state.config.PINECONE_TOP_K)
         
         # Préparation du contexte + Sauvegarde des données de debug
         context_str = ""
@@ -198,7 +209,6 @@ if user_input:
                 })
             
             context_str += f"DOC: {pname}\n{d.page_content}\n\n"
-
         # Affichage TEMPORAIRE du debug (pendant que l'IA réfléchit)
         if st.session_state.user_info.get("role") == "ADMIN" and docs:
              with st.expander("🕵️‍♂️ SOURCES PINECONE (EN COURS)", expanded=True):

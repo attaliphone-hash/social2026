@@ -2,7 +2,6 @@ import os
 import streamlit as st
 from dotenv import load_dotenv
 
-# Charge les variables locales (.env)
 load_dotenv()
 
 class Config:
@@ -16,28 +15,27 @@ class Config:
         self.supabase_url = os.getenv("SUPABASE_URL")
         self.supabase_key = os.getenv("SUPABASE_KEY")
 
-        # 3. Sécurité & Accès (SÉCURISÉ : Plus de valeurs par défaut en dur)
+        # 3. Sécurité & Accès
         self.admin_password = os.getenv("ADMIN_PASSWORD")
-        
-        # On récupère la liste des codes promo depuis la nouvelle variable PROMO_CODES
         self.promo_codes = os.getenv("PROMO_CODES", "").split(",")
 
-        # ⚠️ Sécurité P0 : Bloquer si le mot de passe admin est absent du .env
+        # 4. PARAMÈTRES TECHNIQUES (AUDIT)
+        self.PINECONE_TOP_K = 6              # Nombre de documents RAG
+        self.RSS_TIMEOUT = 30                # Timeout Cloud Run
+        self.RATE_LIMIT_DELAY = 2.0          # Anti-Spam (secondes)
+        self.MAX_INPUT_LENGTH = 5000         # Sécurité input
+
         if not self.admin_password:
             st.error("🚨 CONFIGURATION CRITIQUE MANQUANTE : ADMIN_PASSWORD non défini.")
             st.stop()
 
     def get_supabase_client(self):
-        """Initialise et retourne le client Supabase (La pièce manquante)"""
         from supabase import create_client
         if self.supabase_url and self.supabase_key:
             try:
                 return create_client(self.supabase_url, self.supabase_key)
-            except Exception as e:
-                st.error(f"⚠️ Erreur de connexion Supabase : {e}")
-                return None
+            except: return None
         return None
 
     def is_production(self):
-        """Détecte si l'app tourne sur Cloud Run"""
         return os.getenv("K_SERVICE") is not None
