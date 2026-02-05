@@ -159,7 +159,7 @@ for msg in st.session_state.messages:
 # ------------------------------------------------------------------------------
 # INPUT & GÉNÉRATION
 # ------------------------------------------------------------------------------
-user_input = st.chat_input("Posez votre question. vous pouvez charger un document pour analyse (bouton plus haut). Ainsi que de demander la rédaction d'un courrier pour l'administration.")
+user_input = st.chat_input("Posez votre question. Vous pouvez charger un document pour analyse (bouton plus haut). Ainsi que demander la rédaction d'un courrier pour l'administration.")
 
 if user_input:
     # 1. SÉCURITÉ : SANITIZATION

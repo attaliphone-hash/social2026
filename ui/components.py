@@ -121,7 +121,7 @@ class UIComponents:
 
     # --- 4. LE MANIFESTE (TEXTE VALIDÉ) ---
     @staticmethod
-    @st.dialog("Pourquoi Expert Social Pro existe ?")
+    @st.dialog("Pourquoi Expert Social Pro existe")
     def modal_manifesto():
         st.markdown("""
         <style>
@@ -134,7 +134,7 @@ class UIComponents:
             .manifesto-punchline { margin-top: 20px; padding-top: 15px; border-top: 1px dashed #cbd5e1; text-align: center; font-size: 16px; font-weight: 800; color: #024c6f; }
         </style>
         <div class="manifesto-box">
-            <p>Pendant des années, j’ai vu des professionnels RH passer des heures à chercher la bonne règle...</p>
+            <p>Pendant des années, j’ai vu des professionnels passer des heures à chercher la bonne règle...</p>
             <p>Le problème n’était pas le manque d’information.<br>
             <span class="manifesto-highlight">C’était l’excès d’information.</span></p>
             <div class="manifesto-title">Aujourd’hui :</div>
@@ -163,7 +163,7 @@ class UIComponents:
     def modal_mentions():
         st.markdown(f"""
         <div style='font-size: 12px; color: #1e293b; font-family: sans-serif;'>
-            <p>ÉDITEUR DU SITE<br>Le site <em>socialexpertfrance.fr</em> est édité par <strong>Sylvain Attal EI (BUSINESS AGENT AI)</strong>.<br>SIREN : 948253711</p>
+            <p>ÉDITEUR DU SITE<br>Le site <em>socialexpertfrance.fr</em> est édité par <strong>Sylvain Attal (BUSINESS AGENT AI)</strong>.<br>SIREN : 948253711</p>
             <p>HÉBERGEMENT<br>Google Cloud EMEA Limited</p>
             <p>LIMITATION DE RESPONSABILITÉ (IA)<br>Ne remplace pas une consultation juridique.</p>
         </div>
