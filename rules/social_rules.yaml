@@ -418,3 +418,208 @@
   derniere_maj: "Janvier 2026"
   source: "Code du Travail Art. D1226-1"
   text: "Maintien : 90,0% (30j) puis 66,67% (30j)."
+
+  # -------------------------------------------------------------------------
+# 19. INDEMNITÉ COMPENSATRICE DE PRÉAVIS
+# -------------------------------------------------------------------------
+- id: INDEMNITE_COMPENSATRICE_PREAVIS_2026
+  keywords: ["préavis", "preavis", "compensatrice", "dispense", "inexécuté", "indemnité"]
+  valeurs:
+    base_calcul: "Salaire brut que le salarié aurait perçu"
+    inclut_avantages_nature: true
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L1234-5"
+  text: "RÈGLE : L'indemnité compensatrice de préavis = salaire brut (+ avantages en nature) sur la durée du préavis non effectué."
+
+# -------------------------------------------------------------------------
+# 20. INDEMNITÉ COMPENSATRICE DE CONGÉS PAYÉS
+# -------------------------------------------------------------------------
+- id: INDEMNITE_CP_2026
+  keywords: ["indemnité", "compensatrice", "congés", "payés", "cp", "solde", "départ", "dixième", "maintien"]
+  valeurs:
+    methode_1_dixieme_pct: 10.0
+    methode_2_maintien: "Salaire qu'aurait perçu le salarié s'il avait travaillé"
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L3141-24"
+  text: |
+    RÈGLE IMPÉRATIVE (COMPARAISON OBLIGATOIRE) :
+    1. Méthode du 1/10ème : 10,0% de la rémunération brute totale perçue.
+    2. Méthode du maintien : Salaire qu'aurait perçu le salarié pendant ses congés.
+    L'employeur DOIT appliquer la méthode LA PLUS FAVORABLE au salarié.
+
+# -------------------------------------------------------------------------
+# 21. BARÈME MACRON (LICENCIEMENT SANS CAUSE RÉELLE)
+# -------------------------------------------------------------------------
+- id: BAREME_MACRON_2026
+  keywords: ["barème", "macron", "prud'hommes", "prudhommes", "licenciement", "abusif", "dommages", "intérêts", "plancher", "plafond"]
+  valeurs:
+    anciennete_1_an_plancher_mois: 1.0
+    anciennete_1_an_plafond_mois: 2.0
+    anciennete_2_ans_plancher_mois: 3.0
+    anciennete_2_ans_plafond_mois: 3.5
+    anciennete_5_ans_plancher_mois: 3.0
+    anciennete_5_ans_plafond_mois: 6.0
+    anciennete_10_ans_plancher_mois: 3.0
+    anciennete_10_ans_plafond_mois: 10.0
+    anciennete_20_ans_plancher_mois: 3.0
+    anciennete_20_ans_plafond_mois: 15.5
+    anciennete_30_ans_plafond_mois: 20.0
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L1235-3"
+  text: |
+    BARÈME PRUD'HOMAL 2026 (Entreprises >= 11 salariés) :
+    - 1 an : 1 à 2 mois de salaire
+    - 2 ans : 3 à 3,5 mois
+    - 5 ans : 3 à 6 mois
+    - 10 ans : 3 à 10 mois
+    - 20 ans : 3 à 15,5 mois
+    - 30 ans : 3 à 20 mois
+
+# -------------------------------------------------------------------------
+# 22. CONGÉS POUR ÉVÉNEMENTS FAMILIAUX
+# -------------------------------------------------------------------------
+- id: CONGES_EVENEMENTS_FAMILIAUX_2026
+  keywords: ["congé", "mariage", "pacs", "naissance", "décès", "deuil", "événement", "familial", "jours"]
+  valeurs:
+    mariage_salarie_jours: 4.0
+    pacs_salarie_jours: 4.0
+    mariage_enfant_jours: 1.0
+    naissance_adoption_jours: 3.0
+    deces_conjoint_jours: 3.0
+    deces_enfant_jours: 12.0
+    deces_enfant_moins_25ans_jours: 14.0
+    deces_pere_mere_jours: 3.0
+    deces_frere_soeur_jours: 3.0
+    deces_beaux_parents_jours: 3.0
+    annonce_handicap_enfant_jours: 5.0
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L3142-4"
+  text: |
+    CONGÉS LÉGAUX ÉVÉNEMENTS FAMILIAUX 2026 :
+    - Mariage/PACS du salarié : 4 jours
+    - Mariage d'un enfant : 1 jour
+    - Naissance/Adoption : 3 jours
+    - Décès conjoint/partenaire : 3 jours
+    - Décès enfant : 12 jours (14 si < 25 ans)
+    - Décès père/mère : 3 jours
+    - Décès frère/sœur : 3 jours
+    - Décès beaux-parents : 3 jours
+    - Annonce handicap enfant : 5 jours
+
+# -------------------------------------------------------------------------
+# 23. DURÉE LÉGALE DU TRAVAIL
+# -------------------------------------------------------------------------
+- id: DUREE_TRAVAIL_2026
+  keywords: ["durée", "légale", "travail", "35h", "heures", "hebdomadaire", "contingent", "maximum", "journalier"]
+  valeurs:
+    duree_legale_hebdo: 35.0
+    duree_max_journaliere: 10.0
+    duree_max_hebdo_absolue: 48.0
+    duree_max_hebdo_moyenne_12sem: 44.0
+    contingent_annuel_heures_sup: 220.0
+    majoration_heures_sup_8_premieres_pct: 25.0
+    majoration_heures_sup_suivantes_pct: 50.0
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L3121-27"
+  text: |
+    DURÉE DU TRAVAIL 2026 :
+    - Durée légale : 35,0 heures/semaine
+    - Maximum journalier : 10,0 heures
+    - Maximum hebdomadaire absolu : 48,0 heures
+    - Maximum moyen sur 12 semaines : 44,0 heures
+    - Contingent annuel heures sup : 220,0 heures
+    - Majoration H.Sup : 25,0% (8 premières) puis 50,0% (suivantes)
+
+# -------------------------------------------------------------------------
+# 24. DÉLAI DE CARENCE CDD
+# -------------------------------------------------------------------------
+- id: CARENCE_CDD_2026
+  keywords: ["carence", "cdd", "délai", "succession", "contrat", "renouvellement", "tiers", "moitié"]
+  valeurs:
+    duree_14_jours_ou_moins_diviseur: 2.0
+    duree_plus_14_jours_diviseur: 3.0
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L1244-3"
+  text: |
+    RÈGLE DÉLAI DE CARENCE CDD 2026 :
+    - Contrat initial <= 14 jours : Carence = Durée / 2 (moitié)
+    - Contrat initial > 14 jours : Carence = Durée / 3 (tiers)
+    EXCEPTION : Pas de carence si remplacement, saisonnier, ou usage.
+
+# -------------------------------------------------------------------------
+# 25. REPOS OBLIGATOIRES
+# -------------------------------------------------------------------------
+- id: REPOS_OBLIGATOIRES_2026
+  keywords: ["repos", "quotidien", "hebdomadaire", "pause", "obligatoire", "heures", "consécutives"]
+  valeurs:
+    repos_quotidien_heures: 11.0
+    repos_hebdomadaire_heures: 35.0
+    pause_apres_6h_travail_minutes: 20.0
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L3131-1"
+  text: |
+    REPOS OBLIGATOIRES 2026 :
+    - Repos quotidien : 11,0 heures consécutives minimum
+    - Repos hebdomadaire : 35,0 heures consécutives (24h + 11h)
+    - Pause : 20 minutes obligatoires après 6,0 heures de travail
+
+# -------------------------------------------------------------------------
+# 26. TRAVAIL DE NUIT
+# -------------------------------------------------------------------------
+- id: TRAVAIL_NUIT_2026
+  keywords: ["nuit", "travail", "nocturne", "majoration", "heures", "21h", "6h", "horaires"]
+  valeurs:
+    plage_debut: "21h00"
+    plage_fin: "06h00"
+    duree_minimale_statut_travailleur_nuit: 3.0
+    duree_max_quotidienne_nuit: 8.0
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L3122-2"
+  text: |
+    TRAVAIL DE NUIT 2026 :
+    - Plage légale : 21h00 à 06h00
+    - Statut "travailleur de nuit" : au moins 3,0 heures dans cette plage (habituellement)
+    - Durée max quotidienne : 8,0 heures
+    - Majoration : Selon convention collective (pas de minimum légal)
+
+# -------------------------------------------------------------------------
+# 27. ASTREINTES
+# -------------------------------------------------------------------------
+- id: ASTREINTES_2026
+  keywords: ["astreinte", "permanence", "disponibilité", "intervention", "compensation", "repos"]
+  valeurs:
+    delai_information_salarie_jours: 15.0
+    delai_circonstances_exceptionnelles_jour: 1.0
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L3121-9"
+  text: |
+    ASTREINTES 2026 :
+    - Définition : Période hors travail où le salarié doit rester joignable
+    - Délai de prévenance : 15 jours (1 jour si circonstances exceptionnelles)
+    - Compensation : Obligatoire (repos ou financière), définie par accord ou employeur
+    - Temps d'intervention = Temps de travail effectif
+
+# -------------------------------------------------------------------------
+# 28. PÉRIODE D'ESSAI
+# -------------------------------------------------------------------------
+- id: PERIODE_ESSAI_2026
+  keywords: ["période", "essai", "durée", "renouvellement", "rupture", "préavis", "cdi", "cdd"]
+  valeurs:
+    cdi_ouvrier_employe_mois: 2.0
+    cdi_technicien_am_mois: 3.0
+    cdi_cadre_mois: 4.0
+    cdi_ouvrier_employe_renouvellement_max_mois: 4.0
+    cdi_technicien_am_renouvellement_max_mois: 6.0
+    cdi_cadre_renouvellement_max_mois: 8.0
+    cdd_moins_6mois_jour_par_semaine: 1.0
+    cdd_plus_6mois_mois: 1.0
+  derniere_maj: "Janvier 2026"
+  source: "Code du Travail Art. L1221-19"
+  text: |
+    PÉRIODE D'ESSAI CDI 2026 (Durées maximales légales) :
+    - Ouvriers/Employés : 2 mois (renouvelable 1x = 4 mois max)
+    - Techniciens/Agents de maîtrise : 3 mois (renouvelable 1x = 6 mois max)
+    - Cadres : 4 mois (renouvelable 1x = 8 mois max)
+    PÉRIODE D'ESSAI CDD :
+    - CDD < 6 mois : 1 jour par semaine (max 2 semaines)
+    - CDD >= 6 mois : 1 mois maximum
