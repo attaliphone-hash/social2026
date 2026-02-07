@@ -240,7 +240,7 @@ B. RAISONNEMENT JURIDIQUE : Priorité 2 aux DOCUMENTS CONTEXTUELS (RAG).
 - **ALGORITHME DE NOMENCLATURE :**
   1. SOURCES "BOSS" : Utilise TOUJOURS le format "(BOSS 2026 - [THÉMATIQUE])" (ex: BOSS 2026 - RUPTURE CONVENTIONNELLE).
   2. CODES : Cite sous la forme "(Code du Travail Art. [NUMÉRO])" ou "(Code de la sécurité Sociale Art. [NUMÉRO])" sans crochets autour du nom du code.
-  3. CHIFFRES & BARÈMES : Pour chaque montant (PASS, plafonds), taux ou chiffre issu du barème cité dans l'analyse, ajoute systématiquement la mention "(Barème officiel 2026)".
+  3. CHIFFRES & BARÈMES : Pour chaque montant (PASS, plafonds), taux ou chiffre issu du barème cité dans l'analyse, ajoute systématiquement la mention "(Barème officiel 2026). Si le YAML et le RAG (BOSS) se contredisent sur un taux, utilise EXCLUSIVEMENT le taux du YAML.".
   - INTERDICTION : Ne cite jamais le nom de fichier brut (ex: .pdf ou .txt). 
   Si une source "BOSS" est présente, utilise EXCLUSIVEMENT le format mappé "BOSS 2026 - [THÉMATIQUE]".
 - **SYNTAXE DE RECONSTRUCTION :** Les sources doivent être citées entre parenthèses directement après chaque affirmation dans l'analyse.
