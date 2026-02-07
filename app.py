@@ -129,7 +129,6 @@ for msg in st.session_state.messages:
         st.markdown(msg["content"])
         
         # 2. Le Debugger (Si Admin et si présent dans le message)
-        # C'est ici que ça s'affiche même après le rerun !
         if st.session_state.user_info.get("role") == "ADMIN" and "debug_data" in msg:
             with st.expander("▪️ SOURCES TECHNIQUES (PINECONE)", expanded=False):
                 for src in msg["debug_data"]:
@@ -163,7 +162,6 @@ user_input = st.chat_input("Posez votre question. Vous pouvez charger un documen
 
 if user_input:
     # 1. SÉCURITÉ : SANITIZATION
-    # On nettoie l'entrée avant toute utilisation
     user_input = sanitize_user_input(user_input, st.session_state.config.MAX_INPUT_LENGTH)
     
     if not user_input:
@@ -173,7 +171,6 @@ if user_input:
     role = st.session_state.user_info.get("role", "GUEST")
     
     # 2. RATE LIMITING & QUOTA
-    # check_quota gère le Toast "Doucement..." si clic trop rapide
     if not quota.check_quota(role):
         st.stop()
         
@@ -196,24 +193,24 @@ if user_input:
         # Préparation du contexte + Sauvegarde des données de debug
         context_str = ""
         seen = []
-        debug_data_list = [] # On va stocker les sources ici pour l'historique
+        debug_data_list = []
 
         for d in docs:
             pname = d.metadata.get('clean_name', 'Source')
             if pname not in seen: 
                 seen.append(pname)
-                # On ajoute à la liste de debug
                 debug_data_list.append({
                     "name": pname,
                     "extract": d.page_content
                 })
             
             context_str += f"DOC: {pname}\n{d.page_content}\n\n"
-        # Affichage TEMPORAIRE du debug (pendant que l'IA réfléchit)
+        
         if st.session_state.user_info.get("role") == "ADMIN" and docs:
              with st.expander("🕵️‍♂️ SOURCES PINECONE (EN COURS)", expanded=True):
                  st.success(f"{len(docs)} documents trouvés.")
 
+        # [MODIFICATION] AJOUT RÈGLES DE PRÉCISION POUR CORRIGER LES CENTIMES
         template = """
 Tu es l'Expert Social Pro 2026.
 
@@ -224,6 +221,11 @@ CONSIGNES DE FORME (MARKDOWN STRICT) :
    - Gras : **Texte Important**
    - Listes : - Élément
 3. Formatage Montants : 1 200,50 EUR (Espace millier, virgule décimale).
+
+RÈGLES DE CALCUL & PRÉCISION (IMPÉRATIF) :
+1. DÉTAIL : Pose explicitement les calculs étape par étape.
+2. PRÉCISION : Utilise une précision minimale de 4 décimales pour toutes les étapes intermédiaires (ex: 0.5300, 966.2059).
+3. RÉSULTAT FINAL : Arrondis le résultat final affiché à 2 décimales strictes (ex: 966.21 €).
 
 STRUCTURE DE RÉPONSE ATTENDUE :
 
@@ -268,11 +270,11 @@ QUESTION : {question}
             
             box.markdown(full_response)
             
-            # SAUVEGARDE PERSISTANTE : On enregistre le message ET les debug_data
+            # SAUVEGARDE PERSISTANTE
             st.session_state.messages.append({
                 "role": "assistant", 
                 "content": full_response,
-                "debug_data": debug_data_list # ✅ C'EST ÇA QUI SAUVE L'AFFICHAGE
+                "debug_data": debug_data_list
             })
             
             st.rerun()
