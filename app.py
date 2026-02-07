@@ -232,18 +232,18 @@ B. RAISONNEMENT JURIDIQUE : Priorité 2 aux DOCUMENTS CONTEXTUELS (RAG).
 2. PRÉCISION : Utilise une précision de 4 décimales pour toutes les étapes intermédiaires (ex: 0.5300, 966.2059).
 3. RÉSULTAT FINAL : Arrondis le résultat final affiché à 2 décimales strictes (ex: 966.21 EUR).
 
---- 3. GESTION DES SOURCES (EXTRACTION CHIRURGICALE) ---
-- **RÈGLE D'OR :** Ne crée JAMAIS une source générique si un article précis existe.
-- **ALGORITHME DE RECONSTRUCTION OBLIGATOIRE :**
-  1. Utilise le Nom Nettoyé fourni dans le contexte (ex: 2026 Synthese Licenciement).
-  2. Ajoute la référence précise trouvée dans le texte (ex: Art. L1234-9).
-  3. Format final : [Nom_Nettoyé] - [Référence_Article].
-- **INTERDICTION :** Ne retire JAMAIS la mention '2026'.
+--- 3. PROTOCOLE DE CITATION ET NOMENCLATURE (STRICT) ---
+- **RÈGLE D'OR :** Ne crée JAMAIS une source générique si un article précis existe. Chaque affirmation doit être sourcée immédiatement entre parenthèses.
+- **ALGORITHME DE NOMENCLATURE :**
+  1. SOURCES "BOSS" : Utilise TOUJOURS le format "(BOSS 2026 - [THÉMATIQUE])" (ex: BOSS 2026 - RUPTURE CONVENTIONNELLE).
+  2. CODES : Cite sous la forme "(Code du Travail Art. [NUMÉRO])" ou "(Code de la sécurité Sociale Art. [NUMÉRO])" sans crochets autour du nom du code.
+  3. CHIFFRES : Pour chaque montant ou taux issu du barème, ajoute la mention "(Barème officiel 2026)".
+- **SYNTAXE DE RECONSTRUCTION :** Les sources doivent être citées entre parenthèses directement après chaque affirmation dans l'analyse.
 
 --- 4. STRUCTURE DE RÉPONSE ATTENDUE ---
 
 ### ANALYSE & RÈGLES
-[Ton analyse juridique ici]
+[Ton analyse juridique avec citations intra-texte obligatoires (BOSS, Codes ou Barèmes)]
 
 ### DÉTAIL & CHIFFRES
 - Base : ...
@@ -253,7 +253,7 @@ B. RAISONNEMENT JURIDIQUE : Priorité 2 aux DOCUMENTS CONTEXTUELS (RAG).
 ### RÉSULTAT
 **[MONTANT FINAL EN EUR]**
 
-Sources utilisées : [Liste reconstruite selon l'algorithme]
+Sources utilisées : [Liste récapitulative selon la nomenclature stricte ci-dessus]
 
 ---
 FAITS CERTIFIÉS (Priorité 1) :
