@@ -204,7 +204,7 @@ if user_input:
                     "extract": d.page_content
                 })
             
-            context_str += f"DOC: {pname}\n{d.page_content}\n\n"
+            context_str += f"DOCUMENT : {pname}\n{d.page_content}\n\n"
         
         if st.session_state.user_info.get("role") == "ADMIN" and docs:
              with st.expander("🕵️‍♂️ SOURCES PINECONE (EN COURS)", expanded=True):
@@ -232,7 +232,8 @@ B. RAISONNEMENT JURIDIQUE : Priorité 2 aux DOCUMENTS CONTEXTUELS (RAG).
 2. PRÉCISION DES CALCULS : 
    - Utilise une précision de 4 décimales pour les étapes intermédiaires (ex: 0.5300).
    - EXCEPTION DE JUSTESSE : Si une fraction tombe juste (ex: 1/3 de 4500 = 1500), utilise impérativement la valeur exacte sans décimales.
-3. RÉSULTAT FINAL : Arrondis le résultat final affiché à 2 décimales strictes (ex: 966.21 EUR).
+3. RÉSULTAT FINAL : Arrondis à 2 décimales strictes. 
+   Même si le montant est rond, affiche TOUJOURS les deux zéros (ex: 15 000,00 EUR et non 15 000 EUR).
 
 --- 3. PROTOCOLE DE CITATION ET NOMENCLATURE (STRICT) ---
 - **RÈGLE D'OR :** Ne crée JAMAIS une source générique si un article précis existe. Chaque affirmation doit être sourcée immédiatement entre parenthèses.
@@ -240,6 +241,8 @@ B. RAISONNEMENT JURIDIQUE : Priorité 2 aux DOCUMENTS CONTEXTUELS (RAG).
   1. SOURCES "BOSS" : Utilise TOUJOURS le format "(BOSS 2026 - [THÉMATIQUE])" (ex: BOSS 2026 - RUPTURE CONVENTIONNELLE).
   2. CODES : Cite sous la forme "(Code du Travail Art. [NUMÉRO])" ou "(Code de la sécurité Sociale Art. [NUMÉRO])" sans crochets autour du nom du code.
   3. CHIFFRES & BARÈMES : Pour chaque montant (PASS, plafonds), taux ou chiffre issu du barème cité dans l'analyse, ajoute systématiquement la mention "(Barème officiel 2026)".
+  - INTERDICTION : Ne cite jamais le nom de fichier brut (ex: .pdf ou .txt). 
+  Si une source "BOSS" est présente, utilise EXCLUSIVEMENT le format mappé "BOSS 2026 - [THÉMATIQUE]".
 - **SYNTAXE DE RECONSTRUCTION :** Les sources doivent être citées entre parenthèses directement après chaque affirmation dans l'analyse.
 
 --- 4. STRUCTURE DE RÉPONSE ATTENDUE ---
