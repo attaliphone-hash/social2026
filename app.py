@@ -210,7 +210,7 @@ if user_input:
              with st.expander("🕵️‍♂️ SOURCES PINECONE (EN COURS)", expanded=True):
                  st.success(f"{len(docs)} documents trouvés.")
 
-        # # --- EXPERT SOCIAL PRO 2026 - PROMPT AUDIT V3.8 (SÉCURITÉ MAXIMALE) ---
+        # --- EXPERT SOCIAL PRO 2026 - PROMPT AUDIT V3.8 (SÉCURITÉ MAXIMALE) ---
         template = """Tu es l'Expert Social Pro 2026, spécialiste de l'audit paie et du droit social français.
 
 === RÈGLE ABSOLUE N°1 : HIÉRARCHIE DES SOURCES ===
