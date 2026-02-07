@@ -149,7 +149,7 @@ for msg in st.session_state.messages:
             
             if pdf_data:
                 st.download_button(
-                    label="📄 Télécharger le dossier PDF",
+                    label="📄 Télécharger la discussion",
                     data=pdf_data,
                     file_name=f"Dossier_Social_{datetime.datetime.now().strftime('%H%M')}.pdf",
                     mime="application/pdf",

@@ -72,11 +72,11 @@
 - id: AVN_LOGEMENT_2026
   keywords: ["logement", "avantage", "nature", "hebergement", "loyer"]
   valeurs:
-    forfait_1_piece: 77.30
-    forfait_par_piece_sup: 41.20
+    forfait_1_piece: 79.70
+    forfait_par_piece_sup: 42.60
   derniere_maj: "Janvier 2026"
-  source: "Arrêté du 23 décembre 2025 (Barème URSSAF)"
-  text: "Barème forfaitaire mensuel : 77,30 € pour une pièce principale, et 41,20 € par pièce supplémentaire (si salaire < 1793,60 €)."
+  source: "Barème URSSAF 2026 (Basé sur PMSS 4005 €)"
+  text: "Barème forfaitaire mensuel 2026 : 79,70 € pour une pièce principale (si salaire < 2002,50 €)."
 
 - id: TICKET_RESTO_2026
   keywords: ["ticket", "resto", "titre", "restaurant", "cheque", "déjeuner", "patronale", "exonération"]
@@ -128,40 +128,50 @@
     26_plus_pct: 100.0
   derniere_maj: "Janvier 2026"
   source: "Code du travail - Art. D6222-26 (Version 2026)"
-  text: "GRILLE SALAIRE APPRENTI (1ère année) : Moins de 18 ans = 27% du SMIC. De 18 à 20 ans = 43% du SMIC. De 21 à 25 ans = 53% du SMIC. 26 ans et plus = 100% du SMIC."
+  text: |
+    GRILLE SALAIRE APPRENTI 2026 (1ère année) - TRANCHES D'ÂGE STRICTES :
+    - Moins de 18 ans : 27% du SMIC.
+    - 18 à 20 ans : 43% du SMIC.
+    - 21 à 25 ans : 53% du SMIC (C'est bien 53% dès 21 ans, et non 43%).
+    - 26 ans et plus : 100% du SMIC.
 
 - id: GRATIFICATION_STAGE_2026
   keywords: ["stage", "stagiaire", "gratification", "minimale", "indemnité", "heure", "taux"]
   valeurs:
     taux_horaire: 4.50
   derniere_maj: "Janvier 2026"
-  source: "Arrêté du 19 décembre 2025 (Fixation du plafond SS horaire)"
-  text: "La gratification minimale de stage est de 4,50 €/heure (calcul officiel : 15% du Plafond Horaire SS de 30 €)."
+  source: "Arrêté du 19 décembre 2025"
+  text: "La gratification minimale de stage est de 4,50 €/heure (15% du PHSS)."
 
 - id: EXONERATION_APPRENTI_2026
-  keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond", "50%", "79%", "seuil"]
+  keywords: ["apprenti", "apprentissage", "cotisations", "exonération", "plafond"]
   valeurs:
-    # CORRECTION AUDIT : Standardisation en % (50.00 et non 0.50)
     taux_plafond_nouveaux_contrats_pct: 50.00
     taux_plafond_anciens_contrats_pct: 79.00
     seuil_50pct_mensuel: 911.52
   derniere_maj: "Janvier 2026"
-  source: "Décret n° 2025-290 du 28 mars 2025 (Art. D6243-5 Code du travail)"
-  text: |
-    RÈGLE 2026 :
-    1. Contrats AVANT 01/03/2025 : Exonération totale jusqu'à 79% du SMIC.
-    2. Contrats DEPUIS 01/03/2025 : Exonération jusqu'à 50% du SMIC (soit 911,52 €/mois).
+  source: "Décret n° 2025-290"
+  text: "Exonération salariale plafonnée à 79% du SMIC (anciens contrats) ou 50% (nouveaux contrats)."
 
 - id: AIDE_EMBAUCHE_APPRENTI_2026
-  keywords: ["aide", "embauche", "apprenti", "apprentissage", "prime", "soutien", "5000", "6000"]
+  keywords: ["aide", "embauche", "apprenti", "apprentissage", "prime", "soutien", "6000", "250"]
   valeurs:
-    montant_standard: 5000
+    montant_standard: 6000
     montant_handicap: 6000
     effectif_max: 250
     niveau_diplome_max: 4
+    condition_sup_250: "Quota 5% alternants"
   derniere_maj: "Janvier 2026"
-  source: "Code du travail - Aide unique"
-  text: "5 000 € pour les entreprises de moins de 250 salariés. 6 000 € pour le handicap."
+  source: "Décret n° 2023-1354 (Prolongé 2026)"
+  text: |
+    RÈGLES D'ÉLIGIBILITÉ AIDE UNIQUE 2026 :
+    1. PRINCIPE GÉNÉRAL : L'aide est UNIFIÉE à 6 000 € pour la 1ère année du contrat. Elle remplace l'ancienne aide unique et l'aide exceptionnelle.
+    
+    2. CONDITIONS D'EFFECTIF :
+       - Entreprises de MOINS de 250 salariés : Aide automatique (sans condition de quota).
+       - Entreprises de 250 salariés ET PLUS : L'aide de 6 000 € est due UNIQUEMENT si l'entreprise respecte le quota de 5% d'alternants (ou est exonérée de la CSA).
+    
+    CONSIGNE IA : Le montant est toujours de 6 000 € (et non 5 000 €). Si l'entreprise a plus de 250 salariés, rappelez l'obligation du quota de 5%.
 
 # -------------------------------------------------------------------------
 # 4. RÉDUCTION GÉNÉRALE (RGDU / FILLON)
@@ -530,13 +540,13 @@
   valeurs:
     duree_max_1_enfant_mois: 12
     duree_max_2_enfants_plus_mois: 36
-    prestation_temps_plein: 428.71
-    prestation_temps_partiel_50: 277.14
-    prestation_temps_partiel_50_80: 160.05
+    prestation_temps_plein: 456.06
+    prestation_temps_partiel_50: 294.82
+    prestation_temps_partiel_50_80: 170.07
     anciennete_requise_mois: 12
   derniere_maj: "Janvier 2026"
-  source: "Code du travail & CAF"
-  text: "PreParE : 428,71 €/mois à temps plein."
+  source: "CAF - Barèmes 2026"
+  text: "PreParE 2026 : 456,06 €/mois à temps plein. 294,82 € (Temps partiel <= 50%)."
 
 # -------------------------------------------------------------------------
 # 18. MAINTIEN DE SALAIRE MALADIE
