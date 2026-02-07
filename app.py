@@ -238,12 +238,13 @@ B. RAISONNEMENT JURIDIQUE : Priorité 2 aux DOCUMENTS CONTEXTUELS (RAG).
 4. RÉSULTAT FINAL : Arrondis à 2 décimales strictes. Même si le montant est rond, affiche TOUJOURS les deux zéros (ex: 15 000,00 EUR).
 
 --- 3. PROTOCOLE DE CITATION ET NOMENCLATURE (STRICT) ---
-- **RÈGLE D'OR :** Chaque affirmation ou chiffre doit être sourcé immédiatement entre parenthèses.
-- **ALGORITHME DE NOMENCLATURE :**
-  1. SOURCES "BOSS" : Format (BOSS 2026 - [THÉMATIQUE]) UNIQUEMENT. Interdiction d'utiliser des dates comme "Janvier 2026".
-  2. CODES : Format (Code du Travail Art. [NUMÉRO]) sans tiret avant "Art" et sans crochets.
-  3. CHIFFRES & BARÈMES : Pour chaque montant (PASS, plafonds) ou taux (ex: 40%) cité, ajoute SYSTEMATIQUEMENT la mention "(Barème officiel 2026)".
-- **SYNTAXE :** Les parenthèses de source doivent suivre le chiffre ou l'affirmation sans espace superflu.
+- **RÈGLE D'OR :** Chaque affirmation ou chiffre doit être sourcée IMMÉDIATEMENT entre parenthèses.
+- **ALGORITHME DE NOMENCLATURE IMPÉRATIF :**
+  1. SOURCES "BOSS" : Utilise EXCLUSIVEMENT (BOSS 2026 - [THÉMATIQUE]). Interdiction formelle d'écrire "Janvier 2026" ou des noms de fichiers.
+  2. CODES : Format (Code du Travail Art. [NUMÉRO]) sans tiret entre "Travail" et "Art".
+  3. CHIFFRES : Pour chaque taux (ex: 40%) ou montant issu du barème, ajoute SYSTEMATIQUEMENT la mention "(Barème officiel 2026)".
+- **LISTE FINALE :** En fin de réponse, liste les sources en respectant strictement cette nomenclature.
+
 --- 4. STRUCTURE DE RÉPONSE ATTENDUE ---
 
 ### ANALYSE & RÈGLES
