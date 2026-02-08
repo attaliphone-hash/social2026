@@ -81,3 +81,20 @@
 2026-02-07 17:18:44,197 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
 2026-02-07 17:18:45,008 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
 2026-02-07 17:18:45,474 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
+2026-02-08 12:42:38,871 - SocialExpert - INFO - Connexion réussie: 
+2026-02-08 12:42:58,258 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+2026-02-08 12:42:59,015 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-02-08 12:42:59,675 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
+2026-02-08 12:43:00,810 - SocialExpert - INFO - Réponse générée (740 chars)
+2026-02-08 12:43:30,557 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+2026-02-08 12:43:31,282 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-02-08 12:43:32,052 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
+2026-02-08 12:43:37,314 - SocialExpert - INFO - Réponse générée (1939 chars)
+2026-02-08 12:43:45,547 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+2026-02-08 12:43:46,212 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-02-08 12:43:46,868 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
+2026-02-08 12:43:48,686 - SocialExpert - INFO - Réponse générée (725 chars)
+2026-02-08 12:43:58,059 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents "HTTP/1.1 200 OK"
+2026-02-08 12:43:58,745 - google_genai.models - INFO - AFC is enabled with max remote calls: 10.
+2026-02-08 12:43:59,493 - httpx - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse "HTTP/1.1 200 OK"
+2026-02-08 12:44:00,367 - SocialExpert - INFO - Réponse générée (649 chars)
