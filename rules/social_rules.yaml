@@ -285,16 +285,6 @@
     - RÈGLE IMPÉRATIVE : Forfait social patronal = 40,0% de la part exonérée de cotisations.
     (ATTENTION : Le taux standard de 20% ne s'applique PAS aux ruptures conventionnelles.)
 
-- id: SAISIE_SALAIRE_2026
-  keywords: ["saisie", "salaire", "rémunération", "remuneration", "retenue", "quotité", "quotite", "cessible", "saisissable", "créancier", "creancier", "huissier", "barème", "bareme"]
-  valeurs:
-    tranche_1_taux: 0.0500
-    tranche_5_taux: 0.3333
-    tranche_6_taux: 0.6667
-  derniere_maj: "Janvier 2026"
-  source: "Barème officiel 2026"
-  text: "Barème progressif de saisie sur salaire 2026 : de 1/20ème (5,0%) pour la 1ère tranche jusqu'à la totalité pour les tranches supérieures."
-
 - id: VALIDITE_RC_SUSPENSION_2026
   keywords: ["validité", "rupture", "conventionnelle", "maternité", "maladie", "accident", "suspension", "protection"]
   valeurs: {}
@@ -305,6 +295,18 @@
     1. CONGÉ MATERNITÉ : La signature d'une rupture conventionnelle est autorisée pendant le congé de maternité et les 10 semaines de protection suivante (Cass. Soc. 25 mars 2015).
     2. ARRÊT MALADIE / AT : La rupture est également valable pendant la suspension du contrat pour maladie ou accident du travail, sauf fraude ou vice du consentement.
     RÈGLE IMPÉRATIVE : L'absence de licenciement possible n'interdit pas une rupture d'un commun accord.
+
+
+- id: SAISIE_SALAIRE_2026
+  keywords: ["saisie", "salaire", "rémunération", "remuneration", "retenue", "quotité", "quotite", "cessible", "saisissable", "créancier", "creancier", "huissier", "barème", "bareme"]
+  valeurs:
+    tranche_1_taux: 0.0500
+    tranche_5_taux: 0.3333
+    tranche_6_taux: 0.6667
+  derniere_maj: "Janvier 2026"
+  source: "Barème officiel 2026"
+  text: "Barème progressif de saisie sur salaire 2026 : de 1/20ème (5,0%) pour la 1ère tranche jusqu'à la totalité pour les tranches supérieures."
+
 
 # -------------------------------------------------------------------------
 # 7. FISCALITÉ & HEURES SUPPLÉMENTAIRES
