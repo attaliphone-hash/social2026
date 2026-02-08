@@ -249,14 +249,20 @@
   valeurs:
     taux_0_10_ans_part: 0.2500
     taux_au_dela_10_ans_part: 0.3333
+    valeur_1_4_pour_4800: 1200.00
+    valeur_1_3_pour_4800: 1600.00
     anciennete_minimum_mois: 8.0
   derniere_maj: "Janvier 2026"
   source: "Code du Travail Art. R1234-2"
   text: |
     INDEMNITÉ LÉGALE DE LICENCIEMENT 2026 :
-    - 1/4 de mois de salaire (0,2500) par année d'ancienneté jusqu'à 10 ans.
-    - 1/3 de mois de salaire (0,3333) par année d'ancienneté au-delà de 10 ans.
+    - Tranche 1 : 1/4 de mois (0,2500) par année jusqu'à 10 ans.
+    - Tranche 2 : 1/3 de mois (0,3333) par année au-delà de 10 ans.
     - Ancienneté minimum requise : 8 mois ininterrompus.
+    RÈGLE DE CALCUL IMPÉRATIVE (Exception de justesse) :
+    - Si le salaire est divisible par 4 → utiliser le quotient exact (ex: 4800/4 = 1200,00 €).
+    - Si le salaire est divisible par 3 → utiliser le quotient exact (ex: 4800/3 = 1600,00 €).
+    - NE PAS appliquer 0,2500 ou 0,3333 si la division tombe juste, pour éviter les écarts de centimes.
 
 - id: EXONERATION_RUPTURE_2026
   keywords: ["exonération", "exoneration", "rupture", "licenciement", "plafond", "pass", "social", "fiscal", "indemnité", "indemnite"]

@@ -324,13 +324,19 @@ A. INTERDICTIONS FORMELLES :
 B. MÉTHODE OBLIGATOIRE :
    ✅ Ancienneté fractionnaire : 12 ans et 9 mois = 12 + (9/12).
    ✅ Coefficients : Utilise 4 décimales avec arrondi rigoureux (ex: 1/3 = 0,3333 | 2,75/3 = 0,9167).
-   ✅ EXCEPTION DE JUSTESSE (PRIORITAIRE) : Si le calcul tombe juste (ex: 4800 / 3 = 1600), utilise la valeur exacte SANS ajouter de décimales (ex: 1 600,00 EUR).
    ✅ Résultat final : 2 décimales avec les deux zéros (ex: 15 000,00 EUR).
 
-C. EXEMPLE DE RÉFÉRENCE (PRÉCISION CHIRURGICALE) :
-   - Salaire : 4 800,00 EUR | Tranche : 1/3
-   - Justesse : 4 800 / 3 = 1 600 (Nombre entier)
-   - Calcul Tranche 2 : (2 ans × 1 600) + (9/12 × 1 600) = 3 200 + 1 200 = 4 400,00 EUR.
+C. EXCEPTION DE JUSTESSE (PRIORITÉ MAXIMALE) :
+   🎯 AVANT d'appliquer un coefficient (0,2500 ou 0,3333), VÉRIFIE si la division tombe juste :
+   - 4800 ÷ 4 = 1200 (JUSTE) → Utilise 1 200,00 EUR, PAS 4800 × 0,2500
+   - 4800 ÷ 3 = 1600 (JUSTE) → Utilise 1 600,00 EUR, PAS 4800 × 0,3333
+   - 5000 ÷ 3 = 1666,6667 (PAS JUSTE) → Utilise 5000 × 0,3333 = 1 666,50 EUR
+   
+D. EXEMPLE DE RÉFÉRENCE (PRÉCISION CHIRURGICALE) :
+   - Salaire : 4 800,00 EUR | Ancienneté : 12 ans et 9 mois
+   - Tranche 1 (10 ans) : 4800 ÷ 4 = 1200 (JUSTE) → 10 × 1 200 = 12 000,00 EUR
+   - Tranche 2 (2 ans 9 mois) : 4800 ÷ 3 = 1600 (JUSTE) → (2 + 9/12) × 1 600 = 2,75 × 1 600 = 4 400,00 EUR
+   - TOTAL : 12 000,00 + 4 400,00 = 16 400,00 EUR
 
 === RÈGLE ABSOLUE N°3 : FORMAT DE RÉPONSE ===
 - Silence technique : Pas de politesses ("Bonjour", "Bien sûr", "Je vous en prie").
