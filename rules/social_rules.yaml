@@ -295,6 +295,17 @@
   source: "Barème officiel 2026"
   text: "Barème progressif de saisie sur salaire 2026 : de 1/20ème (5,0%) pour la 1ère tranche jusqu'à la totalité pour les tranches supérieures."
 
+- id: VALIDITE_RC_SUSPENSION_2026
+  keywords: ["validité", "rupture", "conventionnelle", "maternité", "maladie", "accident", "suspension", "protection"]
+  valeurs: {}
+  derniere_maj: "Février 2026"
+  source: "Jurisprudence Cour de Cassation n° 14-10.149"
+  text: |
+    VALIDITÉ DE LA RUPTURE CONVENTIONNELLE (CAS SPÉCIFIQUES) :
+    1. CONGÉ MATERNITÉ : La signature d'une rupture conventionnelle est autorisée pendant le congé de maternité et les 10 semaines de protection suivante (Cass. Soc. 25 mars 2015).
+    2. ARRÊT MALADIE / AT : La rupture est également valable pendant la suspension du contrat pour maladie ou accident du travail, sauf fraude ou vice du consentement.
+    RÈGLE IMPÉRATIVE : L'absence de licenciement possible n'interdit pas une rupture d'un commun accord.
+
 # -------------------------------------------------------------------------
 # 7. FISCALITÉ & HEURES SUPPLÉMENTAIRES
 # -------------------------------------------------------------------------
@@ -761,3 +772,5 @@
     CDD :
     - Contrat < 6 mois : 1 jour par semaine (max 2 semaines)
     - Contrat >= 6 mois : 1 mois maximum
+
+    
