@@ -23,7 +23,7 @@ class IAService:
             streaming=True
         )
 
-    def search_documents(self, query, k=6):
+    def search_documents(self, query: str, k: int = None):
         """Recherche les documents pertinents dans Pinecone"""
         try:
             # ✅ RÉTABLISSEMENT DE VOTRE SYNTAXE PRÉCISE :
